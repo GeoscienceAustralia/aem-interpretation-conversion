@@ -65,15 +65,42 @@ def test_get_make_srt_dir_oserror(tmp_path):
         with pytest.raises(SystemExit):
             commands.get_make_srt_dir(srt_dir)
 
-# def test_sort_gmtp_creates_dirs(tmp_path):
-#     nm_lst = [123, 456]
-#     with mock.patch("pathlib.Path.exists", return_value=False):
-#         with mock.patch("pathlib.Path.mkdir") as mock_mkdir:
-#             with mock.patch("glob.glob", return_value=[]):
-#                 with mock.patch("subprocess.run") as mock_run:
-#                     commands.sort_gmtp(str(tmp_path), nm_lst)
-#                     mock_mkdir.assert_called()
-#                     mock_run.assert_called()
+def test_sort_gmtp_creates_dirs(tmp_path):
+    name = 0
+    wrk_dir = tmp_path
+    srt_dir = wrk_dir / "SORT"
+    srt_dir.mkdir()
+    hdr_file = srt_dir / f"{name}_hdr.hdr"
+    hdr_file.touch()
+    with mock.patch("pathlib.Path.exists", return_value=False):
+        with mock.patch("pathlib.Path.mkdir") as mock_mkdir:
+            with mock.patch("glob.glob", return_value=[]):
+                with mock.patch("subprocess.run") as mock_run:
+                    commands.sort_gmtp(str(tmp_path), [name])
+                    mock_mkdir.assert_called()
+                    mock_run.assert_called()
+
+def test_gets_2_mdc_writes_mdc_file(tmp_path):
+    wrk_dir = tmp_path
+    srt_dir = wrk_dir / "SORT"
+    srt_dir.mkdir()
+    name = 0
+    df = pd.DataFrame({
+        'Feature classes': ['gname'],
+        'Red': [10.0],
+        'Green': [100.0],
+        'Blue': [5.0]
+    })
+    gmts_file = srt_dir / f"{name}.gmts"
+    gmts_file.touch()
+    gmts_file.write_text("@D|gname|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19\n 1 2 3 4 5 6 7 8 9 10")
+    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+        commands.gmts_2_mdc(str(wrk_dir), 'colors_file', [name])
+        mdc_file = srt_dir / f"{name}.mdc"
+        assert(os.path.exists(mdc_file))
+        mdc_content = mdc_file.read_text()
+        assert 'gname' in mdc_content
+        assert '*line*color:0.039062 0.390625 0.019531 1' in mdc_content
 
 def test_first_runs_gdal_command(tmp_path):
     shp_dir = tmp_path
@@ -138,6 +165,59 @@ def test_fourth_writes_s2_file_to_sort_dir(tmp_path):
         assert 'PVRTX x 16.000000 160.000000 0.600000 1.000000 1.000000 11.000000 -10.400000' in s2_file
         assert 'PVRTX x 10.000000 100.000000 0.000000 1.000000 1.000000 5.000000 -5.000000' in s2_file
         assert 'PVRTX x 40.000000 400.000000 3.000000 1.000000 1.000000 35.000000 -32.000000' in s2_file
+
+def test_fifth_writes_gp_file_to_sort_dir(tmp_path):
+    wrk_dir = tmp_path
+    srt_dir = wrk_dir / "SORT"
+    srt_dir.mkdir()
+    name = 0
+    s2_file = srt_dir / f"{name}.s2"
+    s2_file.touch()
+    s2_file.write_text("GOCAD PLine 1\nline:1\nline:gname\nline:next\nline:last\n")
+    df = pd.DataFrame({
+        'Feature classes': ['gname'],
+        'Red': [10.0],
+        'Green': [100.0],
+        'Blue': [5.0]
+    })
+    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+        commands.fifth(str(wrk_dir), 'colors_file', [0])
+        assert(os.path.exists(srt_dir / f"{name}.gp"))
+
+def test_fifth_b_writes_hmdc_file_to_sort_dir(tmp_path):
+    wrk_dir = tmp_path
+    srt_dir = wrk_dir / "SORT"
+    srt_dir.mkdir()
+    name = 0
+    s2_file = srt_dir / f"{name}.s2"
+    s2_file.touch()
+    s2_file.write_text("ILINE\nline|gname|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22\n")
+    df = pd.DataFrame({
+        'Feature classes': ['gname'],
+        'Red': [0],
+        'Green': [0],
+        'Blue': [0]
+    })
+    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+        commands.fifth_b(str(wrk_dir), 'colors_file', [0], 'hrz')
+        assert(os.path.exists(srt_dir / f"{name}.hmdc"))
+
+def test_sixth_writes_xml_format_header_files(tmp_path):
+    wrk_dir = tmp_path
+    srt_dir = wrk_dir / "SORT"
+    srt_dir.mkdir()
+    name = 0
+    commands.sixth(str(wrk_dir), [name])
+    xml_file = (srt_dir / f"{name}.xml").read_text()
+    assert "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" in xml_file
+    assert "<Layer version=\"1\" layerType=\"ModelLayer\">\n" in xml_file
+    assert f"<DisplayName>{name} Interp</DisplayName>\n" in xml_file
+    assert f"<URL>{name}.gp</URL>\n" in xml_file
+    assert "<DataFormat>GOCAD</DataFormat>\n" in xml_file
+    assert "<LineWidth>5</LineWidth>\n" in xml_file
+    assert f"<DataCacheName>GA/EFTF/AEM/{name}.gp</DataCacheName>\n" in xml_file
+    assert "<CoordinateSystem>EPSG:28353</CoordinateSystem>\n" in xml_file
+    assert "</Layer>\n" in xml_file
 
 def test_main_runs_all(monkeypatch):
     config_dict = {

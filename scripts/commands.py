@@ -812,7 +812,7 @@ def fifth(wrk_dir: str, colors: str, nm_lst: List[int], revamp: str = "") -> Non
     nm: List[int]
         The list of path identifiers from the the common extent file
     revamp: str
-        Eiither '' or '2017'
+        Either '' or '2017'
     """
 
     fmt = "*line*color:{:{_f}} {:{_f}} {:{_f}} {}\n"
