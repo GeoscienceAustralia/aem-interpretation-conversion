@@ -27,7 +27,7 @@ from scripts.config import get_ogr_path
 
 def first(shp_dir: str, wrk_dir: str) -> None:
     """
-    Converts all the shapefiles found in the shp_dir folder to ASCII format GMT files by callling
+    Converts all the shapefiles found in the shp_dir folder to ASCII format GMT files by calling
     the GDAL ogr2ogr utility. The '>' character is appended as in original the fix_gmt.awk script.
     It combines the following commands:
     ogr2ogr -f 'GMT' '$1'_interp.gmt '$1'_*_interp_*.shp

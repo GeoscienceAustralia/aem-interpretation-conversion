@@ -65,12 +65,6 @@ def test_get_make_srt_dir_oserror(tmp_path):
         with pytest.raises(SystemExit):
             commands.get_make_srt_dir(srt_dir)
 
-# def test_help_gr8_removes_fake_gt():
-#     lines = ["# @D0 meta", ">", "data", ">", "data2"]
-#     idx_d0 = [0]
-#     result = commands.help_gr8(lines, idx_d0)
-#     assert isinstance(result, list)
-
 def test_sort_gmtp_creates_dirs(tmp_path):
     nm_lst = [123, 456]
     with mock.patch("pathlib.Path.exists", return_value=False):
@@ -81,7 +75,7 @@ def test_sort_gmtp_creates_dirs(tmp_path):
                     mock_mkdir.assert_called()
                     mock_run.assert_called()
 
-def test_first_runs_subprocess(tmp_path):
+def test_first_runs_gdal_command(tmp_path):
     shp_dir = tmp_path
     wrk_dir = tmp_path / "work"
     shp_file = tmp_path / "test_interp_1.shp"
@@ -92,7 +86,7 @@ def test_first_runs_subprocess(tmp_path):
                 commands.first(str(shp_dir), str(wrk_dir))
                 mock_run.assert_called()
 
-def test_second_writes_asc_filet_to_sort_dir(tmp_path):
+def test_second_writes_asc_file_to_sort_dir(tmp_path):
     wrk_dir = tmp_path / "work"
     filo = "test"
     name = "data"
@@ -102,6 +96,20 @@ def test_second_writes_asc_filet_to_sort_dir(tmp_path):
     with mock.patch("glob.glob", return_value=[str(gmt_file)]):
         commands.second(str(wrk_dir))
         assert(os.path.exists(wrk_dir / "SORT" / f"{filo}_{name}.asc"))
+
+def test_third_writes_s1_file_to_sort_dir(tmp_path):
+    wrk_dir = tmp_path
+    srt_dir = wrk_dir / "SORT"
+    srt_dir.mkdir()
+    name = "name"
+    asc_file = srt_dir / f"{name}.asc"
+    asc_file.touch()
+    df = pd.DataFrame({
+        'nm': [name]
+    })
+    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+        commands.third(str(wrk_dir), "ext_file")
+        assert(os.path.exists(srt_dir / f"{name}.s1"))
 
 def test_main_runs_all(monkeypatch):
     config_dict = {
