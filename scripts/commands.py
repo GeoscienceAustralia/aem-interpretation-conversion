@@ -22,7 +22,7 @@ import pandas as pd
 
 from loguru import logger
 from typing import List, Tuple, TextIO
-from aemworkflow.webapp.config import get_ogr_path
+from scripts.config import get_ogr_path
 
 
 def first(shp_dir: str, wrk_dir: str) -> None:
@@ -336,7 +336,7 @@ def help_gr8(lin_lst: List[str], idx_d0: List[int]) -> List[int]:
     """
     Replacing the list comprehension
     idx_gr8 = [_i for _i, line in enumerate(lin_lst) if line.startswith(">")][1:]
-    to find the first line starting with '>', after a a meta '# @D0 ...' line
+    to find the first line starting with '>', after a meta '# @D0 ...' line
     Also removes the 'fake >' from lin_lst
     """
     idx_lst = []

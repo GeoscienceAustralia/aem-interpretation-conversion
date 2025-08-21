@@ -8,7 +8,7 @@ import os
 # from loguru import logger
 from datetime import date
 # from typing import List, Tuple
-# from aemworkflow.webapp.config import get_ogr_path
+# from scripts.config import get_ogr_path
 
 
 def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session):

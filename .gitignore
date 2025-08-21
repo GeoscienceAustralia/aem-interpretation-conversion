@@ -37,11 +37,6 @@ pip-log.txt
 *.egg
 *.egg-info
 
-# Unit test / coverage reports
-.coverage
-.tox
-nosetests.xml
-
 # PyCharm / IntelliJ
 *.iml
 .idea
