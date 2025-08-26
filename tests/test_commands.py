@@ -102,6 +102,33 @@ def test_gets_2_mdc_writes_mdc_file(tmp_path):
         assert 'gname' in mdc_content
         assert '*line*color:0.039062 0.390625 0.019531 1' in mdc_content
 
+def test_zedfix_gmt_returns_path_identifiers(tmp_path):
+    wrk_dir = tmp_path
+    srt_dir = wrk_dir / "SORT"
+    srt_dir.mkdir()
+    filo_1 = "test1"
+    filo_2 = "test2"
+    gmt_file_1 = tmp_path / f"{filo_1}_interp.gmt"
+    gmt_file_2 = tmp_path / f"{filo_2}_interp.gmt"
+    gmt_file_1.touch()
+    gmt_file_2.touch()
+    gmt_file_1.write_text(f"@D0|{filo_1}|{filo_1}\n>@D0|{filo_1}|{filo_1}\n>")
+    gmt_file_2.write_text(f"@D0|{filo_2}|{filo_2}\n>@D0|{filo_2}|{filo_2}\n>")
+    df = pd.DataFrame({
+        'nm': [filo_1, filo_2],
+        't_bot': [1, 2],
+        't_top': [2, 3],
+        'frame_bot': [3, 4],
+        'frame_top': [4, 5]
+    })
+    df2 = pd.DataFrame({
+        'fid': [1, 2],
+        'gl': [5.0, 15.0]
+    })
+    with mock.patch("scripts.commands.pd.read_csv", side_effect=[df, df2, df2]):
+        names = commands.zedfix_gmt(str(wrk_dir), 'path_dir', 'ext_file')
+        assert names == [filo_1, filo_2]
+
 def test_first_runs_gdal_command(tmp_path):
     shp_dir = tmp_path
     wrk_dir = tmp_path / "work"
