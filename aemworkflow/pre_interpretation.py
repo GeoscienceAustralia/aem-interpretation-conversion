@@ -136,7 +136,6 @@ def box_elevation(extent_file_path, path_file_path, output_file_path, depth_line
                 # ly=(yy[i]-(ddd/y_fact))
                 # print i-1" "ly+ypo
 
-                # print i-1" "(yy[i]-ddd)+ypo
                 ly = round(decimal.Decimal(str(yy[i] - (ddd / y_fact) - (2 / y_fact))), 4).normalize()
                 out_file.write(f'{i} {round(ly + decimal.Decimal(ypo), 4).normalize()}\n')
 

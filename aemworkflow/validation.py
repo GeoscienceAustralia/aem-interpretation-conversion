@@ -1,14 +1,6 @@
 # import sys
 import os
-# from pathlib import Path
-# import glob
-# import pandas as pd
-# import re
-
-# from loguru import logger
 from datetime import date
-# from typing import List, Tuple
-# from scripts.config import get_ogr_path
 
 
 def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session):

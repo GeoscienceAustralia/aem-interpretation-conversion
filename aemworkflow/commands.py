@@ -1,15 +1,6 @@
-#!/usr/bin/env python3
 """
 GA AEM interpretation workflow, awk2python script translation
 """
-#################################################
-# Author: Ante Bilic                            #
-# Since: 15/11/2022                             #
-# Copyright: Geoscience Australia MTworkflow    #
-# Version: N/A                                  #
-# Maintainer: Mick Ilovski                      #
-# Email: toolkits@ga.gov.au                     #
-#################################################
 
 from pathlib import Path
 import os
