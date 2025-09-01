@@ -11,6 +11,7 @@ jobs:
       - run:
           name: Build and run test environment
           command: |
+            pip install -r requirements-dev.txt
             pytest tests/
 
       - run:

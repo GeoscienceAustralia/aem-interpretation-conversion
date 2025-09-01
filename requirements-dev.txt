@@ -1,0 +1,5 @@
+pytest
+codecov
+coverage
+pandas==2.2.3
+GDAL==3.10.2
