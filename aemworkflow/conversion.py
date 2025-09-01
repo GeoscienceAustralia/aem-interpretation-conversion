@@ -5,7 +5,6 @@ from pathlib import Path
 import glob
 import pandas as pd
 import re
-from loguru import logger
 from typing import List, Tuple
 from osgeo import osr
 from aemworkflow.config import get_ogr_path

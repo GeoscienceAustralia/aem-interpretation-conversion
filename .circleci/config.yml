@@ -11,6 +11,7 @@ jobs:
       - run:
           name: Build and run test environment
           command: |
+            source ./ci_gdal_install.sh
             pip install -r requirements-dev.txt
             pytest tests/
 
