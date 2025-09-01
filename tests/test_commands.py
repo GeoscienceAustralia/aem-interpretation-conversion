@@ -179,8 +179,13 @@ def test_third_writes_s1_file_to_sort_dir(tmp_path):
     name = "name"
     asc_file = srt_dir / f"{name}.asc"
     asc_file.touch()
+    asc_file.write_text(f"1\n2\n3 4 5\n1\n5 6 7\n8 9 10\n11 12 13\n14 15 16\n1\n17 18 19")
     df = pd.DataFrame({
-        'nm': [name]
+        'nm': [name],
+        't_bot': [1],
+        't_top': [2],
+        'frame_bot': [3],
+        'frame_top': [4]
     })
     with mock.patch("scripts.commands.pd.read_csv", return_value=df):
         commands.third(str(wrk_dir), "ext_file")
