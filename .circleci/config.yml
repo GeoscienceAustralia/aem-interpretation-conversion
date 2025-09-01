@@ -11,9 +11,8 @@ jobs:
       - run:
           name: Build and run test environment
           command: |
-            source ./ci_gdal_install.sh
-            pip install -r requirements-dev.txt
-            pytest tests/
+            chmod +x tests/_run-tests.sh
+            bash tests/_run-tests.sh
 
       - run:
           name: Upload test results to Codecov

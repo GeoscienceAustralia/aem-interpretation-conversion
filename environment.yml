@@ -1,4 +1,4 @@
-name: aemworkflow
+name: aemworkflow-scripts
 channels:
   - conda-forge
   - defaults
