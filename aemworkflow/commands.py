@@ -1,15 +1,6 @@
-#!/usr/bin/env python3
 """
 GA AEM interpretation workflow, awk2python script translation
 """
-#################################################
-# Author: Ante Bilic                            #
-# Since: 15/11/2022                             #
-# Copyright: Geoscience Australia MTworkflow    #
-# Version: N/A                                  #
-# Maintainer: Mick Ilovski                      #
-# Email: toolkits@ga.gov.au                     #
-#################################################
 
 from pathlib import Path
 import os
@@ -22,12 +13,12 @@ import pandas as pd
 
 from loguru import logger
 from typing import List, Tuple, TextIO
-from aemworkflow.webapp.config import get_ogr_path
+from aemworkflow.config import get_ogr_path
 
 
 def first(shp_dir: str, wrk_dir: str) -> None:
     """
-    Converts all the shapefiles found in the shp_dir folder to ASCII format GMT files by callling
+    Converts all the shapefiles found in the shp_dir folder to ASCII format GMT files by calling
     the GDAL ogr2ogr utility. The '>' character is appended as in original the fix_gmt.awk script.
     It combines the following commands:
     ogr2ogr -f 'GMT' '$1'_interp.gmt '$1'_*_interp_*.shp
@@ -336,7 +327,7 @@ def help_gr8(lin_lst: List[str], idx_d0: List[int]) -> List[int]:
     """
     Replacing the list comprehension
     idx_gr8 = [_i for _i, line in enumerate(lin_lst) if line.startswith(">")][1:]
-    to find the first line starting with '>', after a a meta '# @D0 ...' line
+    to find the first line starting with '>', after a meta '# @D0 ...' line
     Also removes the 'fake >' from lin_lst
     """
     idx_lst = []
@@ -812,7 +803,7 @@ def fifth(wrk_dir: str, colors: str, nm_lst: List[int], revamp: str = "") -> Non
     nm: List[int]
         The list of path identifiers from the the common extent file
     revamp: str
-        Eiither '' or '2017'
+        Either '' or '2017'
     """
 
     fmt = "*line*color:{:{_f}} {:{_f}} {:{_f}} {}\n"

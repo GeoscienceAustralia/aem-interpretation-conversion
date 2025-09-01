@@ -8,7 +8,7 @@ import re
 from loguru import logger
 from typing import List, Tuple
 from osgeo import osr
-from aemworkflow.webapp.config import get_ogr_path
+from aemworkflow.config import get_ogr_path
 
 
 def make_srt_dir(wrk_dir: str, logger_session):

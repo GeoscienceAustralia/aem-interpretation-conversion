@@ -1,9 +1,7 @@
-#!/usr/bin/env python3
 
 import argparse
 import re
 from pathlib import Path
-# from loguru import logger
 
 
 def main(directory: str, suffix: str) -> None:

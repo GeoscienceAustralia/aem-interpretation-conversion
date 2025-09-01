@@ -1,13 +1,11 @@
-# import glob
-# import os
+
 import subprocess
 from pathlib import Path
-# import sys
 import logging
 import decimal
 
 from osgeo import osr
-from aemworkflow.webapp.config import get_ogr_path
+from aemworkflow.config import get_ogr_path
 
 
 logging.basicConfig(filename='out.log',
