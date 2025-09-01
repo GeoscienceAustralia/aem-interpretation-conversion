@@ -3,7 +3,7 @@ import pandas as pd
 from unittest import mock
 import os
 
-import scripts.commands as commands
+import aemworkflow.commands as commands
 
 
 def test_interpol():
@@ -93,7 +93,7 @@ def test_gmts_2_mdc_writes_mdc_file(tmp_path):
     gmts_file = srt_dir / f"{name}.gmts"
     gmts_file.touch()
     gmts_file.write_text("@D|gname|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19\n 1 2 3 4 5 6 7 8 9 10")
-    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+    with mock.patch("aemworkflow.commands.pd.read_csv", return_value=df):
         commands.gmts_2_mdc(str(wrk_dir), 'colors_file', [name])
         mdc_file = srt_dir / f"{name}.mdc"
         assert(os.path.exists(mdc_file))
@@ -115,7 +115,7 @@ def test_gmts_2_egs_writes_egs_file(tmp_path):
     gmts_file = srt_dir / f"{name}.gmts"
     gmts_file.touch()
     gmts_file.write_text("@D|gname|1|2|3|4|5|6|7|8\n 1 2 3 4 5 6 7 8 9 10")
-    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+    with mock.patch("aemworkflow.commands.pd.read_csv", return_value=df):
         commands.gmts_2_egs(str(wrk_dir), 'alt-colors', [name])
         egs_file = srt_dir / f"{name}.egs"
         assert(os.path.exists(egs_file))
@@ -145,7 +145,7 @@ def test_zedfix_gmt_returns_path_identifiers(tmp_path):
         'fid': [1, 2],
         'gl': [5.0, 15.0]
     })
-    with mock.patch("scripts.commands.pd.read_csv", side_effect=[df, df2, df2]):
+    with mock.patch("aemworkflow.commands.pd.read_csv", side_effect=[df, df2, df2]):
         names = commands.zedfix_gmt(str(wrk_dir), 'path_dir', 'ext_file')
         assert names == [filo_1, filo_2]
 
@@ -156,7 +156,7 @@ def test_first_runs_gdal_command(tmp_path):
     shp_file.touch()
     with mock.patch("glob.glob", return_value=[str(shp_file)]):
         with mock.patch("subprocess.run") as mock_run:
-            with mock.patch("scripts.commands.get_ogr_path", return_value="ogr2ogr"):
+            with mock.patch("aemworkflow.commands.get_ogr_path", return_value="ogr2ogr"):
                 commands.first(str(shp_dir), str(wrk_dir))
                 mock_run.assert_called()
 
@@ -186,7 +186,7 @@ def test_third_writes_s1_file_to_sort_dir(tmp_path):
         'frame_bot': [3],
         'frame_top': [4]
     })
-    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+    with mock.patch("aemworkflow.commands.pd.read_csv", return_value=df):
         commands.third(str(wrk_dir), "ext_file")
         assert(os.path.exists(srt_dir / f"{name}.s1"))
 
@@ -211,7 +211,7 @@ def test_fourth_writes_s2_file_to_sort_dir(tmp_path):
         'coordy': [100.0, 200.0],
         'gl': [5.0, 15.0]
     })
-    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+    with mock.patch("aemworkflow.commands.pd.read_csv", return_value=df):
         commands.fourth(str(wrk_dir), str(srt_dir), [name])
         s2_file = (srt_dir / f"{name}.s2").read_text()
         assert 'PVRTX x 16.000000 160.000000 0.600000 1.000000 1.000000 11.000000 -10.400000' in s2_file
@@ -232,7 +232,7 @@ def test_fifth_writes_gp_file_to_sort_dir(tmp_path):
         'Green': [100.0],
         'Blue': [5.0]
     })
-    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+    with mock.patch("aemworkflow.commands.pd.read_csv", return_value=df):
         commands.fifth(str(wrk_dir), 'colors_file', [name])
         assert(os.path.exists(srt_dir / f"{name}.gp"))
 
@@ -250,7 +250,7 @@ def test_fifth_b_writes_hmdc_file_to_sort_dir(tmp_path):
         'Green': [0],
         'Blue': [0]
     })
-    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+    with mock.patch("aemworkflow.commands.pd.read_csv", return_value=df):
         commands.fifth_b(str(wrk_dir), 'colors_file', [name], 'hrz')
         assert(os.path.exists(srt_dir / f"{name}.hmdc"))
 

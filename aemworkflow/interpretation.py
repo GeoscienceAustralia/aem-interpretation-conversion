@@ -7,7 +7,7 @@ import logging
 import decimal
 
 from osgeo import osr
-from scripts.config import get_ogr_path
+from aemworkflow.config import get_ogr_path
 
 
 logging.basicConfig(filename='out.log',
