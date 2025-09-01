@@ -80,7 +80,7 @@ def test_sort_gmtp_creates_dirs(tmp_path):
                     mock_mkdir.assert_called()
                     mock_run.assert_called()
 
-def test_gets_2_mdc_writes_mdc_file(tmp_path):
+def test_gmts_2_mdc_writes_mdc_file(tmp_path):
     wrk_dir = tmp_path
     srt_dir = wrk_dir / "SORT"
     srt_dir.mkdir()
@@ -101,6 +101,27 @@ def test_gets_2_mdc_writes_mdc_file(tmp_path):
         mdc_content = mdc_file.read_text()
         assert 'gname' in mdc_content
         assert '*line*color:0.039062 0.390625 0.019531 1' in mdc_content
+
+def test_gmts_2_egs_writes_egs_file(tmp_path):
+    wrk_dir = tmp_path
+    srt_dir = wrk_dir / "SORT"
+    srt_dir.mkdir()
+    name = 'gname'
+    df = pd.DataFrame({
+        'TYPE': ['gname'],
+        'OVERAGE': [10.0],
+        'UNDERAGE': [100.0],
+        'Blue': [5.0]
+    })
+    gmts_file = srt_dir / f"{name}.gmts"
+    gmts_file.touch()
+    gmts_file.write_text("@D|gname|1|2|3|4|5|6|7|8\n 1 2 3 4 5 6 7 8 9 10")
+    with mock.patch("scripts.commands.pd.read_csv", return_value=df):
+        commands.gmts_2_egs(str(wrk_dir), 'alt-colors', [name])
+        egs_file = srt_dir / f"{name}.egs"
+        assert(os.path.exists(egs_file))
+        egs_content = egs_file.read_text()
+        assert f"10,9,3,4,5,1,2,6,7,('{name}',),{name}" in egs_content
 
 def test_zedfix_gmt_returns_path_identifiers(tmp_path):
     wrk_dir = tmp_path
