@@ -1,6 +1,5 @@
 import pytest
 import pandas as pd
-from pathlib import Path
 from unittest import mock
 import os
 
@@ -66,7 +65,7 @@ def test_get_make_srt_dir_oserror(tmp_path):
             commands.get_make_srt_dir(srt_dir)
 
 def test_sort_gmtp_creates_dirs(tmp_path):
-    name = 0
+    name = "name"
     wrk_dir = tmp_path
     srt_dir = wrk_dir / "SORT"
     srt_dir.mkdir()
@@ -84,7 +83,7 @@ def test_gmts_2_mdc_writes_mdc_file(tmp_path):
     wrk_dir = tmp_path
     srt_dir = wrk_dir / "SORT"
     srt_dir.mkdir()
-    name = 0
+    name = "name"
     df = pd.DataFrame({
         'Feature classes': ['gname'],
         'Red': [10.0],
@@ -164,7 +163,7 @@ def test_first_runs_gdal_command(tmp_path):
 def test_second_writes_asc_file_to_sort_dir(tmp_path):
     wrk_dir = tmp_path / "work"
     filo = "test"
-    name = "data"
+    name = "name"
     gmt_file = tmp_path / f"{filo}_interp_1.gmt"
     gmt_file.touch()
     gmt_file.write_text(f"@D0|{name}|{name}\n>@D0|{name}|{name}\n>")
@@ -195,7 +194,7 @@ def test_fourth_writes_s2_file_to_sort_dir(tmp_path):
     wrk_dir = tmp_path
     srt_dir = wrk_dir / "SORT"
     srt_dir.mkdir()
-    name = 0
+    name = "name"
     s1_file = srt_dir / f"{name}.s1"
     s1_file.touch()
     col_5_interpolate = 0.6
@@ -223,7 +222,7 @@ def test_fifth_writes_gp_file_to_sort_dir(tmp_path):
     wrk_dir = tmp_path
     srt_dir = wrk_dir / "SORT"
     srt_dir.mkdir()
-    name = 0
+    name = "name"
     s2_file = srt_dir / f"{name}.s2"
     s2_file.touch()
     s2_file.write_text("GOCAD PLine 1\nline:1\nline:gname\nline:next\nline:last\n")
@@ -234,14 +233,14 @@ def test_fifth_writes_gp_file_to_sort_dir(tmp_path):
         'Blue': [5.0]
     })
     with mock.patch("scripts.commands.pd.read_csv", return_value=df):
-        commands.fifth(str(wrk_dir), 'colors_file', [0])
+        commands.fifth(str(wrk_dir), 'colors_file', [name])
         assert(os.path.exists(srt_dir / f"{name}.gp"))
 
 def test_fifth_b_writes_hmdc_file_to_sort_dir(tmp_path):
     wrk_dir = tmp_path
     srt_dir = wrk_dir / "SORT"
     srt_dir.mkdir()
-    name = 0
+    name = "name"
     s2_file = srt_dir / f"{name}.s2"
     s2_file.touch()
     s2_file.write_text("ILINE\nline|gname|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22\n")
@@ -252,14 +251,14 @@ def test_fifth_b_writes_hmdc_file_to_sort_dir(tmp_path):
         'Blue': [0]
     })
     with mock.patch("scripts.commands.pd.read_csv", return_value=df):
-        commands.fifth_b(str(wrk_dir), 'colors_file', [0], 'hrz')
+        commands.fifth_b(str(wrk_dir), 'colors_file', [name], 'hrz')
         assert(os.path.exists(srt_dir / f"{name}.hmdc"))
 
 def test_sixth_writes_xml_format_header_files(tmp_path):
     wrk_dir = tmp_path
     srt_dir = wrk_dir / "SORT"
     srt_dir.mkdir()
-    name = 0
+    name = "name"
     commands.sixth(str(wrk_dir), [name])
     xml_file = (srt_dir / f"{name}.xml").read_text()
     assert "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" in xml_file
@@ -289,3 +288,4 @@ def test_main_runs_all(monkeypatch):
     monkeypatch.setattr(commands, "gmts_2_mdc", lambda *a, **kw: None)
     monkeypatch.setattr(commands, "gmts_2_egs", lambda *a, **kw: None)
     commands.main(config_dict)
+    
