@@ -19,4 +19,4 @@ jobs:
             chmod +x tests/_run-tests.sh
             bash tests/_run-tests.sh
 
-      - codecov/upload
+      # - codecov/upload
