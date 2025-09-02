@@ -1,5 +1,6 @@
 version: 2.1
-
+orbs:
+  codecov: codecov/codecov@5.4.3
 jobs:
   build:
     docker:
@@ -9,16 +10,13 @@ jobs:
       # Checkout the code as the first step.
       - checkout
       - run:
+          name: Set up environment variables
+          command: |
+            echo 'export AEMWORKFLOW_SRC=$CIRCLE_WORKING_DIRECTORY' >> $BASH_ENV
+      - run:
           name: Build and run test environment
           command: |
             chmod +x tests/_run-tests.sh
             bash tests/_run-tests.sh
 
-      - run:
-          name: Upload test results to Codecov
-          command: |
-            bash <(curl -s https://codecov.io/bash) \
-              -t $CODECOV_TOKEN \
-              -f test-results/results.xml \
-              -F unittests \
-              -B main
+      - codecov/upload

@@ -29,4 +29,4 @@ conda activate aemworkflow-scripts
 pip install -r requirements-dev.txt
 
 echo "Running tests…"
-pytest tests
+pytest tests --cov-report=xml:test-results/results.xml
