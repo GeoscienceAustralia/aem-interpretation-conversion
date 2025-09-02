@@ -31,4 +31,4 @@ pip install -r requirements-dev.txt
 echo "Running tests…"
 pytest tests --cov-report=xml:test-results/results.xml
 
-./codecovcli --verbose upload-process --disable-search --fail-on-error -t ${{ secrets.CODECOV_TOKEN }} -f test-results/results.xml
+codecovcli --verbose upload-process -f test-results/results.xml -t YOUR_CODECOV_TOKEN

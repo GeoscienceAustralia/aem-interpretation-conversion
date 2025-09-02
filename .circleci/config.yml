@@ -1,18 +1,13 @@
 version: 2.1
-orbs:
-  codecov: codecov/codecov@5.4.3
 jobs:
   build:
     docker:
       - image: cimg/python:3.12.9
 
     steps:
-      # Checkout the code as the first step.
       - checkout
-      - run:
-          name: Set up environment variables
-          command: |
-            echo 'export AEMWORKFLOW_SRC=$CIRCLE_WORKING_DIRECTORY' >> $BASH_ENV
+      - restore_cache:
+          key: aemworkflow
       - run:
           name: Build and run test environment
           command: |
@@ -20,3 +15,7 @@ jobs:
             bash tests/_run-tests.sh
 
       # - codecov/upload
+      - save_cache: 
+          key: aemworkflow
+          paths:
+            - $HOME
