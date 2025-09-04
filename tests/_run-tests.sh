@@ -18,5 +18,3 @@ conda install -n base -c conda-forge mamba -y
 echo "Creating & activating aemworkflow-scripts with mamba…"
 mamba env create -f environment.yml -y
 conda activate aemworkflow-scripts
-
-pip install -r requirements-dev.txt
