@@ -24,11 +24,12 @@ jobs:
         source tests/_run-tests.sh
     - name: Run tests with coverage
       run: |
-        conda init
+        eval "$(conda shell.bash hook)"
+        conda init bash
+        source ~/.bashrc
         conda info --envs
         conda config --show envs_dirs
         conda activate /home/runner/miniconda/envs/aemworkflow-scripts
-    # eval "$(conda shell.bash hook)"
     # pip install -r requirements-dev.txt
     # pytest tests --cov-report=xml:test-results/results.xml
     # - name: Get Cover 
