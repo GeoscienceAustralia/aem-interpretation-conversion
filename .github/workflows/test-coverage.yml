@@ -22,11 +22,13 @@ jobs:
       if: steps.cache-dependencies.outputs.cache-hit != 'true'
       run: |
         source tests/_run-tests.sh
-    # - name: Run tests with coverage
-    #   run: |
-    #     conda activate aemworkflow-scripts
-    #     pip install -r requirements-dev.txt
-    #     pytest tests --cov-report=xml:test-results/results.xml
+    - name: Run tests with coverage
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda init
+        conda activate aemworkflow-scripts
+        pip install -r requirements-dev.txt
+        pytest tests --cov-report=xml:test-results/results.xml
     # - name: Get Cover 
     #   uses: orgoro/coverage@v3.2
     #   with:
