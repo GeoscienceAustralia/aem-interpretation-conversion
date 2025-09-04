@@ -30,8 +30,8 @@ jobs:
         conda info --envs
         conda config --show envs_dirs
         conda activate /home/runner/miniconda/envs/aemworkflow-scripts
-    # pip install -r requirements-dev.txt
-    # pytest tests --cov-report=xml:test-results/results.xml
+        pip install -r requirements-dev.txt
+        pytest tests --cov-report=xml:test-results/results.xml
     # - name: Get Cover 
     #   uses: orgoro/coverage@v3.2
     #   with:

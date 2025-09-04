@@ -2,6 +2,7 @@
 set -exuo pipefail
 
 echo "Building conda test environment…"
+
 # move into your project
 # cd "${$HOME}"
 
