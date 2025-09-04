@@ -121,3 +121,25 @@ def test_gmts_2_mdc(temp_sort_dir):
         lines = f.read()
     assert "GOCAD PLine" in lines
     assert "A" in lines
+
+def test_main():
+    ap = mock.MagicMock()
+    ap.add_argument = mock.MagicMock()
+    ap.parse_args = mock.MagicMock(return_value=mock.MagicMock(
+        input_directory='input_dir',
+        output_directory='output_dir',
+        crs='4326',
+        export_mdc=True,
+        export_mdch=False,
+        export_egs=True,
+        boundary='boundary',
+        split='split'
+    ))
+    with mock.patch('argparse.ArgumentParser', return_value=ap):
+        with mock.patch('aemworkflow.exports.gmtsddd_to_egs') as to_egs:
+            with mock.patch('aemworkflow.exports.gmtsddd_to_mdc') as to_mdc:
+                with mock.patch('aemworkflow.exports.gmtsddd_to_mdch') as to_mdch:
+                    exports.main(['name'])
+                    to_egs.assert_called_once()
+                    to_mdc.assert_called_once()
+                    to_mdch.assert_not_called()

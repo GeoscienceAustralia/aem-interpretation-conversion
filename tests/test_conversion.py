@@ -127,9 +127,6 @@ def test_main():
         input_directory='input_dir',
         output_directory='output_dir',
         crs='4326',
-        export_mdc=True,
-        export_mdch=False,
-        export_egs=True
     ))
     with mock.patch('argparse.ArgumentParser', return_value=ap):
         with mock.patch('aemworkflow.conversion.conversion_zedfix_gmt_to_srt', return_value=['name1', 'name2']) as mock_conversion_zedfix:
