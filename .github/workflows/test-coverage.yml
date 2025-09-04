@@ -24,10 +24,11 @@ jobs:
         source tests/_run-tests.sh
     - name: Run tests with coverage
       run: |
+        conda activate aemworkflow-scripts
         pip install -r requirements-dev.txt
         pytest tests --cov-report=xml:test-results/results.xml
-    - name: Get Cover 
-      uses: orgoro/coverage@v3.2
-      with:
-          coverageFile: test-results/results.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Get Cover 
+    #   uses: orgoro/coverage@v3.2
+    #   with:
+    #       coverageFile: test-results/results.xml
+    #       token: ${{ secrets.GITHUB_TOKEN }}
