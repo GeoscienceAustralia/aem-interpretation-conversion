@@ -30,8 +30,8 @@ jobs:
         conda activate /home/runner/miniconda/envs/aemworkflow-scripts
         pip install -r requirements-dev.txt
         pytest tests --cov-report=xml:test-results/results.xml
-    # - name: Get Cover 
-    #   uses: orgoro/coverage@v3.2
-    #   with:
-    #       coverageFile: test-results/results.xml
-    #       token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get Cover 
+      uses: orgoro/coverage@v3.2
+      with:
+          coverageFile: test-results/results.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
