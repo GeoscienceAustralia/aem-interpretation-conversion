@@ -1,9 +1,5 @@
 # AEM interpretation conversion workflow
 
-.. image:: https://circleci.com/gh/GeoscienceAustralia/aem-interpretation-conversion/tree/main.svg?style=svg
-    :target: https://circleci.com/gh/GeoscienceAustralia/aem-interpretation-conversion/tree/main
-    :alt: CircleCI
-
 .. image:: https://codecov.io/gh/GeoscienceAustralia/aem-interpretation-conversion/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/GeoscienceAustralia/aem-interpretation-conversion
     :alt: Codecov
