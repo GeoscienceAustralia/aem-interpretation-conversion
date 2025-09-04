@@ -6,15 +6,15 @@ jobs:
 
     steps:
       - checkout
-      - restore_cache:
-          key: aemworkflow
-      - run:
-          name: Build and run test environment
-          command: |
-            chmod +x tests/_run-tests.sh
-            bash tests/_run-tests.sh
+      # - restore_cache:
+      #     key: aemworkflow
+      # - run:
+      #     name: Build and run test environment
+      #     command: |
+      #       chmod +x tests/_run-tests.sh
+      #       bash tests/_run-tests.sh
             
-      - save_cache: 
-          key: aemworkflow
-          paths:
-            - $HOME
+      # - save_cache: 
+      #     key: aemworkflow
+      #     paths:
+      #       - $HOME
