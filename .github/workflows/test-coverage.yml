@@ -33,5 +33,5 @@ jobs:
     - name: Get Cover 
       uses: orgoro/coverage@v3.2
       with:
-          coverageFile: results.xml
+          coverageFile:  /home/runner/work/aem-interpretation-conversion/aem-interpretation-conversion/results.xml
           token: ${{ secrets.GITHUB_TOKEN }}
