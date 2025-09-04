@@ -35,3 +35,4 @@ jobs:
       with:
           coverageFile: results.xml
           token: ${{ secrets.GITHUB_TOKEN }}
+          thresholdAll: .8
