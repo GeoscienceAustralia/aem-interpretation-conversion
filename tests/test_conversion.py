@@ -119,3 +119,21 @@ def test_interpol_extrapolate_right():
     assert isinstance(x, float)
     assert isinstance(y, float)
     assert isinstance(t, float)
+
+def test_main():
+    ap = mock.MagicMock()
+    ap.add_argument = mock.MagicMock()
+    ap.parse_args = mock.MagicMock(return_value=mock.MagicMock(
+        input_directory='input_dir',
+        output_directory='output_dir',
+        crs='4326',
+        export_mdc=True,
+        export_mdch=False,
+        export_egs=True
+    ))
+    with mock.patch('argparse.ArgumentParser', return_value=ap):
+        with mock.patch('aemworkflow.conversion.conversion_zedfix_gmt_to_srt', return_value=['name1', 'name2']) as mock_conversion_zedfix:
+            with mock.patch('aemworkflow.conversion.conversion_sort_gmtp_3d') as mock_conversion_sort_gmtp_3d:
+                conversion.main()
+                mock_conversion_zedfix.assert_called()
+                mock_conversion_sort_gmtp_3d.assert_called()
