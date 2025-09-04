@@ -1,9 +1,6 @@
-# This workflow is setup by Fei Zhang to use Github Actions 2020-09-14
-# Updated by Melyn Roberts 2025 June to run tests using Anaconda3-2021.11 and Python and package versions designated in linux startup script
-
 name: aemworkflow
 
-on: [push]
+on: [pull_request]
 
 jobs:
   test-coverage:
@@ -19,8 +16,7 @@ jobs:
       uses: actions/cache@main
       with:
         path: |
-          /home/runner/work/aemworkflow-scripts
-          /usr/share/miniconda/envs/aemworkflow-scripts
+          /home/runner/miniconda/envs/aemworkflow-scripts
         key: anaconda
     - name: Build and run test environment
       run: |
