@@ -20,6 +20,3 @@ mamba env create -f environment.yml -y
 conda activate aemworkflow-scripts
 
 pip install -r requirements-dev.txt
-
-echo "Running tests…"
-pytest tests --cov-report=xml:test-results/results.xml

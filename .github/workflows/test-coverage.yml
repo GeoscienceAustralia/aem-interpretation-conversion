@@ -18,9 +18,13 @@ jobs:
         path: |
           /home/runner/miniconda/envs/aemworkflow-scripts
         key: anaconda
-    - name: Build and run test environment
+    - name: Build test environment
+      if: steps.cache-dependencies.outputs.cache-hit != 'true'
       run: |
         source tests/_run-tests.sh
+    - name: Run tests with coverage
+      run: |
+        pytest tests --cov-report=xml:test-results/results.xml
     - name: Get Cover 
       uses: orgoro/coverage@v3.2
       with:
