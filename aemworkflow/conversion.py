@@ -8,6 +8,7 @@ import re
 from typing import List, Tuple
 from osgeo import osr
 from aemworkflow.config import get_ogr_path
+import argparse
 
 
 def make_srt_dir(wrk_dir: str, logger_session):
@@ -360,3 +361,26 @@ def interpol(col_1: float, frst: int, last: int, tdf: pd.DataFrame) -> Tuple[flo
         y = y2 + (y2 - y1) * lr
         t = g2 + (g2 - g1) * lr
     return x, y, t
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
+    ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
+    ap.add_argument("--crs", "-c", required=False, help="Coordinate reference system")
+
+    ARG = vars(ap.parse_args())
+
+    input_directory = ARG["input_directory"]
+    output_directory = ARG["output_directory"]
+    crs = ARG["crs"]
+    work_dir = output_directory
+    path_dir = input_directory
+
+    active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
+    return_list = conversion_zedfix_gmt_to_srt(work_dir, path_dir, active_extent_out_file_path)
+
+    nm_list = return_list
+    conversion_sort_gmtp_3d(work_dir, nm_list, crs)
+
+if __name__ == "__main__":
+    main()

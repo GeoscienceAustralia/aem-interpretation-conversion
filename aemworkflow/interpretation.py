@@ -6,6 +6,10 @@ import decimal
 
 from osgeo import osr
 from aemworkflow.config import get_ogr_path
+import os
+import glob
+import sys
+import argparse
 
 
 logging.basicConfig(filename='out.log',
@@ -82,38 +86,93 @@ def active_extent_control_file(extent_file_path, path_file_path,
 
                 out_file.write(f"{path_line[4]} {path_line[5]}\n")
 
-# def main():
-#     print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
-#     print("layer interval", dlinc, file=sys.stderr)
-#     print("layer count", dlrs, file=sys.stderr)
+def main():
+    print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
+    print("layer interval", dlinc, file=sys.stderr)
+    print("layer count", dlrs, file=sys.stderr)
 
-#     # input_directory = r'C:\Temp\jira-pv-1728\run_03'
-#     input_directory = r'C:\Temp\jira-pv-1930\input'
-#     output_directory = r'C:\Temp\jira-pv-1930\output'
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
+    ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
+    ap.add_argument("--crs", "-c", required=False, help="Coordinate reference system")
+    ap.add_argument("--gis", "-g", required=False, help="GIS")
 
-#     active_extent_out_file_path = r'C:\Temp\jira-pv-1728\run_03\active_extent_new.txt'
-#     active_gmt_out_file_path = r'C:\Temp\jira-pv-1728\run_03\active_control_file_new.gmt'
+    ARG = vars(ap.parse_args())
 
-#     shp_dir = input_directory
-#     shp_list = sorted(glob.glob(os.path.join(shp_dir, '*_interp_*.shp')))
-#     mode = 'w'
-#     for shp in shp_list:
-#         fname = Path(shp).stem
-#         prefix = fname.split("_")[0]
-#         extent_file_path = fr'{shp_dir}\{prefix}.extent.txt'
-#         print(f'extent file {extent_file_path} exists: {os.path.isfile(extent_file_path)}')
-#         path_file_path = fr'{shp_dir}\{prefix}.path.txt'
-#         print(f'path file {path_file_path} exists: {os.path.isfile(path_file_path)}')
-#         active_extent_control_file(extent_file_path, path_file_path, active_gmt_out_file_path,
-#           active_extent_out_file_path, mode)
+    input_directory = ARG["input_directory"]
+    output_directory = ARG["output_directory"]
+    crs = ARG["crs"]
+    gis = ARG["gis"]
+    Path(fr'{output_directory}{os.sep}interp').mkdir(exist_ok=True)
+    active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
+    active_gmt_out_file_path = os.path.join(output_directory, 'interp', 'active_path.gmt')
+    active_shp_out_file_path = os.path.join(output_directory, 'interp', 'active_path.shp')
+    ogr2ogr_active_gmt_log = os.path.join(output_directory, 'interp', 'gdal_active.log')
 
-#         gmt_file_path = f'{shp_dir}\{prefix}_interp_new.gmt'
-#         active_shp_to_gmt(shp, gmt_file_path)
+    shp_dir = input_directory
+    shp_list = sorted(glob.glob(os.path.join(shp_dir, '*_interp_*.shp')))
+    mode = 'w'
 
-#         bdf_file_path = f'{shp_dir}\met_new.bdf'
-#         active_gmt_metadata_to_bdf(gmt_file_path, bdf_file_path, mode)
+    for shp in shp_list:
+        fname = Path(shp).stem
+        prefix = fname.split("_")[0]
+        extent_file_path = fr'{shp_dir}\{prefix}.extent.txt'
+        print(f'extent file {extent_file_path} exists: {os.path.isfile(extent_file_path)}')
+        path_file_path = fr'{shp_dir}\{prefix}.path.txt'
+        print(f'path file {path_file_path} exists: {os.path.isfile(path_file_path)}')
+        active_extent_control_file(extent_file_path,
+                                   path_file_path,
+                                   active_gmt_out_file_path,
+                                   active_extent_out_file_path,
+                                   crs,
+                                   gis,
+                                   mode)
 
-#         mode = 'a'
+        gmt_file_path = os.path.join(output_directory, 'interp', f'{prefix}_interp.gmt')
+        active_shp_to_gmt(shp, gmt_file_path)
 
-# if __name__ == "__main__":
-#     main()
+        bdf_file_path = os.path.join(output_directory, 'interp', 'met.bdf')
+        active_gmt_metadata_to_bdf(gmt_file_path, bdf_file_path, mode)
+
+        mode = 'a'
+
+        cmd = [
+            get_ogr_path(),
+            "-f", "ESRI Shapefile",
+            active_shp_out_file_path,
+            active_gmt_out_file_path,
+            "--config", "CPL_DEBUG", "ON",
+            "--config", "CPL_LOG", ogr2ogr_active_gmt_log
+        ]
+        subprocess.run(cmd, check=True)
+
+# Not sure if this is needed.
+        # Create the active path interp geojson file for display on map.
+        active_path_interp_shp: geopandas.GeoDataFrame = geopandas.read_file(active_shp_out_file_path)
+        print(active_path_interp_shp.crs)
+        active_path_interp_shp = active_path_interp_shp.to_crs(epsg=4326)
+        print(active_path_interp_shp.crs)
+        active_path_interp_shp.to_file(os.path.join(output_directory,
+                                                    'interp',
+                                                    'active_path.geojson'), driver='GeoJSON')
+
+        # Create the folium map for the all_lines and update the map html file.
+        def style_func(x):
+            return {
+                'fillColor': 'red',
+                'color': 'red',
+                'opacity': 0.50,
+                'weight': 2,
+            }
+
+        # m = folium.Map(location = [-30.80, 141.264160], zoom_start=5)
+        folium.GeoJson(data=open(os.path.join(output_directory,
+                                              'interp',
+                                              'active_path.geojson'), 'r').read(),
+                                              name="interp",
+                                              style_function=style_func).add_to(m)
+
+        print(f'bounds are: {layer.get_bounds()}')
+
+if __name__ == "__main__":
+    main()
