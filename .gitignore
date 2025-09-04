@@ -108,6 +108,7 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+asud_nf.asc
 
 # Translations
 *.mo

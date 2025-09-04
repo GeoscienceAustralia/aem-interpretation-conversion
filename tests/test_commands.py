@@ -52,36 +52,36 @@ def test_interpol_extrapolate_right():
     assert isinstance(t, float)
 
 def test_get_make_srt_dir_creates_dir(tmp_path):
-    srt_dir = tmp_path / "SORT"
-    with mock.patch("pathlib.Path.exists", return_value=False):
-        with mock.patch("pathlib.Path.mkdir") as mock_mkdir:
+    srt_dir = tmp_path / 'SORT'
+    with mock.patch('pathlib.Path.exists', return_value=False):
+        with mock.patch('pathlib.Path.mkdir') as mock_mkdir:
             commands.get_make_srt_dir(srt_dir)
             mock_mkdir.assert_called()
 
 def test_get_make_srt_dir_oserror(tmp_path):
-    srt_dir = tmp_path / "SORT"
-    with mock.patch("pathlib.Path.exists", side_effect=OSError("fail")):
+    srt_dir = tmp_path / 'SORT'
+    with mock.patch('pathlib.Path.exists', side_effect=OSError('fail')):
         with pytest.raises(SystemExit):
             commands.get_make_srt_dir(srt_dir)
 
 def test_sort_gmtp_creates_dirs(tmp_path):
     name = "name"
     wrk_dir = tmp_path
-    srt_dir = wrk_dir / "SORT"
+    srt_dir = wrk_dir / 'SORT'
     srt_dir.mkdir()
-    hdr_file = srt_dir / f"{name}_hdr.hdr"
+    hdr_file = srt_dir / f'{name}_hdr.hdr'
     hdr_file.touch()
-    with mock.patch("pathlib.Path.exists", return_value=False):
-        with mock.patch("pathlib.Path.mkdir") as mock_mkdir:
-            with mock.patch("glob.glob", return_value=[]):
-                with mock.patch("subprocess.run") as mock_run:
+    with mock.patch('pathlib.Path.exists', return_value=False):
+        with mock.patch('pathlib.Path.mkdir') as mock_mkdir:
+            with mock.patch('glob.glob', return_value=[]):
+                with mock.patch('subprocess.run') as mock_run:
                     commands.sort_gmtp(str(tmp_path), [name])
                     mock_mkdir.assert_called()
                     mock_run.assert_called()
 
 def test_gmts_2_mdc_writes_mdc_file(tmp_path):
     wrk_dir = tmp_path
-    srt_dir = wrk_dir / "SORT"
+    srt_dir = wrk_dir / 'SORT'
     srt_dir.mkdir()
     name = "name"
     df = pd.DataFrame({
@@ -90,12 +90,12 @@ def test_gmts_2_mdc_writes_mdc_file(tmp_path):
         'Green': [100.0],
         'Blue': [5.0]
     })
-    gmts_file = srt_dir / f"{name}.gmts"
+    gmts_file = srt_dir / f'{name}.gmts'
     gmts_file.touch()
     gmts_file.write_text("@D|gname|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19\n 1 2 3 4 5 6 7 8 9 10")
     with mock.patch("aemworkflow.commands.pd.read_csv", return_value=df):
         commands.gmts_2_mdc(str(wrk_dir), 'colors_file', [name])
-        mdc_file = srt_dir / f"{name}.mdc"
+        mdc_file = srt_dir / f'{name}.mdc'
         assert(os.path.exists(mdc_file))
         mdc_content = mdc_file.read_text()
         assert 'gname' in mdc_content
@@ -103,7 +103,7 @@ def test_gmts_2_mdc_writes_mdc_file(tmp_path):
 
 def test_gmts_2_egs_writes_egs_file(tmp_path):
     wrk_dir = tmp_path
-    srt_dir = wrk_dir / "SORT"
+    srt_dir = wrk_dir / 'SORT'
     srt_dir.mkdir()
     name = 'gname'
     df = pd.DataFrame({
@@ -112,28 +112,28 @@ def test_gmts_2_egs_writes_egs_file(tmp_path):
         'UNDERAGE': [100.0],
         'Blue': [5.0]
     })
-    gmts_file = srt_dir / f"{name}.gmts"
+    gmts_file = srt_dir / f'{name}.gmts'
     gmts_file.touch()
     gmts_file.write_text("@D|gname|1|2|3|4|5|6|7|8\n 1 2 3 4 5 6 7 8 9 10")
     with mock.patch("aemworkflow.commands.pd.read_csv", return_value=df):
         commands.gmts_2_egs(str(wrk_dir), 'alt-colors', [name])
-        egs_file = srt_dir / f"{name}.egs"
+        egs_file = srt_dir / f'{name}.egs'
         assert(os.path.exists(egs_file))
         egs_content = egs_file.read_text()
         assert f"10,9,3,4,5,1,2,6,7,('{name}',),{name}" in egs_content
 
 def test_zedfix_gmt_returns_path_identifiers(tmp_path):
     wrk_dir = tmp_path
-    srt_dir = wrk_dir / "SORT"
+    srt_dir = wrk_dir / 'SORT'
     srt_dir.mkdir()
-    filo_1 = "test1"
-    filo_2 = "test2"
-    gmt_file_1 = tmp_path / f"{filo_1}_interp.gmt"
-    gmt_file_2 = tmp_path / f"{filo_2}_interp.gmt"
+    filo_1 = 'test1'
+    filo_2 = 'test2'
+    gmt_file_1 = tmp_path / f'{filo_1}_interp.gmt'
+    gmt_file_2 = tmp_path / f'{filo_2}_interp.gmt'
     gmt_file_1.touch()
     gmt_file_2.touch()
-    gmt_file_1.write_text(f"@D0|{filo_1}|{filo_1}\n>@D0|{filo_1}|{filo_1}\n>")
-    gmt_file_2.write_text(f"@D0|{filo_2}|{filo_2}\n>@D0|{filo_2}|{filo_2}\n>")
+    gmt_file_1.write_text(f'@D0|{filo_1}|{filo_1}\n>@D0|{filo_1}|{filo_1}\n>')
+    gmt_file_2.write_text(f'@D0|{filo_2}|{filo_2}\n>@D0|{filo_2}|{filo_2}\n>')
     df = pd.DataFrame({
         'nm': [filo_1, filo_2],
         't_bot': [1, 2],
@@ -151,8 +151,8 @@ def test_zedfix_gmt_returns_path_identifiers(tmp_path):
 
 def test_first_runs_gdal_command(tmp_path):
     shp_dir = tmp_path
-    wrk_dir = tmp_path / "work"
-    shp_file = tmp_path / "test_interp_1.shp"
+    wrk_dir = tmp_path / 'work'
+    shp_file = tmp_path / 'test_interp_1.shp'
     shp_file.touch()
     with mock.patch("glob.glob", return_value=[str(shp_file)]):
         with mock.patch("subprocess.run") as mock_run:
@@ -166,19 +166,19 @@ def test_second_writes_asc_file_to_sort_dir(tmp_path):
     name = "name"
     gmt_file = tmp_path / f"{filo}_interp_1.gmt"
     gmt_file.touch()
-    gmt_file.write_text(f"@D0|{name}|{name}\n>@D0|{name}|{name}\n>")
-    with mock.patch("glob.glob", return_value=[str(gmt_file)]):
+    gmt_file.write_text(f'@D0|{name}|{name}\n>@D0|{name}|{name}\n>')
+    with mock.patch('glob.glob', return_value=[str(gmt_file)]):
         commands.second(str(wrk_dir))
-        assert(os.path.exists(wrk_dir / "SORT" / f"{filo}_{name}.asc"))
+        assert(os.path.exists(wrk_dir / 'SORT' / f'{filo}_{name}.asc'))
 
 def test_third_writes_s1_file_to_sort_dir(tmp_path):
     wrk_dir = tmp_path
-    srt_dir = wrk_dir / "SORT"
+    srt_dir = wrk_dir / 'SORT'
     srt_dir.mkdir()
-    name = "name"
-    asc_file = srt_dir / f"{name}.asc"
+    name = 'name'
+    asc_file = srt_dir / f'{name}.asc'
     asc_file.touch()
-    asc_file.write_text(f"1\n2\n3 4 5\n1\n5 6 7\n8 9 10\n11 12 13\n14 15 16\n1\n17 18 19")
+    asc_file.write_text(f'1\n2\n3 4 5\n1\n5 6 7\n8 9 10\n11 12 13\n14 15 16\n1\n17 18 19')
     df = pd.DataFrame({
         'nm': [name],
         't_bot': [1],
@@ -192,7 +192,7 @@ def test_third_writes_s1_file_to_sort_dir(tmp_path):
 
 def test_fourth_writes_s2_file_to_sort_dir(tmp_path):
     wrk_dir = tmp_path
-    srt_dir = wrk_dir / "SORT"
+    srt_dir = wrk_dir / 'SORT'
     srt_dir.mkdir()
     name = "name"
     s1_file = srt_dir / f"{name}.s1"
@@ -213,19 +213,19 @@ def test_fourth_writes_s2_file_to_sort_dir(tmp_path):
     })
     with mock.patch("aemworkflow.commands.pd.read_csv", return_value=df):
         commands.fourth(str(wrk_dir), str(srt_dir), [name])
-        s2_file = (srt_dir / f"{name}.s2").read_text()
+        s2_file = (srt_dir / f'{name}.s2').read_text()
         assert 'PVRTX x 16.000000 160.000000 0.600000 1.000000 1.000000 11.000000 -10.400000' in s2_file
         assert 'PVRTX x 10.000000 100.000000 0.000000 1.000000 1.000000 5.000000 -5.000000' in s2_file
         assert 'PVRTX x 40.000000 400.000000 3.000000 1.000000 1.000000 35.000000 -32.000000' in s2_file
 
 def test_fifth_writes_gp_file_to_sort_dir(tmp_path):
     wrk_dir = tmp_path
-    srt_dir = wrk_dir / "SORT"
+    srt_dir = wrk_dir / 'SORT'
     srt_dir.mkdir()
     name = "name"
     s2_file = srt_dir / f"{name}.s2"
     s2_file.touch()
-    s2_file.write_text("GOCAD PLine 1\nline:1\nline:gname\nline:next\nline:last\n")
+    s2_file.write_text('GOCAD PLine 1\nline:1\nline:gname\nline:next\nline:last\n')
     df = pd.DataFrame({
         'Feature classes': ['gname'],
         'Red': [10.0],
@@ -238,12 +238,12 @@ def test_fifth_writes_gp_file_to_sort_dir(tmp_path):
 
 def test_fifth_b_writes_hmdc_file_to_sort_dir(tmp_path):
     wrk_dir = tmp_path
-    srt_dir = wrk_dir / "SORT"
+    srt_dir = wrk_dir / 'SORT'
     srt_dir.mkdir()
     name = "name"
     s2_file = srt_dir / f"{name}.s2"
     s2_file.touch()
-    s2_file.write_text("ILINE\nline|gname|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22\n")
+    s2_file.write_text('ILINE\nline|gname|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22\n')
     df = pd.DataFrame({
         'Feature classes': ['gname'],
         'Red': [0],
@@ -256,11 +256,11 @@ def test_fifth_b_writes_hmdc_file_to_sort_dir(tmp_path):
 
 def test_sixth_writes_xml_format_header_files(tmp_path):
     wrk_dir = tmp_path
-    srt_dir = wrk_dir / "SORT"
+    srt_dir = wrk_dir / 'SORT'
     srt_dir.mkdir()
     name = "name"
     commands.sixth(str(wrk_dir), [name])
-    xml_file = (srt_dir / f"{name}.xml").read_text()
+    xml_file = (srt_dir / f'{name}.xml').read_text()
     assert "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" in xml_file
     assert "<Layer version=\"1\" layerType=\"ModelLayer\">\n" in xml_file
     assert f"<DisplayName>{name} Interp</DisplayName>\n" in xml_file
