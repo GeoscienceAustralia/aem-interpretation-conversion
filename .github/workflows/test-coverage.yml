@@ -29,9 +29,14 @@ jobs:
         source ~/.bashrc
         conda activate /home/runner/miniconda/envs/aemworkflow-scripts
         pip install -r requirements-dev.txt
-        pytest tests --cov-report xml:tests/results.xml
-        ls -al tests
-    - name: Code Coverage Summary Report
-      uses: irongut/CodeCoverageSummary@v1.3.0
+        pytest --cov --cov-report=term-missing
+        ls -al
+    # - name: Code Coverage Summary Report
+    #   uses: irongut/CodeCoverageSummary@v1.3.0
+    #   with:
+    #     filename: results.xml
+    - name: Get Cover 
+      uses: orgoro/coverage@v3.2
       with:
-        filename: results.xml
+          coverageFile: test-results/results.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
