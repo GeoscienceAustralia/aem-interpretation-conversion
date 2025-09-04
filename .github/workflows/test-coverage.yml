@@ -29,8 +29,8 @@ jobs:
         source ~/.bashrc
         conda activate /home/runner/miniconda/envs/aemworkflow-scripts
         pip install -r requirements-dev.txt
-        pytest tests --cov-report xml:./results.xml
-        ls -al
+        pytest tests --cov-report xml:tests/results.xml
+        ls -al tests
     - name: Code Coverage Summary Report
       uses: irongut/CodeCoverageSummary@v1.3.0
       with:
