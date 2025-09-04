@@ -1,9 +1,5 @@
 # AEM interpretation conversion workflow
 
-.. image:: https://codecov.io/gh/GeoscienceAustralia/aem-interpretation-conversion/branch/main/graph/badge.svg
-    :target: https://codecov.io/gh/GeoscienceAustralia/aem-interpretation-conversion
-    :alt: Codecov
-
 AEM Interpretation Conversion Tools
 
 
