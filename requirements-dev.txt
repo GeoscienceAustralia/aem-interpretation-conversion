@@ -2,4 +2,3 @@ pytest
 codecov
 coverage
 pytest-cov
-codecov-cli

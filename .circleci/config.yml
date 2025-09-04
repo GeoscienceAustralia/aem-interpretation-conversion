@@ -13,8 +13,7 @@ jobs:
           command: |
             chmod +x tests/_run-tests.sh
             bash tests/_run-tests.sh
-
-      # - codecov/upload
+            
       - save_cache: 
           key: aemworkflow
           paths:
