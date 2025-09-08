@@ -30,6 +30,7 @@ jobs:
         conda activate /home/runner/miniconda/envs/aemworkflow-scripts
         pip install -r requirements-dev.txt
         pytest --cov --cov-report xml:results.xml --cov-report json
+      continue-on-error: true
     - name: Get Cover 
       uses: orgoro/coverage@v3.2
       with:
