@@ -11,20 +11,9 @@ import folium
 
 from aemworkflow.config import get_ogr_path
 
-# logging.basicConfig(filename='out.log',
-#                     filemode='w',
-#                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-#                     datefmt='%H:%M:%S',
-#                     level=logging.DEBUG)
-
-# p = 1
-header = 0
-# linename = -99999
 dlrs = 10
 ddd = dlinc = 30  # Set the initial value for dlinc
 dpth = dlinc
-# xpo = 0.5
-# ypo = 0.5
 
 decimal.getcontext().rounding = decimal.ROUND_HALF_UP
 
@@ -90,7 +79,6 @@ def print_boxes(pl, pt, pr, pb, out_file, xpo, ypo):
 
 
 def box_elevation(extent_file_path, path_file_path, output_file_path, depth_lines, line_increments, xpo, ypo):
-    global header
     global dlrs
     global ddd
     global dpth
