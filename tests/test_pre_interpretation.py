@@ -86,7 +86,6 @@ def test_main_prints_bounds(monkeypatch, tmp_path, capsys):
     output_dir = tmp_path / "output"
     input_dir.mkdir()
     output_dir.mkdir()
-    (output_dir / "all_lines").mkdir()
 
     # Create minimal path and extent files
     (input_dir / "1.path.txt").write_text("1 1 1 1 100.0 200.0 7 8 9\n1 1 4 5 110.0 210.0 8 9 10\n")

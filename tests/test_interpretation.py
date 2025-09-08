@@ -1,4 +1,7 @@
 from aemworkflow import interpretation
+import sys
+import builtins
+import io
 
 def test_active_gmt_metadata_to_bdf(tmp_path):
     gmt_content = "@D some metadata\nother line\n@D another metadata\n"
@@ -28,7 +31,7 @@ def test_active_shp_to_gmt(monkeypatch):
     assert called['cmd'] == ["ogr2ogr", "-f", "GMT", "output.gmt", "input.shp"]
     assert called['check'] is True
 
-def test_active_extent_control_file(tmp_path, monkeypatch):
+def test_active_extent_control_file(tmp_path):
     extent_file = tmp_path / "extent.txt"
     path_file = tmp_path / "path.txt"
     output_file = tmp_path / "output.gmt"
@@ -62,3 +65,92 @@ def test_active_extent_control_file(tmp_path, monkeypatch):
     assert "5.5 6.6" == out_lines[12]
 
     assert out_active_extent.read_text().strip() == "123 456 789 012"
+
+def test_main_creates_outputs(monkeypatch, tmp_path):
+    # Setup fake input directory and files
+    input_dir = tmp_path / "inputs"
+    output_dir = tmp_path / "outputs"
+    interp_dir = output_dir / "interp"
+    all_lines_dir = output_dir / "all_lines"
+    input_dir.mkdir(parents=True)
+    interp_dir.mkdir(parents=True)
+    all_lines_dir.mkdir(parents=True)
+
+    # Create a fake .shp file and corresponding .extent.txt, .path.txt and .gmt files
+    shp_file = input_dir / "LN1_interp_001.shp"
+    shp_file.touch()
+    extent_file = input_dir / "LN1.extent.txt"
+    extent_file.touch()
+    path_file = input_dir / "LN1.path.txt"
+    path_file.touch()
+    gmt_file = interp_dir / "LN1_interp.gmt"
+    gmt_file.touch()
+
+    # Create a dummy all_lines.geojson for folium
+    all_lines_geojson = all_lines_dir / "all_lines.geojson"
+    all_lines_geojson.write_text('{"type": "FeatureCollection", "features": []}')
+
+    # Patch sys.argv so argparse doesn't fail
+    monkeypatch.setattr('sys.argv', [
+        'pre_interpretation.py',
+        '-i', str(input_dir),
+        '-o', str(output_dir),
+    ])
+
+    # Patch get_ogr_path to return a dummy string
+    monkeypatch.setattr(interpretation, "get_ogr_path", lambda: "ogr2ogr")
+
+    # Patch subprocess.run to do nothing
+    monkeypatch.setattr(interpretation.subprocess, "run", lambda *a, **k: None)
+
+    # Patch geopandas.read_file to return a dummy GeoDataFrame
+    class DummyGeoDF:
+        crs = "epsg:28349"
+        def to_crs(self, epsg=None):
+            self.crs = f"epsg:{epsg}"
+            return self
+        def to_file(self, *a, **k):
+            # Write a minimal geojson file for folium
+            with open(a[0], "w") as f:
+                f.write('{"type": "FeatureCollection", "features": []}')
+    monkeypatch.setattr(interpretation.geopandas, "read_file", lambda *a, **k: DummyGeoDF())
+
+    # Patch folium.Map and folium.GeoJson to dummy classes
+    class DummyLayer:
+        def get_bounds(self): return [[0,0],[1,1]]
+        def add_to(self, m): return self
+    class DummyMap:
+        def __init__(self, *a, **k): self.saved = False
+        def save(self, path): self.saved = True
+        def add_to(self, m): return self
+    monkeypatch.setattr(interpretation.folium, "Map", DummyMap)
+    monkeypatch.setattr(interpretation.folium, "GeoJson", lambda *a, **k: DummyLayer())
+    monkeypatch.setattr(interpretation.folium, "LayerControl", lambda: DummyLayer())
+
+    # Patch open for folium.GeoJson to read geojson
+    orig_open = builtins.open
+    def fake_open(file, mode='r', *args, **kwargs):
+        if isinstance(file, str) and file.endswith(".geojson"):
+            return orig_open(file, mode, *args, **kwargs)
+        return orig_open(file, mode, *args, **kwargs)
+    monkeypatch.setattr(builtins, "open", fake_open)
+
+    # Patch print to capture output
+    output = io.StringIO()
+    monkeypatch.setattr(sys, "stderr", output)
+    monkeypatch.setattr(sys, "stdout", output)
+
+    # Run main
+    interpretation.main()
+
+    # Check that output files were created
+    assert (interp_dir / "active_extent.txt").exists()
+    assert (interp_dir / "active_path.gmt").exists()
+    assert (interp_dir / "met.bdf").exists()
+    assert (interp_dir / "active_path.geojson").exists()
+    # Check that output contains expected prints
+    out = output.getvalue()
+    assert "create AEM interp box" in out
+    assert "layer interval" in out
+    assert "layer count" in out
+    assert "completed updating map" in out

@@ -5,11 +5,13 @@ import logging
 import decimal
 
 from osgeo import osr
-from aemworkflow.config import get_ogr_path
 import os
 import glob
 import sys
 import argparse
+import geopandas
+import folium
+from aemworkflow.config import get_ogr_path
 
 
 logging.basicConfig(filename='out.log',
@@ -19,9 +21,7 @@ logging.basicConfig(filename='out.log',
                     level=logging.DEBUG)
 
 
-# p = 1
 header = 0
-# linename = -99999
 dlrs = 10
 ddd = dlinc = 30  # Set the initial value for dlinc
 dpth = dlinc
@@ -94,15 +94,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
     ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-    ap.add_argument("--crs", "-c", required=False, help="Coordinate reference system")
-    ap.add_argument("--gis", "-g", required=False, help="GIS")
+    ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
+    ap.add_argument("--gis", "-g", required=False, help="Defaults to ESRI ArcMap 0.5")
 
     ARG = vars(ap.parse_args())
 
     input_directory = ARG["input_directory"]
     output_directory = ARG["output_directory"]
-    crs = ARG["crs"]
-    gis = ARG["gis"]
+    crs = ARG["crs"] if ARG["crs"] else 28349
+    gis = ARG["gis"] if ARG["gis"] else "esri_arcmap_0.5"
     Path(fr'{output_directory}{os.sep}interp').mkdir(exist_ok=True)
     active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
     active_gmt_out_file_path = os.path.join(output_directory, 'interp', 'active_path.gmt')
@@ -146,7 +146,6 @@ def main():
         ]
         subprocess.run(cmd, check=True)
 
-# Not sure if this is needed.
         # Create the active path interp geojson file for display on map.
         active_path_interp_shp: geopandas.GeoDataFrame = geopandas.read_file(active_shp_out_file_path)
         print(active_path_interp_shp.crs)
@@ -165,20 +164,21 @@ def main():
                 'weight': 2,
             }
 
-        # m = folium.Map(location = [-30.80, 141.264160], zoom_start=5)
+        m = folium.Map(location=[-30.80, 141.264160], zoom_start=5)
         folium.GeoJson(data=open(os.path.join(output_directory,
                                               'interp',
                                               'active_path.geojson'), 'r').read(),
                                               name="interp",
                                               style_function=style_func).add_to(m)
 
+        layer = folium.GeoJson(data=open(os.path.join(output_directory,
+                                                  'all_lines',
+                                                  'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
         print(f'bounds are: {layer.get_bounds()}')
 
     folium.LayerControl().add_to(m)
-    print(f'path is: {current_app.instance_path}')
-    print(f'path is: {current_app.root_path}')
-    session['map_path'] = os.path.normpath(f"{output_directory.rstrip(session['uuid'])}{os.sep}map.html")
-    m.save(session['map_path'])
+    map_path = os.path.normpath(f"{output_directory}{os.sep}map.html")
+    m.save(map_path)
     print('completed updating map')
 
 if __name__ == "__main__":
