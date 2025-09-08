@@ -73,6 +73,7 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     interp_dir = output_dir / "interp"
     all_lines_dir = output_dir / "all_lines"
     input_dir.mkdir()
+    output_dir.mkdir()
     interp_dir.mkdir()
     all_lines_dir.mkdir()
 
