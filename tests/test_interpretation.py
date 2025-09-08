@@ -72,9 +72,9 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     output_dir = tmp_path / "outputs"
     interp_dir = output_dir / "interp"
     all_lines_dir = output_dir / "all_lines"
-    input_dir.mkdir(parents=True)
-    interp_dir.mkdir(parents=True)
-    all_lines_dir.mkdir(parents=True)
+    input_dir.mkdir()
+    interp_dir.mkdir()
+    all_lines_dir.mkdir()
 
     # Create a fake .shp file and corresponding .extent.txt, .path.txt and .gmt files
     shp_file = input_dir / "LN1_interp_001.shp"

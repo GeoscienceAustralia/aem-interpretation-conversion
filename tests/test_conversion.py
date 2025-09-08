@@ -21,8 +21,6 @@ def test_conversion_zedfix_gmt_returns_path_identifiers(tmp_path):
     filo_2 = "test2"
     gmt_file_1 = int_dir / f"{filo_1}_interp.gmt"
     gmt_file_2 = int_dir / f"{filo_2}_interp.gmt"
-    gmt_file_1.touch()
-    gmt_file_2.touch()
     gmt_file_1.write_text(f"@D0|{filo_1}|{filo_1}\n>@D0|{filo_1}|{filo_1}\n>")
     gmt_file_2.write_text(f"@D0|{filo_2}|{filo_2}\n>@D0|{filo_2}|{filo_2}\n>")
     df = pd.DataFrame({
