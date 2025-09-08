@@ -174,5 +174,12 @@ def main():
 
         print(f'bounds are: {layer.get_bounds()}')
 
+    folium.LayerControl().add_to(m)
+    print(f'path is: {current_app.instance_path}')
+    print(f'path is: {current_app.root_path}')
+    session['map_path'] = os.path.normpath(f"{output_directory.rstrip(session['uuid'])}{os.sep}map.html")
+    m.save(session['map_path'])
+    print('completed updating map')
+
 if __name__ == "__main__":
     main()

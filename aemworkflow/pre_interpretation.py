@@ -6,6 +6,8 @@ from pathlib import Path
 import glob
 import subprocess
 import argparse
+import geopandas
+import folium
 
 from aemworkflow.config import get_ogr_path
 
@@ -159,8 +161,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
     ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-    ap.add_argument("--crs", "-c", required=False, help="Coordinate reference system")
-    ap.add_argument("--gis", "-g", required=False, help="GIS")
+    ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
+    ap.add_argument("--gis", "-g", required=False, help="Defaults to ESRI ArcMap 0.5")
     ap.add_argument("--lines", "-l", required=False, help="Depth lines, defaults to 10")
     ap.add_argument("--lines_increment", "-li", required=False, help="Depth lines increment, defaults to 30")
 
@@ -168,8 +170,8 @@ def main():
 
     input_directory = ARG["input_directory"]
     output_directory = ARG["output_directory"]
-    crs = ARG["crs"]
-    gis = ARG["gis"]
+    crs = ARG["crs"] if ARG["crs"] else 28349
+    gis = ARG["gis"] if ARG["gis"] else "esri_arcmap_0.5"
     lines = ARG["lines"] if ARG["lines"] else 10
     lines_increment = ARG["lines_increment"] if ARG["lines_increment"] else 30
     extent_files_list = sorted(glob.glob(os.path.join(input_directory, '*.extent.txt')))
@@ -206,17 +208,6 @@ def main():
             cmd = [get_ogr_path(), "-f", "ESRI Shapefile", shp_output_file_path, gmt_ouput_file_path, "--config", "CPL_LOG", ogr2ogr_gmt_log]
             subprocess.run(cmd, check=True)
     
-# ---- End of the first code block --- #
-    mode = 'w'
-    Path(os.path.join(output_directory, 'all_lines')).mkdir(exist_ok=True)
-
-    for path_file_path in path_files_list:
-        all_lines_gmt_output_file_path = os.path.join(output_directory, 'all_lines', 'all_lines.gmt')
-        all_lines(path_file_path, all_lines_gmt_output_file_path, crs, gis, mode)
-        mode = 'a'
-
-    all_lines_shp_output_path = os.path.join(output_directory, 'all_lines', 'all_lines.shp')
-    ogr2ogr_all_lines_log = os.path.join(output_directory, 'all_lines', 'gdal_all_lines.log')
     cmd = [
         get_ogr_path(),
         "-f", "ESRI Shapefile",
@@ -227,7 +218,6 @@ def main():
     ]
     subprocess.run(cmd, check=True)
 
-# TODO is this needed for CLI?
     # Create the all_lines geojson file for display on map.
     all_lines_shp: geopandas.GeoDataFrame = geopandas.read_file(all_lines_shp_output_path)
     print(all_lines_shp.crs)
@@ -241,87 +231,6 @@ def main():
                                                   'all_lines',
                                                   'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
     print(f'bounds are: {layer.get_bounds()}')
-
-    # Create interpretation artifacts if we have found any.
-    if form.interp_count > 0:
-        Path(fr'{output_directory}{os.sep}interp').mkdir(exist_ok=True)
-        active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
-        active_gmt_out_file_path = os.path.join(output_directory, 'interp', 'active_path.gmt')
-        active_shp_out_file_path = os.path.join(output_directory, 'interp', 'active_path.shp')
-        ogr2ogr_active_gmt_log = os.path.join(output_directory, 'interp', 'gdal_active.log')
-
-        shp_dir = input_directory
-        shp_list = sorted(glob.glob(os.path.join(shp_dir, '*_interp_*.shp')))
-        mode = 'w'
-
-        for shp in shp_list:
-            fname = Path(shp).stem
-            prefix = fname.split("_")[0]
-            extent_file_path = fr'{shp_dir}{os.sep}{prefix}.extent.txt'
-            print(f'extent file {extent_file_path} exists: {os.path.isfile(extent_file_path)}')
-            path_file_path = fr'{shp_dir}{os.sep}{prefix}.path.txt'
-            print(f'path file {path_file_path} exists: {os.path.isfile(path_file_path)}')
-            inter.active_extent_control_file(extent_file_path,
-                                             path_file_path,
-                                             active_gmt_out_file_path,
-                                             active_extent_out_file_path,
-                                             form.crs.data,
-                                             form.gis.data,
-                                             mode)
-
-            gmt_file_path = os.path.join(output_directory, 'interp', f'{prefix}_interp.gmt')
-            inter.active_shp_to_gmt(shp, gmt_file_path)
-
-            bdf_file_path = os.path.join(output_directory, 'interp', 'met.bdf')
-            inter.active_gmt_metadata_to_bdf(gmt_file_path, bdf_file_path, mode)
-
-            mode = 'a'
-
-        cmd = [
-            get_ogr_path(),
-            "-f", "ESRI Shapefile",
-            active_shp_out_file_path,
-            active_gmt_out_file_path,
-            "--config", "CPL_DEBUG", "ON",
-            "--config", "CPL_LOG", ogr2ogr_active_gmt_log
-        ]
-        subprocess.run(cmd, check=True)
-
-        # Create the active path interp geojson file for display on map.
-        active_path_interp_shp: geopandas.GeoDataFrame = geopandas.read_file(active_shp_out_file_path)
-        print(active_path_interp_shp.crs)
-        active_path_interp_shp = active_path_interp_shp.to_crs(epsg=4326)
-        print(active_path_interp_shp.crs)
-        active_path_interp_shp.to_file(os.path.join(output_directory,
-                                                    'interp',
-                                                    'active_path.geojson'), driver='GeoJSON')
-
-        # Create the folium map for the all_lines and update the map html file.
-        def style_func(x):
-            return {
-                'fillColor': 'red',
-                'color': 'red',
-                'opacity': 0.50,
-                'weight': 2,
-            }
-
-        # m = folium.Map(location = [-30.80, 141.264160], zoom_start=5)
-        folium.GeoJson(data=open(os.path.join(output_directory,
-                                              'interp',
-                                              'active_path.geojson'), 'r').read(),
-                                              name="interp",
-                                              style_function=style_func).add_to(m)
-
-        print(f'bounds are: {layer.get_bounds()}')
-
-    folium.LayerControl().add_to(m)
-    print(f'path is: {current_app.instance_path}')
-    print(f'path is: {current_app.root_path}')
-    session['map_path'] = os.path.normpath(f"{output_directory.rstrip(session['uuid'])}{os.sep}map.html")
-    m.save(session['map_path'])
-    print('completed updating map')
-    cmd = [get_ogr_path(), "-f", "ESRI Shapefile", all_lines_shp_output_path, all_lines_gmt_output_file_path]
-    subprocess.run(cmd, check=True)
 
 
 if __name__ == "__main__":

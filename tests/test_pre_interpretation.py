@@ -1,5 +1,3 @@
-import os
-import tempfile
 import pytest
 from aemworkflow import pre_interpretation
 
