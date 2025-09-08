@@ -9,7 +9,8 @@ import argparse
 import geopandas
 import folium
 
-from aemworkflow.config import get_ogr_path
+sys.path.append('./aemworkflow')
+from config import get_ogr_path
 
 dlrs = 10
 ddd = dlinc = 30  # Set the initial value for dlinc

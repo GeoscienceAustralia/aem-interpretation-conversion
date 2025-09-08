@@ -13,7 +13,8 @@ import pandas as pd
 
 from loguru import logger
 from typing import List, Tuple, TextIO
-from aemworkflow.config import get_ogr_path
+sys.path.append('./aemworkflow')
+from config import get_ogr_path
 
 
 def first(shp_dir: str, wrk_dir: str) -> None:

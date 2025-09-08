@@ -7,7 +7,8 @@ import pandas as pd
 import re
 from typing import List, Tuple
 from osgeo import osr
-from aemworkflow.config import get_ogr_path
+sys.path.append('./aemworkflow')
+from config import get_ogr_path
 import argparse
 
 

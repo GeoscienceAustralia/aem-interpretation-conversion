@@ -11,7 +11,8 @@ import sys
 import argparse
 import geopandas
 import folium
-from aemworkflow.config import get_ogr_path
+sys.path.append('./aemworkflow')
+from config import get_ogr_path
 
 
 logging.basicConfig(filename='out.log',
