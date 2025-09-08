@@ -133,13 +133,14 @@ def test_main():
         export_mdch=False,
         export_egs=True,
         boundary='boundary',
-        split='split'
+        split='split',
+        nm_list='100'
     ))
     with mock.patch('argparse.ArgumentParser', return_value=ap):
         with mock.patch('aemworkflow.exports.gmtsddd_to_egs') as to_egs:
             with mock.patch('aemworkflow.exports.gmtsddd_to_mdc') as to_mdc:
                 with mock.patch('aemworkflow.exports.gmtsddd_to_mdch') as to_mdch:
-                    exports.main(['name'])
+                    exports.main()
                     to_egs.assert_called_once()
                     to_mdc.assert_called_once()
                     to_mdch.assert_not_called()
