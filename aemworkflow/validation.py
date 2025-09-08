@@ -1,10 +1,10 @@
-# import sys
 import os
 from datetime import date
 import argparse
 from pathlib import Path
+from loguru import logger
 
-def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session):
+def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session=logger):
     logger_session.info("Running remove quotes validation.")
     with open(bdf_file_path, 'r') as bdf_file, open(bdf_out_file_path, 'w') as bdf_clean_out_file:
         for line in bdf_file:
@@ -12,7 +12,7 @@ def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session):
     logger_session.info("Completed remove quotes validation.")
 
 
-def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_session):
+def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_session=logger):
     logger_session.info("Running qc_units validation.")
     # Initialize dictionaries to store stratigraphic unit information
     stratno = {}
@@ -114,7 +114,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
     ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-    ap.add_argument("--asud", "-a", required=False, help="asud file name")
+    ap.add_argument("--asud", "-a", required=True, help="asud file name")
 
     ARG = vars(ap.parse_args())
 

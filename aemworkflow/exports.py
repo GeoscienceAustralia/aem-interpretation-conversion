@@ -434,15 +434,16 @@ def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
                     fou.write("END\n")
 
 
-def main(nm_list):
+def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_directory", "-i", required=True, help="Input directory")
     ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-    ap.add_argument("--export_mdc", "-m", required=True, help="Export to MDC format")
-    ap.add_argument("--export_mdch", "-mh", required=True, help="Export to MDCH format")
-    ap.add_argument("--export_egs", "-e", required=True, help="Export to EGS format")
-    ap.add_argument("--boundary", "-b", required=True)
-    ap.add_argument("--split", "-s", required=True)
+    ap.add_argument("--export_mdc", "-m", required=True, help="Export to MDC format, y or n")
+    ap.add_argument("--export_mdch", "-mh", required=True, help="Export to MDCH format, y or n")
+    ap.add_argument("--export_egs", "-e", required=True, help="Export to EGS format, y or n")
+    ap.add_argument("--boundary", "-b", required=True, help="Boundary file for MDC/MDCH")
+    ap.add_argument("--split", "-s", required=True, help="Split file for EGS")
+    ap.add_argument("--nm_list", "-n", required=True, help="List of line names to process")
 
     ARG = vars(ap.parse_args())
 
@@ -453,6 +454,7 @@ def main(nm_list):
     export_egs = ARG["export_egs"]
     boundary = ARG["boundary"]
     split = ARG["split"]
+    nm_list = [int(x) for x in ARG["nm_list"].split(",")]
 
     work_dir = output_directory
     path_dir = input_directory
