@@ -118,10 +118,8 @@ def main():
         fname = Path(shp).stem
         prefix = fname.split("_")[0]
         extent_file_path = os.path.join(shp_dir, f'{prefix}.extent.txt')
-        # extent_file_path = fr'{shp_dir}\{prefix}.extent.txt'
         print(f'extent file {extent_file_path} exists: {os.path.isfile(extent_file_path)}')
         path_file_path = os.path.join(shp_dir, f'{prefix}.path.txt')
-        # path_file_path = fr'{shp_dir}\{prefix}.path.txt'
         print(f'path file {path_file_path} exists: {os.path.isfile(path_file_path)}')
         active_extent_control_file(extent_file_path,
                                    path_file_path,

@@ -137,9 +137,9 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     monkeypatch.setattr(builtins, "open", fake_open)
 
     # Patch print to capture output
-    # output = io.StringIO()
-    # monkeypatch.setattr(sys, "stderr", output)
-    # monkeypatch.setattr(sys, "stdout", output)
+    output = io.StringIO()
+    monkeypatch.setattr(sys, "stderr", output)
+    monkeypatch.setattr(sys, "stdout", output)
 
     # Run main
     interpretation.main()
@@ -150,8 +150,8 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     assert (interp_dir / "met.bdf").exists()
     assert (interp_dir / "active_path.geojson").exists()
     # Check that output contains expected prints
-    # out = output.getvalue()
-    # assert "create AEM interp box" in out
-    # assert "layer interval" in out
-    # assert "layer count" in out
-    # assert "completed updating map" in out
+    out = output.getvalue()
+    assert "create AEM interp box" in out
+    assert "layer interval" in out
+    assert "layer count" in out
+    assert "completed updating map" in out
