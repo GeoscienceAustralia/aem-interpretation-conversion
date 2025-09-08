@@ -443,7 +443,7 @@ def main():
     ap.add_argument("--export_egs", "-e", required=True, help="Export to EGS format, y or n")
     ap.add_argument("--boundary", "-b", required=True, help="Boundary file for MDC/MDCH")
     ap.add_argument("--split", "-s", required=True, help="Split file for EGS")
-    ap.add_argument("--nm_list", "-n", required=True, help="List of line names to process")
+    ap.add_argument("--nm_list", "-n", required=True, help="List of line names to process, comma separated")
 
     ARG = vars(ap.parse_args())
 
