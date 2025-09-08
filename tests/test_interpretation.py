@@ -80,7 +80,7 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     shp_file = input_dir / "LN1_interp_001.shp"
     shp_file.touch()
     extent_file = input_dir / "LN1.extent.txt"
-    extent_file.touch()
+    extent_file.write_text("100 200 300 400")
     path_file = input_dir / "LN1.path.txt"
     path_file.touch()
     gmt_file = interp_dir / "LN1_interp.gmt"
