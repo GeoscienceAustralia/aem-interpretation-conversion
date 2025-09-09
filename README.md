@@ -8,11 +8,21 @@ Setup
 ```
 git clone git@bitbucket.org:geoscienceaustralia/aem-interpretation-conversion.git
 cd aem-interpretation-conversion
+```
+#### For Windows users:  
+If you do not have Anaconda already installed, run the build_environment.sh script in your compatible environment (eg Git Bash)  
+`bash build_environment.sh`  
+
+If you already have Anaconda installed, run the following commands:  
+```
 conda init
 conda env -create -f environment.yml
 conda activate aemworkflow-scripts
 ```
 
+#### For Linux users  
+Install gdal, python and pip versions listed in environment.yml  
+Pip install packages and versions listed in environment.yml
 
 CLI Usage
 ------------

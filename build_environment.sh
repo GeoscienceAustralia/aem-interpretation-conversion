@@ -1,7 +1,7 @@
 #!/bin/bash
 set -exuo pipefail
 
-echo "Building conda test environment…"
+echo "Building conda environment…"
 
 wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 bash miniconda.sh -b -p $HOME/miniconda
