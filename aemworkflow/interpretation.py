@@ -23,9 +23,8 @@ logging.basicConfig(filename='out.log',
 
 
 header = 0
-dlrs = 10
-ddd = dlinc = 30  # Set the initial value for dlinc
-dpth = dlinc
+depth_lines = 10
+depth_lines_increment = 30
 xpo = 0.5
 ypo = 0.5
 
@@ -88,15 +87,13 @@ def active_extent_control_file(extent_file_path, path_file_path,
                 out_file.write(f"{path_line[4]} {path_line[5]}\n")
 
 def main():
-    print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
-    print("layer interval", dlinc, file=sys.stderr)
-    print("layer count", dlrs, file=sys.stderr)
-
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
     ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
     ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
     ap.add_argument("--gis", "-g", required=False, help="Defaults to ESRI ArcMap 0.5")
+    ap.add_argument("--lines", "-l", required=False, help="Depth lines, defaults to 10")
+    ap.add_argument("--lines_increment", "-li", required=False, help="Depth lines increment, defaults to 30")
 
     ARG = vars(ap.parse_args())
 
@@ -104,6 +101,11 @@ def main():
     output_directory = ARG["output_directory"]
     crs = ARG["crs"] if ARG["crs"] else 28349
     gis = ARG["gis"] if ARG["gis"] else "esri_arcmap_0.5"
+    lines = ARG["lines"] if ARG["lines"] else depth_lines
+    lines_increment = ARG["lines_increment"] if ARG["lines_increment"] else depth_lines_increment
+    print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
+    print("layer interval", lines_increment, file=sys.stderr)
+    print("layer count", lines, file=sys.stderr)
     Path(fr'{output_directory}{os.sep}interp').mkdir(exist_ok=True)
     active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
     active_gmt_out_file_path = os.path.join(output_directory, 'interp', 'active_path.gmt')

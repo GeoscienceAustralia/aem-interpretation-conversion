@@ -441,9 +441,8 @@ def main():
     ap.add_argument("--export_mdc", "-m", required=True, help="Export to MDC format, y or n")
     ap.add_argument("--export_mdch", "-mh", required=True, help="Export to MDCH format, y or n")
     ap.add_argument("--export_egs", "-e", required=True, help="Export to EGS format, y or n")
-    ap.add_argument("--boundary", "-b", required=True, help="Boundary file for MDC/MDCH")
-    ap.add_argument("--split", "-s", required=True, help="Split file for EGS")
-    ap.add_argument("--nm_list", "-n", required=True, help="List of line names to process, comma separated")
+    ap.add_argument("--boundary", "-b", required=True, help="Boundary file name")
+    ap.add_argument("--split", "-s", required=True, help="Split file name")
 
     ARG = vars(ap.parse_args())
 
