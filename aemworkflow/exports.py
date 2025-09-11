@@ -453,7 +453,9 @@ def main():
     export_egs = ARG["export_egs"]
     boundary = ARG["boundary"]
     split = ARG["split"]
-    nm_list = [int(x) for x in ARG["nm_list"].split(",")]
+    active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
+    exdf = pd.read_csv(active_extent_out_file_path, sep=r'\s+', usecols=[0])
+    nm_list = exdf.iloc[:, 0].tolist()
 
     work_dir = output_directory
     path_dir = input_directory

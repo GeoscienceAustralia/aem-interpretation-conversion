@@ -11,6 +11,7 @@ import sys
 import argparse
 import geopandas
 import folium
+import warnings
 sys.path.append('./aemworkflow')
 from config import get_ogr_path
 
@@ -85,102 +86,104 @@ def active_extent_control_file(extent_file_path, path_file_path,
                 out_file.write(f"{path_line[4]} {path_line[5]}\n")
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
-    ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-    ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
-    ap.add_argument("--gis", "-g", required=False, help="Defaults to ESRI ArcMap 0.5")
-    ap.add_argument("--lines", "-l", required=False, help="Depth lines, defaults to 10")
-    ap.add_argument("--lines_increment", "-li", required=False, help="Depth lines increment, defaults to 30")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        ap = argparse.ArgumentParser()
+        ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
+        ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
+        ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
+        ap.add_argument("--gis", "-g", required=False, help="Defaults to ESRI ArcMap 0.5")
+        ap.add_argument("--lines", "-l", required=False, help="Depth lines, defaults to 10")
+        ap.add_argument("--lines_increment", "-li", required=False, help="Depth lines increment, defaults to 30")
 
-    ARG = vars(ap.parse_args())
+        ARG = vars(ap.parse_args())
 
-    input_directory = ARG["input_directory"]
-    output_directory = ARG["output_directory"]
-    crs = ARG["crs"] if ARG["crs"] else 28349
-    gis = ARG["gis"] if ARG["gis"] else "esri_arcmap_0.5"
-    lines = ARG["lines"] if ARG["lines"] else 10
-    lines_increment = ARG["lines_increment"] if ARG["lines_increment"] else 30
-    print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
-    print("layer interval", lines_increment, file=sys.stderr)
-    print("layer count", lines, file=sys.stderr)
-    Path(fr'{output_directory}{os.sep}interp').mkdir(exist_ok=True)
-    active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
-    active_gmt_out_file_path = os.path.join(output_directory, 'interp', 'active_path.gmt')
-    active_shp_out_file_path = os.path.join(output_directory, 'interp', 'active_path.shp')
-    ogr2ogr_active_gmt_log = os.path.join(output_directory, 'interp', 'gdal_active.log')
+        input_directory = ARG["input_directory"]
+        output_directory = ARG["output_directory"]
+        crs = ARG["crs"] if ARG["crs"] else 28349
+        gis = ARG["gis"] if ARG["gis"] else "esri_arcmap_0.5"
+        lines = ARG["lines"] if ARG["lines"] else 10
+        lines_increment = ARG["lines_increment"] if ARG["lines_increment"] else 30
+        print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
+        print("layer interval", lines_increment, file=sys.stderr)
+        print("layer count", lines, file=sys.stderr)
+        Path(fr'{output_directory}{os.sep}interp').mkdir(exist_ok=True)
+        active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
+        active_gmt_out_file_path = os.path.join(output_directory, 'interp', 'active_path.gmt')
+        active_shp_out_file_path = os.path.join(output_directory, 'interp', 'active_path.shp')
+        ogr2ogr_active_gmt_log = os.path.join(output_directory, 'interp', 'gdal_active.log')
 
-    shp_dir = input_directory
-    shp_list = sorted(glob.glob(os.path.join(shp_dir, '*_interp_*.shp')))
-    mode = 'w'
+        shp_dir = input_directory
+        shp_list = sorted(glob.glob(os.path.join(shp_dir, '*_interp_*.shp')))
+        mode = 'w'
 
-    for shp in shp_list:
-        fname = Path(shp).stem
-        prefix = fname.split("_")[0]
-        extent_file_path = os.path.join(shp_dir, f'{prefix}.extent.txt')
-        print(f'extent file {extent_file_path} exists: {os.path.isfile(extent_file_path)}')
-        path_file_path = os.path.join(shp_dir, f'{prefix}.path.txt')
-        print(f'path file {path_file_path} exists: {os.path.isfile(path_file_path)}')
-        active_extent_control_file(extent_file_path,
-                                   path_file_path,
-                                   active_gmt_out_file_path,
-                                   active_extent_out_file_path,
-                                   crs,
-                                   gis,
-                                   mode)
+        for shp in shp_list:
+            fname = Path(shp).stem
+            prefix = fname.split("_")[0]
+            extent_file_path = os.path.join(shp_dir, f'{prefix}.extent.txt')
+            print(f'extent file {extent_file_path} exists: {os.path.isfile(extent_file_path)}')
+            path_file_path = os.path.join(shp_dir, f'{prefix}.path.txt')
+            print(f'path file {path_file_path} exists: {os.path.isfile(path_file_path)}')
+            active_extent_control_file(extent_file_path,
+                                    path_file_path,
+                                    active_gmt_out_file_path,
+                                    active_extent_out_file_path,
+                                    crs,
+                                    gis,
+                                    mode)
 
-        gmt_file_path = os.path.join(output_directory, 'interp', f'{prefix}_interp.gmt')
-        active_shp_to_gmt(shp, gmt_file_path)
+            gmt_file_path = os.path.join(output_directory, 'interp', f'{prefix}_interp.gmt')
+            active_shp_to_gmt(shp, gmt_file_path)
 
-        bdf_file_path = os.path.join(output_directory, 'interp', 'met.bdf')
-        active_gmt_metadata_to_bdf(gmt_file_path, bdf_file_path, mode)
+            bdf_file_path = os.path.join(output_directory, 'interp', 'met.bdf')
+            active_gmt_metadata_to_bdf(gmt_file_path, bdf_file_path, mode)
 
-        mode = 'a'
+            mode = 'a'
 
-        cmd = [
-            get_ogr_path(),
-            "-f", "ESRI Shapefile",
-            active_shp_out_file_path,
-            active_gmt_out_file_path,
-            "--config", "CPL_DEBUG", "ON",
-            "--config", "CPL_LOG", ogr2ogr_active_gmt_log
-        ]
-        subprocess.run(cmd, check=True)
+            cmd = [
+                get_ogr_path(),
+                "-f", "ESRI Shapefile",
+                active_shp_out_file_path,
+                active_gmt_out_file_path,
+                "--config", "CPL_DEBUG", "ON",
+                "--config", "CPL_LOG", ogr2ogr_active_gmt_log
+            ]
+            subprocess.run(cmd, check=True)
 
-        # Create the active path interp geojson file for display on map.
-        active_path_interp_shp: geopandas.GeoDataFrame = geopandas.read_file(active_shp_out_file_path)
-        print(active_path_interp_shp.crs)
-        active_path_interp_shp = active_path_interp_shp.to_crs(epsg=4326)
-        print(active_path_interp_shp.crs)
-        active_path_interp_shp.to_file(os.path.join(output_directory,
-                                                    'interp',
-                                                    'active_path.geojson'), driver='GeoJSON')
+            # Create the active path interp geojson file for display on map.
+            active_path_interp_shp: geopandas.GeoDataFrame = geopandas.read_file(active_shp_out_file_path)
+            print(active_path_interp_shp.crs)
+            active_path_interp_shp = active_path_interp_shp.to_crs(epsg=4326)
+            print(active_path_interp_shp.crs)
+            active_path_interp_shp.to_file(os.path.join(output_directory,
+                                                        'interp',
+                                                        'active_path.geojson'), driver='GeoJSON')
 
-        # Create the folium map for the all_lines and update the map html file.
-        def style_func(x):
-            return {
-                'fillColor': 'red',
-                'color': 'red',
-                'opacity': 0.50,
-                'weight': 2,
-            }
+            # Create the folium map for the all_lines and update the map html file.
+            def style_func(x):
+                return {
+                    'fillColor': 'red',
+                    'color': 'red',
+                    'opacity': 0.50,
+                    'weight': 2,
+                }
 
-        m = folium.Map(location=[-30.80, 141.264160], zoom_start=5)
-        folium.GeoJson(data=open(os.path.join(output_directory,
-                                              'interp',
-                                              'active_path.geojson'), 'r').read(),
-                                              name="interp",
-                                              style_function=style_func).add_to(m)
+            m = folium.Map(location=[-30.80, 141.264160], zoom_start=5)
+            folium.GeoJson(data=open(os.path.join(output_directory,
+                                                'interp',
+                                                'active_path.geojson'), 'r').read(),
+                                                name="interp",
+                                                style_function=style_func).add_to(m)
 
-        layer = folium.GeoJson(data=open(os.path.join(output_directory,
-                                                  'all_lines',
-                                                  'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
-        print(f'bounds are: {layer.get_bounds()}')
+            layer = folium.GeoJson(data=open(os.path.join(output_directory,
+                                                    'all_lines',
+                                                    'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
+            print(f'bounds are: {layer.get_bounds()}')
 
-    folium.LayerControl().add_to(m)
-    map_path = os.path.normpath(f"{output_directory}{os.sep}map.html")
-    m.save(map_path)
-    print('completed updating map')
+        folium.LayerControl().add_to(m)
+        map_path = os.path.normpath(f"{output_directory}{os.sep}map.html")
+        m.save(map_path)
+        print('completed updating map')
 
 if __name__ == "__main__":
     main()
