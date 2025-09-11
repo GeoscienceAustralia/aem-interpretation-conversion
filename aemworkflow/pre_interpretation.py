@@ -8,13 +8,11 @@ import subprocess
 import argparse
 import geopandas
 import folium
+import warnings
 
 sys.path.append('./aemworkflow')
 from config import get_ogr_path
 
-dlrs = 10
-ddd = dlinc = 30  # Set the initial value for dlinc
-dpth = dlinc
 
 decimal.getcontext().rounding = decimal.ROUND_HALF_UP
 
@@ -80,16 +78,11 @@ def print_boxes(pl, pt, pr, pb, out_file, xpo, ypo):
 
 
 def box_elevation(extent_file_path, path_file_path, output_file_path, depth_lines, line_increments, xpo, ypo):
-    global dlrs
-    global ddd
-    global dpth
-    global dlinc
-
     last = None
     yy = []
 
-    dlrs = int(depth_lines)
-    ddd = dpth = dlinc = int(line_increments)
+    lines = int(depth_lines)
+    depth = depth_line_increments = int(line_increments) # Set initial value for depth
 
     # This function will be modified to do the following:
     # - Look for all path and extent files in folder
@@ -127,99 +120,100 @@ def box_elevation(extent_file_path, path_file_path, output_file_path, depth_line
                     yy.insert(ppt - 1, py * -1)
                     last = ppt
 
-        for j in range(1, dlrs + 1):
+        for j in range(1, lines + 1):
             out_file.write(">\n")
-            out_file.write(f"# @D{dpth}\n")
+            out_file.write(f"# @D{depth}\n")
 
             for i in range(0, last):
                 # ly=(yy[i]-(ddd/y_fact))
                 # print i-1" "ly+ypo
 
-                ly = round(decimal.Decimal(str(yy[i] - (ddd / y_fact) - (2 / y_fact))), 4).normalize()
+                ly = round(decimal.Decimal(str(yy[i] - (depth / y_fact) - (2 / y_fact))), 4).normalize()
                 out_file.write(f'{i} {round(ly + decimal.Decimal(ypo), 4).normalize()}\n')
 
-            ddd += dlinc
-            dpth += dlinc
+            depth += depth_line_increments
 
 
 def main():
-    print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
-    print("layer interval", dlinc, file=sys.stderr)
-    print("layer count", dlrs, file=sys.stderr)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
-    ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-    ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
-    ap.add_argument("--gis", "-g", required=False, help="Defaults to ESRI ArcMap 0.5")
-    ap.add_argument("--lines", "-l", required=False, help="Depth lines, defaults to 10")
-    ap.add_argument("--lines_increment", "-li", required=False, help="Depth lines increment, defaults to 30")
+        ap = argparse.ArgumentParser()
+        ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
+        ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
+        ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
+        ap.add_argument("--gis", "-g", required=False, help="Defaults to ESRI ArcMap 0.5")
+        ap.add_argument("--lines", "-l", required=False, help="Depth lines, defaults to 10")
+        ap.add_argument("--lines_increment", "-li", required=False, help="Depth lines increment, defaults to 30")
 
-    ARG = vars(ap.parse_args())
+        ARG = vars(ap.parse_args())
 
-    input_directory = ARG["input_directory"]
-    output_directory = ARG["output_directory"]
-    crs = ARG["crs"] if ARG["crs"] else 28349
-    gis = ARG["gis"] if ARG["gis"] else "esri_arcmap_0.5"
-    lines = ARG["lines"] if ARG["lines"] else 10
-    lines_increment = ARG["lines_increment"] if ARG["lines_increment"] else 30
-    extent_files_list = sorted(glob.glob(os.path.join(input_directory, '*.extent.txt')))
-    path_files_list = sorted(glob.glob(os.path.join(input_directory, '*.path.txt')))
-    all_lines_shp_output_path = os.path.join(output_directory, 'all_lines', 'all_lines.shp')
+        input_directory = ARG["input_directory"]
+        output_directory = ARG["output_directory"]
+        crs = ARG["crs"] if ARG["crs"] else 28349
+        gis = ARG["gis"] if ARG["gis"] else "esri_arcmap_0.5"
+        lines = ARG["lines"] if ARG["lines"] else 10
+        lines_increment = ARG["lines_increment"] if ARG["lines_increment"] else 30
+        print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
+        print("layer interval", lines_increment, file=sys.stderr)
+        print("layer count", lines, file=sys.stderr)
+        extent_files_list = sorted(glob.glob(os.path.join(input_directory, '*.extent.txt')))
+        path_files_list = sorted(glob.glob(os.path.join(input_directory, '*.path.txt')))
+        all_lines_shp_output_path = os.path.join(output_directory, 'all_lines', 'all_lines.shp')
 
-    Path(os.path.join(output_directory, 'all_lines')).mkdir(exist_ok=True)
+        Path(os.path.join(output_directory, 'all_lines')).mkdir(exist_ok=True)
 
-    mode = 'w'
-    for path_file_path in path_files_list:
-        all_lines_gmt_output_file_path = os.path.join(output_directory, 'all_lines', 'all_lines.gmt')
-        all_lines(path_file_path, all_lines_gmt_output_file_path, crs, gis, mode)
-        mode = 'a'
+        mode = 'w'
+        for path_file_path in path_files_list:
+            all_lines_gmt_output_file_path = os.path.join(output_directory, 'all_lines', 'all_lines.gmt')
+            all_lines(path_file_path, all_lines_gmt_output_file_path, crs, gis, mode)
+            mode = 'a'
 
-    # After the loop, process the all_lines_gmt_output_file_path
-    ogr2ogr_all_lines_log = os.path.join(output_directory, 'all_lines', 'gdal_all_lines.log')
+        # After the loop, process the all_lines_gmt_output_file_path
+        ogr2ogr_all_lines_log = os.path.join(output_directory, 'all_lines', 'gdal_all_lines.log')
 
-    Path(fr'{output_directory}{os.sep}box').mkdir(exist_ok=True)
-    if len(extent_files_list) != len(path_files_list):
-        print(f"Path an Extent numbers not matching up:{len(path_files_list)}:{len(extent_files_list)}")
-    else:
-        print(f"Path an Extent numbers are matching up:{len(path_files_list)}:{len(extent_files_list)}")
-        ogr2ogr_gmt_log = os.path.join(output_directory, 'box', 'gdal_gmt.log')
+        Path(fr'{output_directory}{os.sep}box').mkdir(exist_ok=True)
+        if len(extent_files_list) != len(path_files_list):
+            print(f"Path and Extent numbers not matching up:{len(path_files_list)}:{len(extent_files_list)}")
+        else:
+            print(f"Path and Extent numbers are matching up:{len(path_files_list)}:{len(extent_files_list)}")
+            ogr2ogr_gmt_log = os.path.join(output_directory, 'box', 'gdal_gmt.log')
 
-        for path_file_path, extent_file_path in zip(path_files_list, extent_files_list):
-            file_path = os.path.basename(path_file_path)
-            flight_path_number = file_path.split('.')[0]
-            gmt_ouput_file_path = os.path.join(output_directory, 'box', f'{flight_path_number}.box.gmt')
+            for path_file_path, extent_file_path in zip(path_files_list, extent_files_list):
+                file_path = os.path.basename(path_file_path)
+                flight_path_number = file_path.split('.')[0]
+                gmt_ouput_file_path = os.path.join(output_directory, 'box', f'{flight_path_number}.box.gmt')
 
-            xpo = ypo = float(gis.split('_')[-1])
-            box_elevation(extent_file_path, path_file_path, gmt_ouput_file_path, lines, lines_increment, xpo, ypo)
+                xpo = ypo = float(gis.split('_')[-1])
+                box_elevation(extent_file_path, path_file_path, gmt_ouput_file_path, lines, lines_increment, xpo, ypo)
 
-            shp_output_file_path = os.path.join(output_directory, 'box', f'{flight_path_number}.box.shp')
-            cmd = [get_ogr_path(), "-f", "ESRI Shapefile", shp_output_file_path, gmt_ouput_file_path, "--config", "CPL_LOG", ogr2ogr_gmt_log]
-            subprocess.run(cmd, check=True)
-    
-    cmd = [
-        get_ogr_path(),
-        "-f", "ESRI Shapefile",
-        all_lines_shp_output_path,
-        all_lines_gmt_output_file_path,
-        "--config", "CPL_DEBUG", "ON",
-        "--config", "CPL_LOG", ogr2ogr_all_lines_log
-    ]
-    subprocess.run(cmd, check=True)
+                shp_output_file_path = os.path.join(output_directory, 'box', f'{flight_path_number}.box.shp')
+                cmd = [get_ogr_path(), "-f", "ESRI Shapefile", shp_output_file_path, gmt_ouput_file_path, "--config", "CPL_LOG", ogr2ogr_gmt_log]
+                subprocess.run(cmd, check=True)
+        
+        cmd = [
+            get_ogr_path(),
+            "-f", "ESRI Shapefile",
+            all_lines_shp_output_path,
+            all_lines_gmt_output_file_path,
+            "--config", "CPL_DEBUG", "ON",
+            "--config", "CPL_LOG", ogr2ogr_all_lines_log
+        ]
+        subprocess.run(cmd, check=True)
 
-    # Create the all_lines geojson file for display on map.
-    all_lines_shp: geopandas.GeoDataFrame = geopandas.read_file(all_lines_shp_output_path)
-    print(all_lines_shp.crs)
-    all_lines_shp = all_lines_shp.to_crs(epsg=4326)
-    print(all_lines_shp.crs)
-    all_lines_shp.to_file(os.path.join(output_directory, 'all_lines', 'all_lines.geojson'), driver='GeoJSON')
+        # Create the all_lines geojson file for display on map.
+        all_lines_shp: geopandas.GeoDataFrame = geopandas.read_file(all_lines_shp_output_path)
+        print(all_lines_shp.crs)
+        all_lines_shp = all_lines_shp.to_crs(epsg=4326)
+        print(all_lines_shp.crs)
+        all_lines_shp.to_file(os.path.join(output_directory, 'all_lines', 'all_lines.geojson'), driver='GeoJSON')
 
-    # Create the folium map for the all_lines and update the map html file.
-    m = folium.Map(location=[-30.80, 141.264160], zoom_start=5)
-    layer = folium.GeoJson(data=open(os.path.join(output_directory,
-                                                  'all_lines',
-                                                  'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
-    print(f'bounds are: {layer.get_bounds()}')
+        # Create the folium map for the all_lines and update the map html file.
+        m = folium.Map(location=[-30.80, 141.264160], zoom_start=5)
+        layer = folium.GeoJson(data=open(os.path.join(output_directory,
+                                                    'all_lines',
+                                                    'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
+        print(f'bounds are: {layer.get_bounds()}')
 
 
 if __name__ == "__main__":

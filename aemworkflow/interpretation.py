@@ -23,8 +23,6 @@ logging.basicConfig(filename='out.log',
 
 
 header = 0
-depth_lines = 10
-depth_lines_increment = 30
 xpo = 0.5
 ypo = 0.5
 
@@ -101,8 +99,8 @@ def main():
     output_directory = ARG["output_directory"]
     crs = ARG["crs"] if ARG["crs"] else 28349
     gis = ARG["gis"] if ARG["gis"] else "esri_arcmap_0.5"
-    lines = ARG["lines"] if ARG["lines"] else depth_lines
-    lines_increment = ARG["lines_increment"] if ARG["lines_increment"] else depth_lines_increment
+    lines = ARG["lines"] if ARG["lines"] else 10
+    lines_increment = ARG["lines_increment"] if ARG["lines_increment"] else 30
     print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
     print("layer interval", lines_increment, file=sys.stderr)
     print("layer count", lines, file=sys.stderr)
