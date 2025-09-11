@@ -2,6 +2,10 @@
 
 AEM Interpretation Conversion Tools
 
+Info
+------------
+For more information about **AEMInterpConvert**, Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool, see this [article](https://ecat.ga.gov.au/geonetwork/srv/eng/catalog.search#/metadata/150529).
+
 
 Setup
 ------------
@@ -10,7 +14,7 @@ git clone git@bitbucket.org:geoscienceaustralia/aem-interpretation-conversion.gi
 cd aem-interpretation-conversion
 ```
 #### For Windows users:  
-If you do not have Anaconda already installed, run the build_environment.sh script in your compatible environment (eg Git Bash)  
+If you do not have Anaconda already installed, run the build_environment.sh script in your compatible environment (eg Git Bash, Anaconda Powershell)  
 `bash build_environment.sh`  
 
 If you already have Anaconda installed, run the following commands:  
@@ -80,7 +84,7 @@ For each script, run the file with any required arguments and any additional whe
 | -o          | output directory| Yes          |None       |          |
 | -m          | Export to MDC format| Yes      |None       |y or n    |
 | -mh         | Export to MDCH format| Yes     |None       |y or n    |
-| -3          | Export to EGS format| Yes      |None       |y or n    |
+| -e          | Export to EGS format| Yes      |None       |y or n    |
 | -b          | name of boundary file| Yes     |None       |          |
 | -s          | name of split file   | Yes     |None       |          |
 
