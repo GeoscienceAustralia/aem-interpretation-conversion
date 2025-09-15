@@ -1,25 +1,21 @@
 """
 GA AEM interpretation workflow, awk2python script translation
 """
-
 from pathlib import Path
 import os
-import sys
 import glob
 import argparse
-import subprocess
 import re
 import pandas as pd
 
 from loguru import logger
 from typing import List, Tuple, TextIO
-sys.path.append('./aemworkflow')
-from config import get_ogr_path
+from aemworkflow.utilities import get_ogr_path, run_command, validate_file, get_make_srt_dir
 
 
 def first(shp_dir: str, wrk_dir: str) -> None:
     """
-    Converts all the shapefiles found in the shp_dir folder to ASCII format GMT files by calling
+    Converts all the shapefiles found in the shp_dir folder to ASCII format GMT files by callling
     the GDAL ogr2ogr utility. The '>' character is appended as in original the fix_gmt.awk script.
     It combines the following commands:
     ogr2ogr -f 'GMT' '$1'_interp.gmt '$1'_*_interp_*.shp
@@ -32,12 +28,12 @@ def first(shp_dir: str, wrk_dir: str) -> None:
     wrk_dir: str
         The path to the new/existing work folder
     """
-
     if not Path(wrk_dir).exists():
         Path(wrk_dir).mkdir(parents=True, exist_ok=False)
     else:
         logger.warning(f"{wrk_dir} folder already exists!")
     shp_list = sorted(glob.glob(os.path.join(shp_dir, '*_interp_*.shp')))
+
     for shp in shp_list:
         fname = Path(shp).stem
         prefix = fname.split("_")[0]
@@ -48,13 +44,15 @@ def first(shp_dir: str, wrk_dir: str) -> None:
         # ogr.set_input(shp)
         # ogr.set_output(str(out_gmt))
         # ogr.execute()
-
         # ogr2ogr.main(["", "-f", "GMT", str(out_gmt), shp])
+
         cmd = [get_ogr_path(), "-f", "GMT", str(out_gmt), shp]
-        subprocess.run(cmd, check=True)
+        if not validate_file(shp):
+            continue
+
+        run_command(cmd)
+
         if out_gmt.exists():
-            # with open(out_gmt, mode="a") as fin:
-            # fin.write(">\n")
             logger.info(f"{fname}.shp successfully converted to {prefix}_interp.gmt")
 
 
@@ -129,18 +127,6 @@ def interpol(col_1: float, frst: int, last: int, tdf: pd.DataFrame) -> Tuple[flo
     return x, y, t
 
 
-def get_make_srt_dir(wrk_dir: str):
-    '''
-    '''
-    try:
-        if not (wrk_dir).exists():
-            logger.info('Making SORT directory...')
-            wrk_dir.mkdir()
-    except OSError as osx:
-        logger.error(osx.args)
-        sys.exit()
-
-
 def zedfix_gmt(wrk_dir: str, path_dir: str, ext_file: str) -> List[int]:
     """
     Implements the following AWK action:
@@ -190,10 +176,13 @@ def zedfix_gmt(wrk_dir: str, path_dir: str, ext_file: str) -> List[int]:
         last = tdf["fid"].iloc[-1] - 1
 
         gmt = Path(wrk_dir) / f"{nm}_interp.gmt"
+
         with open(gmt, "r") as fin:
             lin_lst = fin.readlines()
+
         logger.info(f"{gmt} successfully read.")
         lines = lin_lst.copy()
+
         with open(Path(srt_dir) / f"{nm}zf.gmtf", "w") as fou:
             while lines:
                 try:
@@ -241,9 +230,11 @@ def zedfix_gmt(wrk_dir: str, path_dir: str, ext_file: str) -> List[int]:
             logger.info(f"** Error count {ner} **\n")
             # logger.info("** See z_err.log **\n")
             fou.write("# @D0|DNDUTL|||||||||||||||||||||MAL|\n")
+
             for i in range(frst, last + 1):
                 tmp = f"{-(row['t_top'].iloc[0] - tdf['gl'].iloc[i]) / y_scale: .6f}".rstrip('0').rstrip('.')
                 fou.write(f"{i} {tmp}\n")
+
             fou.write(">\n")
     return exdf['nm'].tolist()
 
@@ -315,10 +306,14 @@ def sort_gmtp(wrk_dir: str, nm_lst: List[int]) -> None:
         # ogr.set_input(str(in_gmtf))
         # ogr.set_output(str(out_shp))
         # ogr.execute()
-
         # ogr2ogr.main(["", "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)])
+
         cmd = [get_ogr_path(), "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)]
-        subprocess.run(cmd, check=True)
+
+        if not validate_file(str(in_gmtf)):
+            continue
+
+        run_command(cmd)
 
         if out_shp.exists():
             logger.info(f"{nm}zf.gmtf successfully converted to {nm}_zf.shp")
@@ -328,7 +323,7 @@ def help_gr8(lin_lst: List[str], idx_d0: List[int]) -> List[int]:
     """
     Replacing the list comprehension
     idx_gr8 = [_i for _i, line in enumerate(lin_lst) if line.startswith(">")][1:]
-    to find the first line starting with '>', after a meta '# @D0 ...' line
+    to find the first line starting with '>', after a a meta '# @D0 ...' line
     Also removes the 'fake >' from lin_lst
     """
     idx_lst = []
@@ -804,7 +799,7 @@ def fifth(wrk_dir: str, colors: str, nm_lst: List[int], revamp: str = "") -> Non
     nm: List[int]
         The list of path identifiers from the the common extent file
     revamp: str
-        Either '' or '2017'
+        Eiither '' or '2017'
     """
 
     fmt = "*line*color:{:{_f}} {:{_f}} {:{_f}} {}\n"
