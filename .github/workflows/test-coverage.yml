@@ -18,7 +18,7 @@ jobs:
         cache: pip
     - name: Install dependencies
       run: |
-        pip install GDAL==$(gdal-config --version)
+        pip install GDAL==3.10.2
         pip install pytest codecov coverage pytest-cov
         pip install -r requirements.txt
     - name: Run tests with coverage
