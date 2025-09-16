@@ -2,6 +2,7 @@ from aemworkflow import interpretation
 import sys
 import builtins
 import io
+from unittest import mock
 
 def test_active_gmt_metadata_to_bdf(tmp_path):
     gmt_content = "@D some metadata\nother line\n@D another metadata\n"
@@ -17,19 +18,17 @@ def test_active_gmt_metadata_to_bdf(tmp_path):
     ]
 
 def test_active_shp_to_gmt(monkeypatch):
-    called = {}
+    command = {}
 
-    def fake_run(cmd, check):
-        called['cmd'] = cmd
-        called['check'] = check
-        return None
+    def fake_run(cmd):
+        command['command'] = cmd
 
-    monkeypatch.setattr(interpretation.subprocess, "run", fake_run)
+    monkeypatch.setattr(interpretation, "validate_file", lambda x: True)
+    monkeypatch.setattr(interpretation, "run_command", fake_run)
     monkeypatch.setattr(interpretation, "get_ogr_path", lambda: "ogr2ogr")
 
     interpretation.active_shp_to_gmt("input.shp", "output.gmt")
-    assert called['cmd'] == ["ogr2ogr", "-f", "GMT", "output.gmt", "input.shp"]
-    assert called['check'] is True
+    assert command['command'] == ["ogr2ogr", "-f", "GMT", "output.gmt", "input.shp"]
 
 def test_active_extent_control_file(tmp_path):
     extent_file = tmp_path / "extent.txt"
@@ -101,8 +100,8 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     # Patch get_ogr_path to return a dummy string
     monkeypatch.setattr(interpretation, "get_ogr_path", lambda: "ogr2ogr")
 
-    # Patch subprocess.run to do nothing
-    monkeypatch.setattr(interpretation.subprocess, "run", lambda *a, **k: None)
+    # Patch run_command to do nothing
+    monkeypatch.setattr(interpretation, "run_command", lambda *a, **k: None)
 
     # Patch geopandas.read_file to return a dummy GeoDataFrame
     class DummyGeoDF:

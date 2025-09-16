@@ -100,8 +100,8 @@ def test_main_prints_bounds(monkeypatch, tmp_path, capsys):
         '--lines', '2',
         '--lines_increment', '10'
     ])
-    # Patch subprocess.run to avoid actually running ogr2ogr
-    monkeypatch.setattr(pre_interpretation.subprocess, "run", lambda *a, **k: None)
+    # Patch run_command to avoid actually running ogr2ogr
+    monkeypatch.setattr(pre_interpretation, "run_command", lambda *a, **k: None)
     # Patch get_ogr_path to return a dummy string
     monkeypatch.setattr(pre_interpretation, "get_ogr_path", lambda: "ogr2ogr")
     # Patch geopandas.read_file to return a dummy GeoDataFrame
