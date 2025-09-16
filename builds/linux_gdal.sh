@@ -2,7 +2,7 @@
 set -exuo pipefail
 
 echo "Setting up environment..."
-apt-get update && apt-get install -y python3-pip python3-gdal gdal-bin libgdal-dev
+apt-get update && apt-get install -y python3-pip gdal-bin libgdal-dev
 
 echo "Installing GDAL and Python requirements..."
 pip install GDAL==$(gdal-config --version)
