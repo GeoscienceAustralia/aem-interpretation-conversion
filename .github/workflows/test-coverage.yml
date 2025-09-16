@@ -9,7 +9,7 @@ jobs:
     - uses: actions/checkout@main
     - uses: awalsh128/cache-apt-pkgs-action@latest
       with:
-        packages: python3-pip gdal-bin libgdal-dev==3.10.2 openmpi-bin libopenmpi-dev libblas-dev liblapack-dev libatlas-base-dev gfortran libproj-dev
+        packages: python3-pip gdal-bin libgdal-dev openmpi-bin libopenmpi-dev libblas-dev liblapack-dev libatlas-base-dev gfortran libproj-dev
         version: 1.0
     - name: Set up Python 3.12.9
       uses: actions/setup-python@v5
@@ -18,7 +18,7 @@ jobs:
         cache: pip
     - name: Install dependencies
       run: |
-        pip install GDAL==3.10.2
+        pip install GDAL==$(gdal-config --version)
         pip install pytest codecov coverage pytest-cov
         pip install -r requirements.txt
         pytest --cov --cov-report xml:results.xml --cov-report json --disable-warnings
