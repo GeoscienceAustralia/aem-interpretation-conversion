@@ -21,9 +21,10 @@ jobs:
         pip install GDAL==3.10.2
         pip install pytest codecov coverage pytest-cov
         pip install -r requirements.txt
-    - name: Run tests with coverage
-      run: |
         pytest --cov --cov-report xml:results.xml --cov-report json --disable-warnings
+    # - name: Run tests with coverage
+    #   run: |
+    #     pytest --cov --cov-report xml:results.xml --cov-report json --disable-warnings
     - name: Get Cover
       uses: orgoro/coverage@v3.2
       with:
