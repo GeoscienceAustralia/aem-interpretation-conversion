@@ -1,17 +1,15 @@
 import decimal
-from osgeo import osr
 import sys
 import os
-from pathlib import Path
 import glob
-import subprocess
 import argparse
 import geopandas
 import folium
 import warnings
 
-sys.path.append('./aemworkflow')
-from config import get_ogr_path
+from osgeo import osr
+from pathlib import Path
+from aemworkflow.utilities import get_ogr_path, validate_file, run_command
 
 
 decimal.getcontext().rounding = decimal.ROUND_HALF_UP
@@ -82,7 +80,7 @@ def box_elevation(extent_file_path, path_file_path, output_file_path, depth_line
     yy = []
 
     lines = int(depth_lines)
-    depth = depth_line_increments = int(line_increments) # Set initial value for depth
+    depth = depth_line_increments = int(line_increments)  # Set initial value for depth
 
     # This function will be modified to do the following:
     # - Look for all path and extent files in folder
@@ -188,9 +186,18 @@ def main():
                 box_elevation(extent_file_path, path_file_path, gmt_ouput_file_path, lines, lines_increment, xpo, ypo)
 
                 shp_output_file_path = os.path.join(output_directory, 'box', f'{flight_path_number}.box.shp')
-                cmd = [get_ogr_path(), "-f", "ESRI Shapefile", shp_output_file_path, gmt_ouput_file_path, "--config", "CPL_LOG", ogr2ogr_gmt_log]
-                subprocess.run(cmd, check=True)
-        
+                cmd = [get_ogr_path(),
+                       "-f",
+                       "ESRI Shapefile",
+                       shp_output_file_path,
+                       gmt_ouput_file_path,
+                       "--config",
+                       "CPL_LOG",
+                       ogr2ogr_gmt_log]
+                if not validate_file(gmt_ouput_file_path):
+                    return
+                run_command(cmd)
+
         cmd = [
             get_ogr_path(),
             "-f", "ESRI Shapefile",
@@ -199,7 +206,9 @@ def main():
             "--config", "CPL_DEBUG", "ON",
             "--config", "CPL_LOG", ogr2ogr_all_lines_log
         ]
-        subprocess.run(cmd, check=True)
+        if not validate_file(all_lines_gmt_output_file_path):
+            return
+        run_command(cmd)
 
         # Create the all_lines geojson file for display on map.
         all_lines_shp: geopandas.GeoDataFrame = geopandas.read_file(all_lines_shp_output_path)
@@ -211,8 +220,8 @@ def main():
         # Create the folium map for the all_lines and update the map html file.
         m = folium.Map(location=[-30.80, 141.264160], zoom_start=5)
         layer = folium.GeoJson(data=open(os.path.join(output_directory,
-                                                    'all_lines',
-                                                    'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
+                               'all_lines',
+                                         'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
         print(f'bounds are: {layer.get_bounds()}')
 
 

@@ -1,4 +1,0 @@
-pytest
-codecov
-coverage
-pytest-cov

@@ -74,10 +74,11 @@ def test_sort_gmtp_creates_dirs(tmp_path):
     with mock.patch('pathlib.Path.exists', return_value=False):
         with mock.patch('pathlib.Path.mkdir') as mock_mkdir:
             with mock.patch('glob.glob', return_value=[]):
-                with mock.patch('subprocess.run') as mock_run:
-                    commands.sort_gmtp(str(tmp_path), [name])
-                    mock_mkdir.assert_called()
-                    mock_run.assert_called()
+                with mock.patch('aemworkflow.commands.run_command') as mock_run:
+                    with mock.patch('aemworkflow.commands.validate_file', return_value=True):
+                        commands.sort_gmtp(str(tmp_path), [name])
+                        mock_mkdir.assert_called()
+                        mock_run.assert_called()
 
 def test_gmts_2_mdc_writes_mdc_file(tmp_path):
     wrk_dir = tmp_path
@@ -155,7 +156,7 @@ def test_first_runs_gdal_command(tmp_path):
     shp_file = tmp_path / 'test_interp_1.shp'
     shp_file.touch()
     with mock.patch("glob.glob", return_value=[str(shp_file)]):
-        with mock.patch("subprocess.run") as mock_run:
+        with mock.patch("aemworkflow.commands.run_command") as mock_run:
             with mock.patch("aemworkflow.commands.get_ogr_path", return_value="ogr2ogr"):
                 commands.first(str(shp_dir), str(wrk_dir))
                 mock_run.assert_called()

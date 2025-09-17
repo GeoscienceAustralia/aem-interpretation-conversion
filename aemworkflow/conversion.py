@@ -1,29 +1,15 @@
-import sys
 import os
-import subprocess
-from pathlib import Path
-import glob
-import pandas as pd
-import re
-from typing import List, Tuple
-from osgeo import osr
-sys.path.append('./aemworkflow')
-from config import get_ogr_path
 import argparse
-from loguru import logger
+import glob
+import re
 import warnings
 
-
-def make_srt_dir(wrk_dir: str, logger_session=logger):
-    '''
-    '''
-    try:
-        if not (wrk_dir).exists():
-            logger_session.info('Making SORT directory...')
-            wrk_dir.mkdir()
-    except OSError as osx:
-        logger_session.error(osx.args)
-        sys.exit()
+from pathlib import Path
+import pandas as pd
+from typing import List, Tuple
+from osgeo import osr
+from loguru import logger
+from aemworkflow.utilities import get_ogr_path, get_make_srt_dir, validate_file, run_command
 
 
 def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, logger_session=logger) -> List[int]:
@@ -54,7 +40,7 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
     regex2 = re.compile('[+-]?([0-9]*[.])?[0-9]+')
 
     srt_dir = Path(wrk_dir) / "SORT"
-    make_srt_dir(srt_dir, logger_session=logger)
+    get_make_srt_dir(srt_dir, logger_session=logger)
 
     dcols = ("nm", "frame_l", "frame_top", "frame_r", "frame_bot", "t_l", "t_top", "t_r", "t_bot")
     exdf = pd.read_csv(ext_file, sep=r'\s+', names=dcols, header=None, index_col=False)
@@ -152,7 +138,7 @@ def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_se
     del proj
 
     srt_dir = Path(wrk_dir) / "SORT"
-    make_srt_dir(srt_dir, logger_session=logger)
+    get_make_srt_dir(srt_dir, logger_session=logger)
 
     zfshp_dir = Path(wrk_dir) / "ZF_SHP"
     if not Path(zfshp_dir).exists():
@@ -214,7 +200,9 @@ def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_se
 
         # ogr2ogr.main(["", "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)])
         cmd = [get_ogr_path(), "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)]
-        subprocess.run(cmd, check=True)
+        if not validate_file(in_gmtf):
+            return
+        run_command(cmd)
 
         if out_shp.exists():
             logger_session.info(f"{nm}zf.gmtf successfully converted to {nm}_zf.shp")
@@ -240,7 +228,7 @@ def conversion_sort_gmtp(wrk_dir: str, nm_lst: List[int], logger_session=logger)
     logger_session.info("Running sort_gmtp conversion.")
 
     srt_dir = Path(wrk_dir) / "SORT"
-    make_srt_dir(srt_dir, logger_session=logger)
+    get_make_srt_dir(srt_dir, logger_session=logger)
 
     zfshp_dir = Path(wrk_dir) / "ZF_SHP"
     if not Path(zfshp_dir).exists():
@@ -287,7 +275,9 @@ def conversion_sort_gmtp(wrk_dir: str, nm_lst: List[int], logger_session=logger)
 
         # ogr2ogr.main(["", "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)])
         cmd = [get_ogr_path(), "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)]
-        subprocess.run(cmd, check=True)
+        if not validate_file(in_gmtf):
+            return
+        run_command(cmd)
 
         if out_shp.exists():
             logger_session.info(f"{nm}zf.gmtf successfully converted to {nm}_zf.shp")
@@ -365,6 +355,7 @@ def interpol(col_1: float, frst: int, last: int, tdf: pd.DataFrame) -> Tuple[flo
         t = g2 + (g2 - g1) * lr
     return x, y, t
 
+
 def main():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -386,6 +377,7 @@ def main():
 
         nm_list = return_list
         conversion_sort_gmtp_3d(work_dir, nm_list, crs)
+
 
 if __name__ == "__main__":
     main()

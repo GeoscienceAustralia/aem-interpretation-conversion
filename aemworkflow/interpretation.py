@@ -1,10 +1,5 @@
-
-import subprocess
-from pathlib import Path
 import logging
 import decimal
-
-from osgeo import osr
 import os
 import glob
 import sys
@@ -12,8 +7,10 @@ import argparse
 import geopandas
 import folium
 import warnings
-sys.path.append('./aemworkflow')
-from config import get_ogr_path
+
+from osgeo import osr
+from pathlib import Path
+from aemworkflow.utilities import get_ogr_path, validate_file, run_command
 
 
 logging.basicConfig(filename='out.log',
@@ -43,7 +40,9 @@ def active_gmt_metadata_to_bdf(gmt_file_path, bdf_file_path, mode):
 def active_shp_to_gmt(shp_file_path, gmt_file_path):
     # ogr2ogr.main(["", "-f", "GMT", gmt_file_path, shp_file_path])
     cmd = [get_ogr_path(), "-f", "GMT", gmt_file_path, shp_file_path]
-    subprocess.run(cmd, check=True)
+    if not validate_file(shp_file_path):
+        return
+    run_command(cmd)
 
 
 def active_extent_control_file(extent_file_path, path_file_path,
@@ -85,6 +84,7 @@ def active_extent_control_file(extent_file_path, path_file_path,
 
                 out_file.write(f"{path_line[4]} {path_line[5]}\n")
 
+
 def main():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -125,12 +125,12 @@ def main():
             path_file_path = os.path.join(shp_dir, f'{prefix}.path.txt')
             print(f'path file {path_file_path} exists: {os.path.isfile(path_file_path)}')
             active_extent_control_file(extent_file_path,
-                                    path_file_path,
-                                    active_gmt_out_file_path,
-                                    active_extent_out_file_path,
-                                    crs,
-                                    gis,
-                                    mode)
+                                       path_file_path,
+                                       active_gmt_out_file_path,
+                                       active_extent_out_file_path,
+                                       crs,
+                                       gis,
+                                       mode)
 
             gmt_file_path = os.path.join(output_directory, 'interp', f'{prefix}_interp.gmt')
             active_shp_to_gmt(shp, gmt_file_path)
@@ -148,7 +148,9 @@ def main():
                 "--config", "CPL_DEBUG", "ON",
                 "--config", "CPL_LOG", ogr2ogr_active_gmt_log
             ]
-            subprocess.run(cmd, check=True)
+            if not validate_file(active_gmt_out_file_path):
+                return
+            run_command(cmd)
 
             # Create the active path interp geojson file for display on map.
             active_path_interp_shp: geopandas.GeoDataFrame = geopandas.read_file(active_shp_out_file_path)
@@ -170,20 +172,20 @@ def main():
 
             m = folium.Map(location=[-30.80, 141.264160], zoom_start=5)
             folium.GeoJson(data=open(os.path.join(output_directory,
-                                                'interp',
-                                                'active_path.geojson'), 'r').read(),
-                                                name="interp",
-                                                style_function=style_func).add_to(m)
+                                                  'interp',
+                                                  'active_path.geojson'), 'r').read(),
+                           name="interp", style_function=style_func).add_to(m)
 
             layer = folium.GeoJson(data=open(os.path.join(output_directory,
-                                                    'all_lines',
-                                                    'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
+                                   'all_lines',
+                                             'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
             print(f'bounds are: {layer.get_bounds()}')
 
         folium.LayerControl().add_to(m)
         map_path = os.path.normpath(f"{output_directory}{os.sep}map.html")
         m.save(map_path)
         print('completed updating map')
+
 
 if __name__ == "__main__":
     main()

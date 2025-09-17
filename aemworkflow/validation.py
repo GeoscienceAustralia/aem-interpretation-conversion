@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 from loguru import logger
 
+
 def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session=logger):
     logger_session.info("Running remove quotes validation.")
     with open(bdf_file_path, 'r') as bdf_file, open(bdf_out_file_path, 'w') as bdf_clean_out_file:

@@ -6,13 +6,6 @@ import aemworkflow.conversion as conversion
 
 logger_session = mock.MagicMock()
 
-def test_make_srt_dir_creates_dir(tmp_path):
-    wrk_dir = tmp_path
-    with mock.patch("pathlib.Path.exists", return_value=False):
-        with mock.patch("pathlib.Path.mkdir") as mock_mkdir:
-            conversion.make_srt_dir(wrk_dir, logger_session)
-            mock_mkdir.assert_called()
-
 def test_conversion_zedfix_gmt_returns_path_identifiers(tmp_path):
     wrk_dir = tmp_path
     int_dir = wrk_dir / "interp"
@@ -52,11 +45,12 @@ def test_sort_gmtp_3d_creates_dirs_and_writes_gmtsddd_file(tmp_path):
     srt_file.write_text(f"> @VGMT1\n# @D0\n1 2 3 4 5 6 7 8 9 10")
     with mock.patch('pathlib.Path.exists', return_value=False):
         with mock.patch('pathlib.Path.mkdir') as mock_mkdir:
-            with mock.patch('subprocess.run') as mock_run:
-                conversion.conversion_sort_gmtp_3d(str(tmp_path), [name], '1', logger_session)
-                assert(os.path.exists(srt_dir / f"{name}.gmtsddd"))
-                mock_mkdir.assert_called()
-                mock_run.assert_called()
+            with mock.patch('aemworkflow.conversion.validate_file', return_value=True):
+                with mock.patch('aemworkflow.conversion.run_command') as mock_run:
+                    conversion.conversion_sort_gmtp_3d(str(tmp_path), [name], '1', logger_session)
+                    assert(os.path.exists(srt_dir / f"{name}.gmtsddd"))
+                    mock_mkdir.assert_called()
+                    mock_run.assert_called()
 
 def test_sort_gmtp_creates_dirs(tmp_path):
     name = "name"
@@ -68,10 +62,11 @@ def test_sort_gmtp_creates_dirs(tmp_path):
     with mock.patch('pathlib.Path.exists', return_value=False):
         with mock.patch('pathlib.Path.mkdir') as mock_mkdir:
             with mock.patch('glob.glob', return_value=[]):
-                with mock.patch('subprocess.run') as mock_run:
-                    conversion.conversion_sort_gmtp(str(tmp_path), [name], logger_session)
-                    mock_mkdir.assert_called()
-                    mock_run.assert_called()
+                with mock.patch('aemworkflow.conversion.validate_file', return_value=True):
+                    with mock.patch('aemworkflow.conversion.run_command') as mock_run:
+                        conversion.conversion_sort_gmtp(str(tmp_path), [name], logger_session)
+                        mock_mkdir.assert_called()
+                        mock_run.assert_called()
 
 def test_interpol():
     df = pd.DataFrame({
