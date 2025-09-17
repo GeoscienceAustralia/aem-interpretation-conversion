@@ -31,7 +31,7 @@ python --version
 python -m venv aem-venv
 source aem-venv/bin/activate
 pip install -r requirements.txt
-sh builds/linux_gdal.sh           # Install GDAL binaries
+sh linux_gdal.sh           # Install GDAL binaries
 ```
 
 ### Windows (Python 3.12 + venv) ###

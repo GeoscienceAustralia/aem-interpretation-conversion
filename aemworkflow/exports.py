@@ -434,7 +434,7 @@ def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
                     fou.write("END\n")
 
 
-def cli():
+def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_directory", "-i", required=True, help="Input directory")
     ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
@@ -472,4 +472,5 @@ def cli():
         gmtsddd_to_egs(work_dir, split_file_path, nm_list)
 
 
- 
+if __name__ == "__main__":
+    main()
