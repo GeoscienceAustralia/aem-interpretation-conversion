@@ -25,11 +25,10 @@ dependencies = [
     "pandas==2.2.3",
     "pytz==2025.1",
     "pyyaml==6.0.2",
-    "gdal==3.10.2",
 ]
 
 [project.scripts]
-pre-interpretation = "aemworkflow.pre_interpretation:main"
+pre_interpretation = "aemworkflow.pre_interpretation:main"
 interpretation = "aemworkflow.interpretation:main"
 validation = "aemworkflow.validation:main"
 conversion = "aemworkflow.conversion:main"
