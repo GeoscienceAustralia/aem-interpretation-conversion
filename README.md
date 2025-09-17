@@ -15,27 +15,35 @@ git clone git@bitbucket.org:geoscienceaustralia/aem-interpretation-conversion.gi
 cd aem-interpretation-conversion
 ```
 
+### Anaconda installation
 If you have Anaconda installed, you may use the following to create the environment:
 
 ```
-conda env -create -f environment.yml
+conda init
+conda env create -f environment.yml
 conda activate aemworkflow-env
 ```
 However if you don't use Anaconda:
 
 ### Linux (Python 3.12 + venv) ###
-
+Pre-requisites:  
+- Python 3  
 ```
 python --version
 python -m venv aem-venv
 source aem-venv/bin/activate
-pip install -r requirements.txt
-sh builds/linux_gdal.sh           # Install GDAL binaries
+sh linux_gdal.sh           # Install GDAL binaries
+pip install --update build
+python -m build
+pip install .
 ```
 
 ### Windows (Python 3.12 + venv) ###
+Pre-requisites:  
+- Python 3  
+- GDAL
 
-You must install GDAL before installing the Python packages from `requirements.txt`
+#### GDAL installation instructions
 
 1. Download and install [OSGeo4W](https://trac.osgeo.org/osgeo4w/) (Recommended)
 
@@ -47,20 +55,21 @@ You must install GDAL before installing the Python packages from `requirements.t
 set PATH=C:\OSGeo4W\bin;%PATH%
 set GDAL_DATA=C:\OSGeo4W\share\gdal
 set PROJ_LIB=C:\OSGeo4W\share\proj
-```
-
-4. Finally install `requirements.txt` followed by the Python GDAL library using the installed version of GDAL
-
-```
-pip install -r requirements.txt
 pip install "gdal==3.8.5"       # You must change this to your version of GDAL
+```
+
+Finally build and install the package followed by the Python GDAL library using the installed version of GDAL
+
+```
+python -m build
+pip install .
 ```
 
 CLI Usage
 ------------
 For each script, run the file with any required arguments and any additional where you want to deviate from the default. All arguments should be in quotes as per the examples.  
 
-Activate conda environment if required before running the scripts.  
+If using Anaconda, activate conda environment if required before running the scripts.  
 
 ### Pre-interpretation
  
@@ -73,7 +82,8 @@ Activate conda environment if required before running the scripts.
 | -l          | depth lines     | No           |10         |          |
 | -li         | depth lines increment| No      |30         |          |
 
-`python pre_interpretation.py -i "{input_directory}" -o "{output_directory}"`
+Anaconda command: `python pre_interpretation.py -i "{input_directory}" -o "{output_directory}"`  
+Pip package command: `python -m aemworkflow pre_interpretation -i "{input_directory}" -o "{output_directory}"`
 
 ### Interpretation
 | Flag        | Argument        | Required     | Default   |Options   |
@@ -85,7 +95,8 @@ Activate conda environment if required before running the scripts.
 | -l          | depth lines     | No           |10         |          |
 | -li         | depth lines increment| No      |30         |          |
 
-`python interpretation.py -i "{input_directory}" -o "{output_directory}"`
+Anaconda command: `python interpretation.py -i "{input_directory}" -o "{output_directory}"`  
+Pip package command: `python -m aemworkflow interpretation -i "{input_directory}" -o "{output_directory}"`
 
 ### Validation
 | Flag        | Argument        | Required     | Default   |Options   |
@@ -94,7 +105,8 @@ Activate conda environment if required before running the scripts.
 | -o          | output directory| Yes          |None       |          |
 | -a          | ausd file name  | Yes          |None       |          |
 
-`python validation.py -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"`
+Anaconda command: `python validation.py -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"`  
+Pip package command: `python -m aemworkflow validation -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"`
 
 ### Conversion
 | Flag        | Argument        | Required     | Default   |Options   |
@@ -103,7 +115,8 @@ Activate conda environment if required before running the scripts.
 | -o          | output directory| Yes          |None       |          |
 | -c          | crs - GDA/MGA zone EPSG| No    |28349      |28349, 28350, 28351, 28352, 28354, 28355, 28356|
 
-`python conversion.py -i "{input_directory}" -o "{output_directory}"`  
+Anaconda command: `python conversion.py -i "{input_directory}" -o "{output_directory}"`  
+Pip package command: `python -m aemworkflow conversion -i "{input_directory}" -o "{output_directory}"`  
 
 ### Export
 | Flag        | Argument        | Required     | Default   |Options   |
@@ -116,7 +129,8 @@ Activate conda environment if required before running the scripts.
 | -b          | name of boundary file| Yes     |None       |          |
 | -s          | name of split file   | Yes     |None       |          |
 
-`python exports.py -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"`
+Anaconda command: `python exports.py -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"`  
+Pip package command: `python -m aemworkflow exports -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"`
 
 Useful Links
 ------------
