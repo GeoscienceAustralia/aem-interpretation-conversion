@@ -32,7 +32,7 @@ Pre-requisites:
 python --version
 python -m venv aem-venv
 source aem-venv/bin/activate
-sh linux_gdal.sh           # Install GDAL binaries
+sh builds/linux_gdal.sh           # Install GDAL binaries
 pip install .
 ```
 
