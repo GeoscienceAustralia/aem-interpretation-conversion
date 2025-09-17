@@ -48,7 +48,7 @@ def run_command(cmd: List[str], logger_session=logger) -> None:
         logger_session.error(f"Executable is not executable: {exe_path}")
         sys.exit(1)
 
-    forbidden_chars = set(';|&$`<>\\')
+    forbidden_chars = set(';|&$`<>')
     for arg in cmd[1:]:
         if any(ch in arg for ch in forbidden_chars):
             logger_session.error(f"Suspicious character found in argument: {arg}")
