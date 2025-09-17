@@ -356,7 +356,7 @@ def interpol(col_1: float, frst: int, last: int, tdf: pd.DataFrame) -> Tuple[flo
     return x, y, t
 
 
-def main():
+def cli():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         ap = argparse.ArgumentParser()
@@ -379,5 +379,4 @@ def main():
         conversion_sort_gmtp_3d(work_dir, nm_list, crs)
 
 
-if __name__ == "__main__":
-    main()
+ 

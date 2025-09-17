@@ -85,7 +85,7 @@ def active_extent_control_file(extent_file_path, path_file_path,
                 out_file.write(f"{path_line[4]} {path_line[5]}\n")
 
 
-def main():
+def cli():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         ap = argparse.ArgumentParser()
@@ -187,5 +187,4 @@ def main():
         print('completed updating map')
 
 
-if __name__ == "__main__":
-    main()
+ 

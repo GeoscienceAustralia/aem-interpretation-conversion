@@ -18,7 +18,8 @@ cd aem-interpretation-conversion
 If you have Anaconda installed, you may use the following to create the environment:
 
 ```
-conda env -create -f environment.yml
+conda init
+conda env create -f environment.yml
 conda activate aemworkflow-env
 ```
 However if you don't use Anaconda:

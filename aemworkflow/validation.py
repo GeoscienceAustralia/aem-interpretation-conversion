@@ -111,7 +111,7 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
     logger_session.info("completed qc_units validation.")
 
 
-def main():
+def cli():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
     ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
@@ -133,5 +133,4 @@ def main():
     validation_qc_units(erc_file_path, bdf_out_file_path, output_directory)
 
 
-if __name__ == "__main__":
-    main()
+ 

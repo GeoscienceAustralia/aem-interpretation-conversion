@@ -132,7 +132,7 @@ def box_elevation(extent_file_path, path_file_path, output_file_path, depth_line
             depth += depth_line_increments
 
 
-def main():
+def cli():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
@@ -223,7 +223,3 @@ def main():
                                'all_lines',
                                          'all_lines.geojson'), 'r').read(), name="all-lines").add_to(m)
         print(f'bounds are: {layer.get_bounds()}')
-
-
-if __name__ == "__main__":
-    main()
