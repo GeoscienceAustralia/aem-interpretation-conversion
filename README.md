@@ -33,8 +33,6 @@ python --version
 python -m venv aem-venv
 source aem-venv/bin/activate
 sh linux_gdal.sh           # Install GDAL binaries
-pip install --update build
-python -m build
 pip install .
 ```
 
@@ -58,10 +56,9 @@ set PROJ_LIB=C:\OSGeo4W\share\proj
 pip install "gdal==3.8.5"       # You must change this to your version of GDAL
 ```
 
-Finally build and install the package followed by the Python GDAL library using the installed version of GDAL
+Finally install the package
 
 ```
-python -m build
 pip install .
 ```
 
