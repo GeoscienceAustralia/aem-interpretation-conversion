@@ -79,7 +79,7 @@ If using Anaconda, activate conda environment if required before running the scr
 | -l          | depth lines     | No           |10         |          |        |
 | -li         | depth lines increment| No      |30         |          |        |
 
-Anaconda command: `python pre_interpretation.py -i "{input_directory}" -o "{output_directory}"`  
+Anaconda command: `python aemworkflow\pre_interpretation.py -i "{input_directory}" -o "{output_directory}"`  
 Pip package command: `python -m aemworkflow.pre_interpretation -i "{input_directory}" -o "{output_directory}"`
 
 ### Interpretation
@@ -93,7 +93,7 @@ Pip package command: `python -m aemworkflow.pre_interpretation -i "{input_direct
 | -li         | depth lines increment| No      |30         |          |  |
 
 
-Anaconda command: `python interpretation.py -i "{input_directory}" -o "{output_directory}"`  
+Anaconda command: `python aemworkflow\interpretation.py -i "{input_directory}" -o "{output_directory}"`  
 Pip package command: `python -m aemworkflow.interpretation -i "{input_directory}" -o "{output_directory}"`
 
 
@@ -105,7 +105,7 @@ Pip package command: `python -m aemworkflow.interpretation -i "{input_directory}
 | -a          | ausd file name  | Yes          |None       |          |        |
 
 
-Anaconda command: `python validation.py -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"`  
+Anaconda command: `python aemworkflow\validation.py -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"`  
 Pip package command: `python -m aemworkflow.validation -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"`
 
 ### Conversion
@@ -116,7 +116,7 @@ Pip package command: `python -m aemworkflow.validation -i "{input_directory}" -o
 | -c          | crs - GDA/MGA zone EPSG| No    |28349      |28349, 28350, 28351, 28352, 28354, 28355, 28356|        |
 
 
-Anaconda command: `python conversion.py -i "{input_directory}" -o "{output_directory}"`  
+Anaconda command: `python aemworkflow\conversion.py -i "{input_directory}" -o "{output_directory}"`  
 Pip package command: `python -m aemworkflow.conversion -i "{input_directory}" -o "{output_directory}"`  
 
 ### Export
@@ -130,7 +130,7 @@ Pip package command: `python -m aemworkflow.conversion -i "{input_directory}" -o
 | -b          | name of boundary file| Yes     |None       |          |        |
 | -s          | name of split file   | Yes     |None       |          |        |
 
-Anaconda command: `python exports.py -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"`  
+Anaconda command: `python aemworkflow\exports.py -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"`  
 Pip package command: `python -m aemworkflow.exports -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"`
 
 Useful Links
