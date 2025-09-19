@@ -11,7 +11,6 @@ from osgeo import osr
 from pathlib import Path
 from aemworkflow.utilities import get_ogr_path, validate_file, run_command
 
-
 decimal.getcontext().rounding = decimal.ROUND_HALF_UP
 
 

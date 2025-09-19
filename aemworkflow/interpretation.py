@@ -1,4 +1,3 @@
-import logging
 import decimal
 import os
 import glob
@@ -11,14 +10,6 @@ import warnings
 from osgeo import osr
 from pathlib import Path
 from aemworkflow.utilities import get_ogr_path, validate_file, run_command
-
-
-logging.basicConfig(filename='out.log',
-                    filemode='w',
-                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                    datefmt='%H:%M:%S',
-                    level=logging.DEBUG)
-
 
 header = 0
 xpo = 0.5
