@@ -1,0 +1,19 @@
+name: aemworkflow-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - gdal=3.10.2
+  - pip=25.0.1
+  - python=3.12.9
+  - pip:
+      - click==8.1.8
+      - folium==0.19.5
+      - geopandas==1.0.1
+      - importlib-metadata==8.6.1
+      - loguru==0.7.3
+      - markdown==3.7
+      - pandas==2.2.3
+      - pytz==2025.1
+      - pyyaml==6.0.2
+prefix: /opt/conda-env

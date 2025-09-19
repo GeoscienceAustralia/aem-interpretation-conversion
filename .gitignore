@@ -1,0 +1,120 @@
+tmp/*
+temp/*
+Session.vim
+aemworkflow/webapp/build
+docs/man/*.gz
+docs/source/api/generated
+docs/gh-pages
+docs/_build*
+docs/_themes
+IPython/frontend/html/notebook/static/mathjax
+*.py[co]
+_build
+.build
+*.egg-info
+*~
+*.bak
+*.swp
+*.swo
+.commitmsg
+*.aux
+*.toc
+*.log
+*.bbl
+
+*~
+*.py[cod]
+*.pyc
+*.pyo
+
+__pycache__
+sdist
+*.so
+pip-log.txt
+.DS_Store
+*.egg
+*.egg-info
+
+# PyCharm / IntelliJ
+*.iml
+.idea
+*.ipr
+
+# Eclipse
+.project
+.pydevproject
+
+# local private
+_Private
+_private
+private
+localsandpit
+localdir
+tmp
+temp
+nohup*
+*.mine
+OldWorks
+
+
+logs
+*.log
+
+ Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+
+test-results/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+
+# PyBuilder
+target/
+
+# pyenv python configuration file
+.python-version
