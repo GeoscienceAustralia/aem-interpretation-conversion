@@ -62,10 +62,12 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
         last = tdf["fid"].iloc[-1] - 1
 
         gmt = Path(wrk_dir) / 'interp' / f"{nm}_interp.gmt"
+
         with open(gmt, "r") as fin:
             lin_lst = fin.readlines()
-        logger_session.info(f"{gmt} successfully read.")
+        logger_session.info(f"{nm}_interp.gmt successfully read.")
         lines = lin_lst.copy()
+
         with open(Path(srt_dir) / f"{nm}zf.gmtf", "w") as fou:
             while lines:
                 try:

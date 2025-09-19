@@ -23,25 +23,27 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
     no_unit = {}
 
     # Read stratigraphic-unit.csv
+    qc_outputs_path = os.path.join(validation_dir, 'qc') + os.sep
+    Path(qc_outputs_path).mkdir(exist_ok=True)
+
     with open(erc_file_path, "r", encoding='utf-8') as strat_file:
         for line in strat_file:
             fields = line.strip().split("|")
             if len(fields) != 43:
-                with open("asud_nf.asc", "a") as nf_file:
+                with open(fr"{qc_outputs_path}asud_nf.asc", "a") as nf_file:
                     nf_file.write(f"{len(fields)} {line}")
-                    # nf_file.write(f"{len(fields)} {NR} {line}")
             else:
                 stratno[fields[0]] = fields[1]
                 name[fields[0]] = fields[0]
 
     # Read AusAEM1_Interp.csv and compare unit name-number
     with open(bdf_2_file_path, "r") as interp_file:
-        with open(fr'{validation_dir}{os.sep}qc{os.sep}error_list.log', "a") as error_list_file:
+        with open(fr'{qc_outputs_path}error_list.log', "a") as error_list_file:
 
             for line in interp_file:
                 fields = line.strip().split("|")
                 if len(fields) <= 25:
-                    with open(fr"{validation_dir}{os.sep}qc{os.sep}short_nf.log", "a") as short_nf_file:
+                    with open(fr"{qc_outputs_path}short_nf.log", "a") as short_nf_file:
                         short_nf_file.write(f"{len(fields)} {fields[0]} {fields[1]}\n")
 
                 if fields[7] == '' and fields[8] == '':
@@ -95,7 +97,7 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
                     error_list_file.write(f'within|{fields[13]}|{fields[14]}|{line}')
 
     d = date.today().strftime("%Y%m%d")
-    summary_file = fr'{validation_dir}{os.sep}qc{os.sep}AEM_validation_summary_{d}.txt'
+    summary_file = fr'{qc_outputs_path}AEM_validation_summary_{d}.txt'
 
     with open(summary_file, "a") as summary_file:
         logger_session.info("result,name,number,count")
