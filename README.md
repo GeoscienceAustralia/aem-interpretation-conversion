@@ -1,6 +1,5 @@
 # AEM interpretation conversion tool (AEMInterpConvert)
 
-
 Info
 ------------
 For more information about **AEMInterpConvert**, Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool, see this [article](https://ecat.ga.gov.au/geonetwork/srv/eng/catalog.search#/metadata/150529).
@@ -15,7 +14,7 @@ git clone git@bitbucket.org:geoscienceaustralia/aem-interpretation-conversion.gi
 cd aem-interpretation-conversion
 ```
 
-### Anaconda installation
+### Using Anaconda
 If you have Anaconda installed, you may use the following to create the environment:
 
 ```
@@ -25,9 +24,8 @@ conda activate aemworkflow-env
 ```
 However if you don't use Anaconda:
 
-### Linux (Python 3.12 + venv) ###
-Pre-requisites:  
-- Python 3  
+### Using Linux (Python 3.12 + venv) ###
+  
 ```
 python --version
 python -m venv aem-venv
@@ -37,9 +35,6 @@ pip install .
 ```
 
 ### Windows (Python 3.12 + venv) ###
-Pre-requisites:  
-- Python 3  
-- GDAL
 
 #### GDAL installation instructions
 
@@ -69,7 +64,13 @@ For each script, run the file with any required arguments and any additional whe
 If using Anaconda, activate conda environment if required before running the scripts.  
 
 ### Pre-interpretation
- 
+
+```
+python pre_interpretation.py -i "{input_directory}" -o "{output_directory}
+```
+
+**Parameter examples:**
+
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
 | -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
@@ -79,10 +80,13 @@ If using Anaconda, activate conda environment if required before running the scr
 | -l          | depth lines     | No           |10         |          |        |
 | -li         | depth lines increment| No      |30         |          |        |
 
-Anaconda command: `python aemworkflow\pre_interpretation.py -i "{input_directory}" -o "{output_directory}"`  
-Pip package command: `python -m aemworkflow.pre_interpretation -i "{input_directory}" -o "{output_directory}"`
-
 ### Interpretation
+
+```
+python interpretation.py -i "{input_directory}" -o "{output_directory}"
+```
+**Parameter examples:**
+
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
 | -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
@@ -92,12 +96,13 @@ Pip package command: `python -m aemworkflow.pre_interpretation -i "{input_direct
 | -l          | depth lines     | No           |10         |          |  |
 | -li         | depth lines increment| No      |30         |          |  |
 
-
-Anaconda command: `python aemworkflow\interpretation.py -i "{input_directory}" -o "{output_directory}"`  
-Pip package command: `python -m aemworkflow.interpretation -i "{input_directory}" -o "{output_directory}"`
-
-
 ### Validation
+
+```
+python validation.py -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"
+```
+**Parameter examples:**
+
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
 | -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
@@ -105,10 +110,13 @@ Pip package command: `python -m aemworkflow.interpretation -i "{input_directory}
 | -a          | ausd file name  | Yes          |None       |          |        |
 
 
-Anaconda command: `python aemworkflow\validation.py -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"`  
-Pip package command: `python -m aemworkflow.validation -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"`
-
 ### Conversion
+
+```
+python conversion.py -i "{input_directory}" -o "{output_directory}"
+```
+**Parameter examples:**
+
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
 | -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
@@ -116,10 +124,13 @@ Pip package command: `python -m aemworkflow.validation -i "{input_directory}" -o
 | -c          | crs - GDA/MGA zone EPSG| No    |28349      |28349, 28350, 28351, 28352, 28354, 28355, 28356|        |
 
 
-Anaconda command: `python aemworkflow\conversion.py -i "{input_directory}" -o "{output_directory}"`  
-Pip package command: `python -m aemworkflow.conversion -i "{input_directory}" -o "{output_directory}"`  
-
 ### Export
+
+```
+python exports.py -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"
+```
+**Parameter examples:**
+
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
 | -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
@@ -129,9 +140,6 @@ Pip package command: `python -m aemworkflow.conversion -i "{input_directory}" -o
 | -e          | Export to EGS format| Yes      |None       |y or n    |        |
 | -b          | name of boundary file| Yes     |None       |          |        |
 | -s          | name of split file   | Yes     |None       |          |        |
-
-Anaconda command: `python aemworkflow\exports.py -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"`  
-Pip package command: `python -m aemworkflow.exports -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"`
 
 Useful Links
 ------------
