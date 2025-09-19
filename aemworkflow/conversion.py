@@ -1,28 +1,18 @@
-import sys
 import os
-import subprocess
-from pathlib import Path
+import argparse
 import glob
-import pandas as pd
 import re
+import warnings
+
+from pathlib import Path
+import pandas as pd
 from typing import List, Tuple
 from osgeo import osr
-from aemworkflow.config import get_ogr_path
+from loguru import logger
+from aemworkflow.utilities import get_ogr_path, get_make_srt_dir, validate_file, run_command
 
 
-def make_srt_dir(wrk_dir: str, logger_session):
-    '''
-    '''
-    try:
-        if not (wrk_dir).exists():
-            logger_session.info('Making SORT directory...')
-            wrk_dir.mkdir()
-    except OSError as osx:
-        logger_session.error(osx.args)
-        sys.exit()
-
-
-def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, logger_session) -> List[int]:
+def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, logger_session=logger) -> List[int]:
     """
     Implements the following AWK action:
     awk -f zedfix_gmt.awk nm=$1 frame_top=$3 frame_bot=$5 t_top=$7 t_bot=$9 $1.path.txt $1*.gmt > $1zf.gmtf
@@ -50,7 +40,7 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
     regex2 = re.compile('[+-]?([0-9]*[.])?[0-9]+')
 
     srt_dir = Path(wrk_dir) / "SORT"
-    make_srt_dir(srt_dir, logger_session)
+    get_make_srt_dir(srt_dir, logger_session=logger)
 
     dcols = ("nm", "frame_l", "frame_top", "frame_r", "frame_bot", "t_l", "t_top", "t_r", "t_bot")
     exdf = pd.read_csv(ext_file, sep=r'\s+', names=dcols, header=None, index_col=False)
@@ -136,7 +126,7 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
     return exdf['nm'].tolist()
 
 
-def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_session) -> None:
+def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_session=logger) -> None:
     logger_session.info("Running sort_gmtp_3d conversion.")
     proj = osr.SpatialReference()
     proj.ImportFromEPSG(int(crs))
@@ -148,7 +138,7 @@ def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_se
     del proj
 
     srt_dir = Path(wrk_dir) / "SORT"
-    make_srt_dir(srt_dir, logger_session)
+    get_make_srt_dir(srt_dir, logger_session=logger)
 
     zfshp_dir = Path(wrk_dir) / "ZF_SHP"
     if not Path(zfshp_dir).exists():
@@ -210,7 +200,9 @@ def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_se
 
         # ogr2ogr.main(["", "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)])
         cmd = [get_ogr_path(), "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)]
-        subprocess.run(cmd, check=True)
+        if not validate_file(in_gmtf):
+            return
+        run_command(cmd)
 
         if out_shp.exists():
             logger_session.info(f"{nm}zf.gmtf successfully converted to {nm}_zf.shp")
@@ -218,7 +210,7 @@ def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_se
     logger_session.info("Completed sort_gmtp conversion.")
 
 
-def conversion_sort_gmtp(wrk_dir: str, nm_lst: List[int], logger_session) -> None:
+def conversion_sort_gmtp(wrk_dir: str, nm_lst: List[int], logger_session=logger) -> None:
     """
     Implements the following actions:
     DEL /Q /F /S *Annotations.srt
@@ -236,7 +228,7 @@ def conversion_sort_gmtp(wrk_dir: str, nm_lst: List[int], logger_session) -> Non
     logger_session.info("Running sort_gmtp conversion.")
 
     srt_dir = Path(wrk_dir) / "SORT"
-    make_srt_dir(srt_dir, logger_session)
+    get_make_srt_dir(srt_dir, logger_session=logger)
 
     zfshp_dir = Path(wrk_dir) / "ZF_SHP"
     if not Path(zfshp_dir).exists():
@@ -283,7 +275,9 @@ def conversion_sort_gmtp(wrk_dir: str, nm_lst: List[int], logger_session) -> Non
 
         # ogr2ogr.main(["", "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)])
         cmd = [get_ogr_path(), "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)]
-        subprocess.run(cmd, check=True)
+        if not validate_file(in_gmtf):
+            return
+        run_command(cmd)
 
         if out_shp.exists():
             logger_session.info(f"{nm}zf.gmtf successfully converted to {nm}_zf.shp")
@@ -360,3 +354,30 @@ def interpol(col_1: float, frst: int, last: int, tdf: pd.DataFrame) -> Tuple[flo
         y = y2 + (y2 - y1) * lr
         t = g2 + (g2 - g1) * lr
     return x, y, t
+
+
+def main():
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        ap = argparse.ArgumentParser()
+        ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
+        ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
+        ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
+
+        ARG = vars(ap.parse_args())
+
+        input_directory = ARG["input_directory"]
+        output_directory = ARG["output_directory"]
+        crs = ARG["crs"] if ARG["crs"] else 28349
+        work_dir = output_directory
+        path_dir = input_directory
+
+        active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
+        return_list = conversion_zedfix_gmt_to_srt(work_dir, path_dir, active_extent_out_file_path)
+
+        nm_list = return_list
+        conversion_sort_gmtp_3d(work_dir, nm_list, crs)
+
+
+if __name__ == "__main__":
+    main()

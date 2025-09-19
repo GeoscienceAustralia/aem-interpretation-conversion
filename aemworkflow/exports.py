@@ -6,6 +6,7 @@ import pandas as pd
 import re
 from loguru import logger
 from typing import List
+import argparse
 
 
 def gmtsddd_to_egs(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
@@ -433,40 +434,43 @@ def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
                     fou.write("END\n")
 
 
-# def main():
-#     # quotes and qc_units function calls
-#     # input_dir = r'C:\Temp\jira-pv-1995\input'
-#     input_dir = r'C:/W10Dev/app/PyWorkflow_TestDirectory_20250311'
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--input_directory", "-i", required=True, help="Input directory")
+    ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
+    ap.add_argument("--export_mdc", "-m", required=True, help="Export to MDC format, y or n")
+    ap.add_argument("--export_mdch", "-mh", required=True, help="Export to MDCH format, y or n")
+    ap.add_argument("--export_egs", "-e", required=True, help="Export to EGS format, y or n")
+    ap.add_argument("--boundary", "-b", required=True, help="Boundary file name")
+    ap.add_argument("--split", "-s", required=True, help="Split file name")
 
-#     # validation_remove_quotes(bdf_file_path)
-#     # validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir)
+    ARG = vars(ap.parse_args())
 
-#     # zedfix function call
-#     # work_dir = r'C:\Temp\jira-pv-1863\input\validation\zedfix\python_in_progress_sample_mundi'
-#     # path_dir = work_dir
-#     # combined_ext_file_path = r'C:\Temp\jira-pv-1863\input\validation\zedfix\python_in_progress_sample_mundi
-#     # \active_extent.txt'
-#     # return_list = validation_zedfix_gmt_to_srt(work_dir, path_dir, combined_ext_file_path)
-#     # logger.info(f'return list: {return_list}')
+    input_directory = ARG["input_directory"]
+    output_directory = ARG["output_directory"]
+    export_mdc = ARG["export_mdc"]
+    export_mdch = ARG["export_mdch"]
+    export_egs = ARG["export_egs"]
+    boundary = ARG["boundary"]
+    split = ARG["split"]
+    active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
+    exdf = pd.read_csv(active_extent_out_file_path, sep=r'\s+', usecols=[0])
+    nm_list = exdf.iloc[:, 0].tolist()
 
-#     # sort functoin call
-#     # work_dir = r'C:\Temp\jira-pv-1863\input\validation\sort_gmtp\python_in_progress_sample_mundi'
-#     # nm_list = [10300]
-#     # validation_sort_gmtp(work_dir, nm_list)
+    work_dir = output_directory
+    path_dir = input_directory
+    if export_mdc:
+        boundary_file_path = os.path.join(path_dir, boundary)
+        gmtsddd_to_mdc(work_dir, boundary_file_path, nm_list)
 
-#     # exports
-#     # egs
-#     # nm_list = [1022001, 1022002, 1023001, 1023002, 1024001, 1024002, 1025001, 1025002, 1025003]
-#     # split_file_path = os.path.join(input_dir, 'LU_SPLIT_FEATURE_CLASSES_20220215.prn')
-#     # gmtsddd_to_egs(input_dir, split_file_path, nm_list)
-#     # mdc
-#     nm_list = [1021002, 1022001, 1022002, 1023001, 1023002, 1024001, 1024002, 1025001, 1025002, 1025003]
-#     split_file_path = os.path.join(input_dir, 'New_feature_classes_20210623.prn')
-#     gmtsddd_to_mdc(input_dir, split_file_path, nm_list)
-#     # gmtsddd_to_mdch(input_dir, split_file_path, nm_list)
+    if export_mdch:
+        boundary_file_path = os.path.join(path_dir, boundary)
+        gmtsddd_to_mdch(work_dir, boundary_file_path, nm_list)
 
-#     logger.info('Completed!!!')
+    if export_egs:
+        split_file_path = os.path.join(path_dir, split)
+        gmtsddd_to_egs(work_dir, split_file_path, nm_list)
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()

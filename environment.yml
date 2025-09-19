@@ -1,4 +1,4 @@
-name: aemworkflow-scripts
+name: aemworkflow-env
 channels:
   - conda-forge
   - defaults
@@ -7,11 +7,9 @@ dependencies:
   - pip=25.0.1
   - python=3.12.9
   - pip:
-      - bootstrap-flask==2.4.1
       - click==8.1.8
       - folium==0.19.5
       - geopandas==1.0.1
-      - gevent==24.11.1
       - importlib-metadata==8.6.1
       - loguru==0.7.3
       - markdown==3.7

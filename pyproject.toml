@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aemworkflow"
+version = "0.0.1"
+authors = [
+  { name="Geoscience Australia", email="toolkits@ga.gov.au" },
+]
+description = "Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool"
+readme = "README.md"
+requires-python = ">=3.12.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "click==8.1.3",
+    "folium==0.19.5",
+    "geopandas==1.0.1",
+    "importlib-metadata==8.6.1",
+    "loguru==0.7.3",
+    "markdown==3.7",
+    "pandas==2.2.3",
+    "pytz==2025.1",
+    "pyyaml==6.0.2",
+]
+
+[project.scripts]
+pre_interpretation = "aemworkflow.pre_interpretation:main"
+interpretation = "aemworkflow.interpretation:main"
+validation = "aemworkflow.validation:main"
+conversion = "aemworkflow.conversion:main"
+export = "aemworkflow.export:main"
+
+[project.urls]
+Homepage = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion"
+Issues = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion/issues"
+
+[tool.setuptools.packages.find]
+where = ["aemworkflow"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::RuntimeWarning",
+    "ignore::DeprecationWarning",
+]
+addopts = [
+    "--cov=aemworkflow",
+    "--cov-report=term",
+    "--cov-report=html:test-results/htmlcov",
+    "--cov-report=xml:test-results/results.xml",
+    "--cov-fail-under=80",
+    "-o junit_family=legacy",
+]
+
+[tool.flake8]
+max-line-length = 120
+ignore = ["E402"]

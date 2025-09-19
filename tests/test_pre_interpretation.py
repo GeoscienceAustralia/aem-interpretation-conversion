@@ -1,7 +1,8 @@
-import os
-import tempfile
 import pytest
 from aemworkflow import pre_interpretation
+import pandas as pd
+import geopandas as gpd
+import folium
 
 def test_all_lines_creates_gmt_file(tmp_path):
     # Prepare input path file
@@ -78,3 +79,47 @@ def test_box_elevation_various_layers(tmp_path, depth_lines, line_increments):
     assert "# @VGMT1.0 @GLINESTRING" in content
     assert "# FEATURE_DATA" in content
     assert content.count(">") >= depth_lines + 3  # 3 boxes + layers
+
+def test_main_prints_bounds(monkeypatch, tmp_path, capsys):
+    # Setup fake input/output directories
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+    output_dir.mkdir()
+
+    # Create minimal path and extent files
+    (input_dir / "1.path.txt").write_text("1 1 1 1 100.0 200.0 7 8 9\n1 1 4 5 110.0 210.0 8 9 10\n")
+    (input_dir / "1.extent.txt").write_text("1 20 10 30 40 2 100 3 200\n")
+    # Patch sys.argv
+    monkeypatch.setattr('sys.argv', [
+        'pre_interpretation.py',
+        '-i', str(input_dir),
+        '-o', str(output_dir),
+        '--crs', '4326',
+        '--gis', 'esri_arcmap_0.5',
+        '--lines', '2',
+        '--lines_increment', '10'
+    ])
+    # Patch run_command to avoid actually running ogr2ogr
+    monkeypatch.setattr(pre_interpretation, "run_command", lambda *a, **k: None)
+    # Patch get_ogr_path to return a dummy string
+    monkeypatch.setattr(pre_interpretation, "get_ogr_path", lambda: "ogr2ogr")
+    # Patch geopandas.read_file to return a dummy GeoDataFrame
+    dummy_gdf = gpd.GeoDataFrame({'geometry': []}, geometry='geometry', crs="EPSG:4326")
+    monkeypatch.setattr(gpd, "read_file", lambda *a, **k: dummy_gdf)
+    # Patch GeoDataFrame.to_crs to just return self
+    monkeypatch.setattr(dummy_gdf, "to_crs", lambda *a, **k: dummy_gdf)
+    # Patch folium.Map and folium.GeoJson to avoid file IO
+    class DummyMap:
+        def __init__(self, *a, **k): pass
+        def save(self, *a, **k): pass
+    class DummyGeoJson:
+        def __init__(self, *a, **k): pass
+        def add_to(self, m): return self
+        def get_bounds(self): return [[0, 0], [1, 1]]
+    monkeypatch.setattr(folium, "Map", DummyMap)
+    monkeypatch.setattr(folium, "GeoJson", DummyGeoJson)
+    # Run main and ensure no exception
+    pre_interpretation.main()
+    out = capsys.readouterr().out
+    assert "bounds are: [[0, 0], [1, 1]]" in out

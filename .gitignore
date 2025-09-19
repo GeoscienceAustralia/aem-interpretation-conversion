@@ -1,7 +1,6 @@
 tmp/*
 temp/*
 Session.vim
-dist
 aemworkflow/webapp/build
 docs/man/*.gz
 docs/source/api/generated
@@ -29,7 +28,6 @@ _build
 *.pyo
 
 __pycache__
-dist
 sdist
 *.so
 pip-log.txt
@@ -74,7 +72,6 @@ __pycache__/
 .Python
 env/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/

@@ -1,9 +1,11 @@
-# import sys
 import os
 from datetime import date
+import argparse
+from pathlib import Path
+from loguru import logger
 
 
-def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session):
+def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session=logger):
     logger_session.info("Running remove quotes validation.")
     with open(bdf_file_path, 'r') as bdf_file, open(bdf_out_file_path, 'w') as bdf_clean_out_file:
         for line in bdf_file:
@@ -11,7 +13,7 @@ def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session):
     logger_session.info("Completed remove quotes validation.")
 
 
-def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_session):
+def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_session=logger):
     logger_session.info("Running qc_units validation.")
     # Initialize dictionaries to store stratigraphic unit information
     stratno = {}
@@ -109,30 +111,27 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
     logger_session.info("completed qc_units validation.")
 
 
-# def main():
-#     # quotes and qc_units function calls
-#     validation_dir = r'C:\Temp\jira-pv-1863\input\validation'
-#     bdf_file_path = fr'{validation_dir}\met.bdf'
-#     erc_file_path = fr'{validation_dir}\ERC_Stratigraphic_names_Current.txt'
-#     bdf_2_file_path = fr'{validation_dir}\qc\met2.bdf'
-#     validation_remove_quotes(bdf_file_path)
-#     validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir)
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
+    ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
+    ap.add_argument("--asud", "-a", required=True, help="asud file name")
 
-#     # zedfix function call
-#     # work_dir = r'C:\Temp\jira-pv-1863\input\validation\zedfix\python_in_progress_sample_mundi'
-#     # path_dir = work_dir
-#     # combined_ext_file_path = r'C:\Temp\jira-pv-1863\input\validation\zedfix\
-# python_in_progress_sample_mundi\active_extent.txt'
-#     # return_list = validation_zedfix_gmt_to_srt(work_dir, path_dir, combined_ext_file_path)
-#     # logger.info(f'return list: {return_list}')
+    ARG = vars(ap.parse_args())
 
-#     # sort functoin call
-#     # work_dir = r'C:\Temp\jira-pv-1863\input\validation\sort_gmtp\python_in_progress_sample_mundi'
-#     # nm_list = [10300]
-#     # validation_sort_gmtp(work_dir, nm_list)
+    input_directory = ARG["input_directory"]
+    output_directory = ARG["output_directory"]
+    asud = ARG["asud"]
+    bdf_file_path = fr'{output_directory}{os.sep}interp{os.sep}met.bdf'
 
-#     logger.info('Completed!!!')
+    Path(fr'{output_directory}{os.sep}qc').mkdir(exist_ok=True)
+    bdf_out_file_path = fr'{output_directory}{os.sep}qc{os.sep}met2.bdf'
+
+    validation_remove_quotes(bdf_file_path, bdf_out_file_path)
+    erc_file_path = os.path.join(input_directory, asud)
+
+    validation_qc_units(erc_file_path, bdf_out_file_path, output_directory)
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()

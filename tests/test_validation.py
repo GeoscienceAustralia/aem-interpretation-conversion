@@ -1,6 +1,7 @@
 import os
 import pytest
 from aemworkflow import validation
+from unittest import mock
 
 class DummyLogger:
     def __init__(self):
@@ -72,3 +73,22 @@ def test_validation_qc_units_short_nf(tmp_path, dummy_logger):
     with open(short_nf_path) as f:
         content = f.read()
     assert "15 a b" in content
+
+def test_validation_main_removes_quotes_and_validates(tmp_path):
+    input_dir = tmp_path
+    output_dir = tmp_path
+    erc_path = os.path.join(input_dir, "test.asud")
+    bdf_path = os.path.join(output_dir, "interp", "met.bdf")
+    ap = mock.MagicMock()
+    ap.add_argument = mock.MagicMock()
+    ap.parse_args = mock.MagicMock(return_value=mock.MagicMock(
+        input_directory=str(input_dir),
+        output_directory=str(output_dir),
+        asud='test.asud'
+    ))
+    with mock.patch('argparse.ArgumentParser', return_value=ap):
+        with mock.patch('aemworkflow.validation.validation_remove_quotes') as remove_quotes:
+            with mock.patch('aemworkflow.validation.validation_qc_units') as qc_units:
+                validation.main()
+                remove_quotes.assert_called_once_with(bdf_path, os.path.join(output_dir, "qc", "met2.bdf"))
+                qc_units.assert_called_once_with(erc_path, os.path.join(output_dir, "qc", "met2.bdf"), str(output_dir))
