@@ -93,9 +93,9 @@ var/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+build/
 
 # Unit test / coverage reports
-
 test-results/
 .tox/
 .coverage
