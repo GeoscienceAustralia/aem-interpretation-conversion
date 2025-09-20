@@ -1,60 +1,95 @@
-# AEM interpretation conversion tool (AEMInterpConvert)
+# AEM Interpretation Conversion Tool (AEMInterpConvert)
 
-Info
-------------
-For more information about **AEMInterpConvert**, Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool, see this [article](https://ecat.ga.gov.au/geonetwork/srv/eng/catalog.search#/metadata/150529).
+## Overview
+For more information about AEMInterpConvert, Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool, see this [Geoscience Australia article](https://ecat.ga.gov.au/geonetwork/srv/eng/catalog.search#/metadata/150529)[Geoscience Australia article](https://ecat.ga.gov.au/geonetwork/srv/eng/catalog.search#/metadata/150529).
 
+---
 
-Installation
-------------
-Clone the repository
+## Installation Guide
 
-```
+### 1. Clone the Repository
+```bash
 git clone git@bitbucket.org:geoscienceaustralia/aem-interpretation-conversion.git
 cd aem-interpretation-conversion
 ```
 
-### Using Anaconda
-If you have Anaconda installed, you may use the following to create the environment:
+---
 
-```
-conda init
+### 2. Choose Your Environment Setup
+
+### **Option A: Anaconda (Recommended)**
+If you have [Anaconda](https://www.anaconda.com/download) installed:
+```bash
 conda env create -f environment.yml
 conda activate aemworkflow-env
 ```
-However if you don't use Anaconda:
 
-### Using Linux (Python 3.12 + venv) ###
-  
-```
-python --version
-python -m venv aem-venv
+---
+
+### **Option B: Python 3.12 + Virtual Environment (VENV)**  
+Ensure Python 3.12 is installed.
+
+**Linux / macOS:**
+```bash
+python3.12 -m venv aem-venv
 source aem-venv/bin/activate
-sh builds/linux_gdal.sh           # Install GDAL binaries
+```
+
+**Windows (Command Prompt):**
+```powershell
+python -m venv aem-venv
+aem-venv\Scripts\activate.bat
+```
+
+---
+
+## 3. Install GDAL Dependencies
+
+### **Windows Setup**
+1. Download and install [OSGeo4W](https://trac.osgeo.org/osgeo4w/).  
+   - Choose **Advanced Install**  
+   - Select the following packages:  
+     - `gdal`  
+     - `proj`
+
+2. After installation (default path is `C:\OSGeo4W` or `C:\OSGeo4W64`), run the helper script to configure environment variables and install Python GDAL bindings using Windows Command prompt (CMD):
+```cmd
+cd builds
+windows_gdal.bat
+```
+
+This script will:
+- Add OSGeo4W binaries to your `PATH`
+- Detect the installed GDAL version (`gdalinfo --version`)
+- Install the matching Python GDAL bindings via `pip`
+
+---
+
+### **Linux / macOS Setup**
+Use the provided build script to install system-level GDAL and PROJ libraries:
+```bash
+cd builds
+./linux_gdal.sh
+```
+
+This script will:
+- Install required system packages (`gdal`, `proj`)  
+- Install the Python GDAL bindings matching your GDAL version  
+
+---
+
+### 4. Install the AEMInterpConvert Package
+After setting up dependencies:
+```bash
 pip install .
 ```
 
-### Windows (Python 3.12 + venv) ###
+---
 
-#### GDAL installation instructions
-
-1. Download and install [OSGeo4W](https://trac.osgeo.org/osgeo4w/) (Recommended)
-
-2. During installation choose `Advanced Install` and select Libs `gdal` and `proj`
-
-3. Finish installation (default path is `C:\OSGeo4W` or `C:\OSGeo4W64`) and set environment variables using CMD
-
-```
-set PATH=C:\OSGeo4W\bin;%PATH%
-set GDAL_DATA=C:\OSGeo4W\share\gdal
-set PROJ_LIB=C:\OSGeo4W\share\proj
-pip install "gdal==3.8.5"       # You must change this to your version of GDAL
-```
-
-Finally install the package
-
-```
-pip install .
+### 5. Verify Installation
+To confirm GDAL bindings are working correctly:
+```bash
+python -c "from osgeo import gdal; print(gdal.VersionInfo())"
 ```
 
 CLI Usage

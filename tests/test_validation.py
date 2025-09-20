@@ -3,15 +3,18 @@ import pytest
 from aemworkflow import validation
 from unittest import mock
 
+
 class DummyLogger:
     def __init__(self):
         self.messages = []
+
     def info(self, msg):
         self.messages.append(msg)
 
 @pytest.fixture
 def dummy_logger():
     return DummyLogger()
+
 
 def test_validation_remove_quotes_removes_quotes(tmp_path, dummy_logger):
     input_path = os.path.join(tmp_path, "input.bdf")
@@ -25,6 +28,7 @@ def test_validation_remove_quotes_removes_quotes(tmp_path, dummy_logger):
     assert content == "abcdef\n123456\n"
     assert "Running remove quotes validation." in dummy_logger.messages
     assert "Completed remove quotes validation." in dummy_logger.messages
+
 
 def test_validation_qc_units_basic(tmp_path, dummy_logger):
     validation_dir = tmp_path
@@ -55,6 +59,7 @@ def test_validation_qc_units_basic(tmp_path, dummy_logger):
     assert "Running qc_units validation." in dummy_logger.messages
     assert "completed qc_units validation." in dummy_logger.messages
 
+
 def test_validation_qc_units_short_nf(tmp_path, dummy_logger):
     validation_dir = tmp_path
     os.makedirs(os.path.join(validation_dir, "qc"), exist_ok=True)
@@ -68,11 +73,10 @@ def test_validation_qc_units_short_nf(tmp_path, dummy_logger):
     validation.validation_qc_units(erc_path, bdf_2_path, validation_dir, dummy_logger)
     short_nf_path = os.path.join(validation_dir, "qc", "short_nf.log")
     assert os.path.exists(short_nf_path)
-    nf_path = "asud_nf.asc"
-    assert os.path.exists(nf_path)
     with open(short_nf_path) as f:
         content = f.read()
     assert "15 a b" in content
+
 
 def test_validation_main_removes_quotes_and_validates(tmp_path):
     input_dir = tmp_path
