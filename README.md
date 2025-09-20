@@ -1,7 +1,7 @@
 # AEM Interpretation Conversion Tool (AEMInterpConvert)
 
 ## Overview
-For more information about AEMInterpConvert, Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool, see this [Geoscience Australia article](https://ecat.ga.gov.au/geonetwork/srv/eng/catalog.search#/metadata/150529)[Geoscience Australia article](https://ecat.ga.gov.au/geonetwork/srv/eng/catalog.search#/metadata/150529).
+For more information about AEMInterpConvert, Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool, see this [Geoscience Australia article](https://ecat.ga.gov.au/geonetwork/srv/eng/catalog.search#/metadata/150529).
 
 ---
 
