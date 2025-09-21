@@ -27,7 +27,7 @@ conda activate aemworkflow-env
 ---
 
 ### **Option B: Python 3.12 + Virtual Environment (VENV)**  
-Ensure Python 3.12 is installed.
+#### i. Ensure Python 3.12 is installed.
 
 **Linux / macOS:**
 ```bash
@@ -41,11 +41,22 @@ python -m venv aem-venv
 aem-venv\Scripts\activate.bat
 ```
 
+#### ii. Install GDAL Dependencies.
+
+**Linux / macOS:**
+Use the provided build script to install system-level GDAL and PROJ libraries:
+```bash
+cd builds
+./linux_gdal.sh
+```
+
+This script will:
+- Install required system packages (`gdal`, `proj`)  
+- Install the Python GDAL bindings matching your GDAL version  
+
 ---
 
-## 3. Install GDAL Dependencies
-
-### **Windows Setup**
+**Windows**
 1. Download and install [OSGeo4W](https://trac.osgeo.org/osgeo4w/).  
    - Choose **Advanced Install**  
    - Select the following packages:  
@@ -65,20 +76,9 @@ This script will:
 
 ---
 
-### **Linux / macOS Setup**
-Use the provided build script to install system-level GDAL and PROJ libraries:
-```bash
-cd builds
-./linux_gdal.sh
-```
 
-This script will:
-- Install required system packages (`gdal`, `proj`)  
-- Install the Python GDAL bindings matching your GDAL version  
+#### iii. Install the AEMInterpConvert Package
 
----
-
-### 4. Install the AEMInterpConvert Package
 After setting up dependencies:
 ```bash
 pip install .
@@ -86,17 +86,22 @@ pip install .
 
 ---
 
-### 5. Verify Installation
+#### iiii. Verify GDAL Installation
 To confirm GDAL bindings are working correctly:
 ```bash
 python -c "from osgeo import gdal; print(gdal.VersionInfo())"
 ```
 
-CLI Usage
+### 3. CLI Usage
 ------------
 For each script, run the file with any required arguments and any additional where you want to deviate from the default. All arguments should be in quotes as per the examples.  
 
 If using Anaconda, activate conda environment if required before running the scripts.  
+
+Navigate to the folder where the scripts are located
+```
+cd aemworkflow
+```
 
 ### Pre-interpretation
 
