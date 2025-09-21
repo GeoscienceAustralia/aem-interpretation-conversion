@@ -2,8 +2,11 @@ import sys
 import click
 from aemworkflow.conversion import main as conversion
 
+def cli():
+    """AEM Interpretation Conversion CLI."""
+    pass
 
-# @cli.command()
+@cli.command()
 @click.argument("input_directory", type=click.Path(exists=True))
 @click.argument("output_directory", type=click.Path())
 @click.option("--crs", default="28349", help="Coordinate Reference System (default: EPSG:28349)")
