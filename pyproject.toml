@@ -40,7 +40,7 @@ Homepage = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion
 Issues = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion/issues"
 
 [tool.setuptools.packages.find]
-where = ["aemworkflow"]
+where = ["aemworkflow", "aemworkflow/scripts"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
