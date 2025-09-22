@@ -29,11 +29,6 @@ dependencies = [
 
 [project.scripts]
 aemworkflow = "scripts.commands:cli"
-pre_interpretation = "pre_interpretation:main"
-interpretation = "interpretation:main"
-validation = "validation:main"
-conversion = "conversion:main"
-export = "export:main"
 
 [project.urls]
 Homepage = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion"

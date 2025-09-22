@@ -2,7 +2,6 @@ import decimal
 import sys
 import os
 import glob
-import argparse
 import geopandas
 import folium
 import warnings
@@ -131,26 +130,10 @@ def box_elevation(extent_file_path, path_file_path, output_file_path, depth_line
             depth += depth_line_increments
 
 
-def main():
+def main(input_directory, output_directory, crs="28349", gis="esri_arcmap_0.5", lines=10, lines_increment=30):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        ap = argparse.ArgumentParser()
-        ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
-        ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-        ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
-        ap.add_argument("--gis", "-g", required=False, help="Defaults to ESRI ArcMap 0.5")
-        ap.add_argument("--lines", "-l", required=False, help="Depth lines, defaults to 10")
-        ap.add_argument("--lines_increment", "-li", required=False, help="Depth lines increment, defaults to 30")
-
-        ARG = vars(ap.parse_args())
-
-        input_directory = ARG["input_directory"]
-        output_directory = ARG["output_directory"]
-        crs = ARG["crs"] if ARG["crs"] else 28349
-        gis = ARG["gis"] if ARG["gis"] else "esri_arcmap_0.5"
-        lines = ARG["lines"] if ARG["lines"] else 10
-        lines_increment = ARG["lines_increment"] if ARG["lines_increment"] else 30
         print("create AEM interp box and ground level ghost profiles", file=sys.stderr)
         print("layer interval", lines_increment, file=sys.stderr)
         print("layer count", lines, file=sys.stderr)

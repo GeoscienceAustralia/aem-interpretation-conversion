@@ -6,7 +6,6 @@ import pandas as pd
 import re
 from loguru import logger
 from typing import List
-import argparse
 
 
 def gmtsddd_to_egs(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
@@ -434,25 +433,8 @@ def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
                     fou.write("END\n")
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--input_directory", "-i", required=True, help="Input directory")
-    ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-    ap.add_argument("--export_mdc", "-m", required=True, help="Export to MDC format, y or n")
-    ap.add_argument("--export_mdch", "-mh", required=True, help="Export to MDCH format, y or n")
-    ap.add_argument("--export_egs", "-e", required=True, help="Export to EGS format, y or n")
-    ap.add_argument("--boundary", "-b", required=True, help="Boundary file name")
-    ap.add_argument("--split", "-s", required=True, help="Split file name")
-
-    ARG = vars(ap.parse_args())
-
-    input_directory = ARG["input_directory"]
-    output_directory = ARG["output_directory"]
-    export_mdc = ARG["export_mdc"]
-    export_mdch = ARG["export_mdch"]
-    export_egs = ARG["export_egs"]
-    boundary = ARG["boundary"]
-    split = ARG["split"]
+def main(input_directory: str, output_directory: str, boundary: str, split: str,
+         export_mdc=False, export_mdch=False, export_egs=False) -> None:
     active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
     exdf = pd.read_csv(active_extent_out_file_path, sep=r'\s+', usecols=[0])
     nm_list = exdf.iloc[:, 0].tolist()
