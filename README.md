@@ -81,7 +81,7 @@ To confirm GDAL bindings are working correctly:
 python -c "from osgeo import gdal; print(gdal.VersionInfo())"
 ```
 
-#### iiii. Install the AEMInterpConvert Package
+#### iv. Install the AEMInterpConvert Package
 
 After setting up dependencies:
 ```bash
@@ -90,7 +90,7 @@ pip install .
 
 ---
 
-#### iiiii. Add current directory to your PYTHONPATH
+#### v. Add current directory to your PYTHONPATH
 ```bash
 export PYTHONPATH=${cloned_directory}
 ```
@@ -100,11 +100,6 @@ export PYTHONPATH=${cloned_directory}
 For each script, run the file with any required arguments and any additional where you want to deviate from the default. All arguments should be in quotes as per the examples.  
 
 If using Anaconda, activate conda environment if required before running the scripts.  
-
-Navigate to the folder where the scripts are located
-```
-cd aemworkflow
-```
 
 ### Pre-interpretation
 

@@ -90,16 +90,6 @@ def test_main_prints_bounds(monkeypatch, tmp_path, capsys):
     # Create minimal path and extent files
     (input_dir / "1.path.txt").write_text("1 1 1 1 100.0 200.0 7 8 9\n1 1 4 5 110.0 210.0 8 9 10\n")
     (input_dir / "1.extent.txt").write_text("1 20 10 30 40 2 100 3 200\n")
-    # Patch sys.argv
-    monkeypatch.setattr('sys.argv', [
-        'pre_interpretation.py',
-        '-i', str(input_dir),
-        '-o', str(output_dir),
-        '--crs', '4326',
-        '--gis', 'esri_arcmap_0.5',
-        '--lines', '2',
-        '--lines_increment', '10'
-    ])
     # Patch run_command to avoid actually running ogr2ogr
     monkeypatch.setattr(pre_interpretation, "run_command", lambda *a, **k: None)
     # Patch get_ogr_path to return a dummy string
@@ -120,6 +110,6 @@ def test_main_prints_bounds(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(folium, "Map", DummyMap)
     monkeypatch.setattr(folium, "GeoJson", DummyGeoJson)
     # Run main and ensure no exception
-    pre_interpretation.main()
+    pre_interpretation.main(str(input_dir), str(output_dir), crs="4326", gis="esri_arcmap_0.5", lines=2, lines_increment=10)
     out = capsys.readouterr().out
     assert "bounds are: [[0, 0], [1, 1]]" in out
