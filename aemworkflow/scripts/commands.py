@@ -2,6 +2,7 @@ import sys
 import click
 from aemworkflow.conversion import main as conversion
 
+@click.group()
 def cli():
     """AEM Interpretation Conversion CLI."""
     pass

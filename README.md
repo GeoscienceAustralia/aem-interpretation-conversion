@@ -92,6 +92,11 @@ To confirm GDAL bindings are working correctly:
 python -c "from osgeo import gdal; print(gdal.VersionInfo())"
 ```
 
+#### iiiii. Add current directory to your PYTHONPATH
+```bash
+export PYTHONPATH=${cloned_directory}
+```
+
 ### 3. CLI Usage
 ------------
 For each script, run the file with any required arguments and any additional where you want to deviate from the default. All arguments should be in quotes as per the examples.  
