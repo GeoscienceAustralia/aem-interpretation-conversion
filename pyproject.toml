@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [project.scripts]
-aemworkflow = "aemworkflow.scripts.commands:cli"
+aemworkflow = "scripts.commands:cli"
 pre_interpretation = "aemworkflow.pre_interpretation:main"
 interpretation = "aemworkflow.interpretation:main"
 validation = "aemworkflow.validation:main"

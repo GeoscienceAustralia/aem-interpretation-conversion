@@ -1,6 +1,6 @@
 import sys
 import click
-from aemworkflow.conversion import main as conversion
+from conversion import main as conversion
 
 def cli():
     """AEM Interpretation Conversion CLI."""
