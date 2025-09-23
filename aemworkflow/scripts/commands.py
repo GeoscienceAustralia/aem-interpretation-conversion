@@ -1,4 +1,3 @@
-from operator import is_
 import sys
 import click
 from aemworkflow.conversion import main as conversion

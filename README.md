@@ -104,7 +104,7 @@ If using Anaconda, activate conda environment if required before running the scr
 ### Pre-interpretation
 
 ```
-aemworkflow pre_interpret "{input_directory}" "{output_directory}" 
+aemworkflow pre-interpret "{input_directory}" "{output_directory}" 
 ```
 
 **Parameter examples:**
