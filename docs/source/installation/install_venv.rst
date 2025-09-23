@@ -11,7 +11,7 @@ You can download it from the official Python website: https://www.python.org/dow
 Linux/MacOS instructions
 ----------------
 To create a virtual environment, open a terminal and run the following commands:
-
+ 
 .. code-block:: bash
 
     python3.12 -m venv aem-venv
