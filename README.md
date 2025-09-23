@@ -88,12 +88,6 @@ After setting up dependencies:
 pip install .
 ```
 
----
-
-#### v. Add current directory to your PYTHONPATH
-```bash
-export PYTHONPATH=${cloned_directory}
-```
 
 ### 3. CLI Usage
 ------------
