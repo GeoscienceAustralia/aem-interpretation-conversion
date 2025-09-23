@@ -1,19 +1,13 @@
+Welcome to the documentation of the AEM Interpretation Conversion workflow!
+===========================================
 
-
-.. currentmodule:: aemworkflow
-
-
-AEM Workflow documentation
-===================
-
-AEM Workflow is a python 3 package.
-
-AEM Workflow is developed at Geoscience Australia.
-
+Contents:
+---------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-
-   
+   background
+   installation/index
+   run_scripts/index
+   genindex
