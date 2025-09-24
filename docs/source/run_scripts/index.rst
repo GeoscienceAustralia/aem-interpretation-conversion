@@ -1,3 +1,6 @@
+Run Scripts
+============
+
 For each script, run the file with any required arguments and any additional where you want to deviate from the default. All arguments should be in quotes as per the examples.  
 
 If using Anaconda, activate conda environment if required before running the scripts.  
