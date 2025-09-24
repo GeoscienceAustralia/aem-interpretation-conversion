@@ -1,4 +1,4 @@
-Welcome to the documentation of the AEM Interpretation Conversion workflow!
+AEM Interpretation Conversion Workflow Documentation
 ===========================================
 
 Contents:

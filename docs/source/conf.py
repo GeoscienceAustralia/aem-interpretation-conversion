@@ -16,7 +16,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'AEM Interpretation Conversion'
+project = 'Airborne Electromagnetic workflow'
 copyright = 'Commonwealth of Australia (Geoscience Australia)'
 
 
