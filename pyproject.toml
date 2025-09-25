@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
