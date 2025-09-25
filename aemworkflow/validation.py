@@ -1,6 +1,5 @@
 import os
 from datetime import date
-import argparse
 from pathlib import Path
 from loguru import logger
 
@@ -113,17 +112,7 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
     logger_session.info("completed qc_units validation.")
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
-    ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-    ap.add_argument("--asud", "-a", required=True, help="asud file name")
-
-    ARG = vars(ap.parse_args())
-
-    input_directory = ARG["input_directory"]
-    output_directory = ARG["output_directory"]
-    asud = ARG["asud"]
+def main(input_directory, output_directory, asud):
     bdf_file_path = fr'{output_directory}{os.sep}interp{os.sep}met.bdf'
 
     Path(fr'{output_directory}{os.sep}qc').mkdir(exist_ok=True)

@@ -27,7 +27,7 @@ conda activate aemworkflow-env
 ---
 
 ### **Option B: Python 3.12 + Virtual Environment (VENV)**  
-Ensure Python 3.12 is installed.
+#### i. Ensure Python 3.12 is installed.
 
 **Linux / macOS:**
 ```bash
@@ -41,11 +41,22 @@ python -m venv aem-venv
 aem-venv\Scripts\activate.bat
 ```
 
+#### ii. Install GDAL Dependencies.
+
+**Linux / macOS:**
+Use the provided build script to install system-level GDAL and PROJ libraries:
+```bash
+cd builds
+./linux_gdal.sh
+```
+
+This script will:
+- Install required system packages (`gdal`, `proj`)  
+- Install the Python GDAL bindings matching your GDAL version  
+
 ---
 
-## 3. Install GDAL Dependencies
-
-### **Windows Setup**
+**Windows**
 1. Download and install [OSGeo4W](https://trac.osgeo.org/osgeo4w/).  
    - Choose **Advanced Install**  
    - Select the following packages:  
@@ -64,35 +75,21 @@ This script will:
 - Install the matching Python GDAL bindings via `pip`
 
 ---
-
-### **Linux / macOS Setup**
-Use the provided build script to install system-level GDAL and PROJ libraries:
-```bash
-cd builds
-./linux_gdal.sh
-```
-
-This script will:
-- Install required system packages (`gdal`, `proj`)  
-- Install the Python GDAL bindings matching your GDAL version  
-
----
-
-### 4. Install the AEMInterpConvert Package
-After setting up dependencies:
-```bash
-pip install .
-```
-
----
-
-### 5. Verify Installation
+#### iii. Verify GDAL Installation
 To confirm GDAL bindings are working correctly:
 ```bash
 python -c "from osgeo import gdal; print(gdal.VersionInfo())"
 ```
 
-CLI Usage
+#### iv. Install the AEMInterpConvert Package
+
+After setting up dependencies:
+```bash
+pip install .
+```
+
+
+### 3. CLI Usage
 ------------
 For each script, run the file with any required arguments and any additional where you want to deviate from the default. All arguments should be in quotes as per the examples.  
 
@@ -101,80 +98,81 @@ If using Anaconda, activate conda environment if required before running the scr
 ### Pre-interpretation
 
 ```
-python pre_interpretation.py -i "{input_directory}" -o "{output_directory}
+aemworkflow pre-interpret "{input_directory}" "{output_directory}" 
 ```
 
 **Parameter examples:**
 
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
-| -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
-| -o          | output directory| Yes          |None       |          |        |
-| -c          | crs - GDA/MGA zone EPSG| No    |28349      |28349, 28350, 28351, 28352, 28354, 28355, 28356|   |
-| -g          | Interpretation GIS software| No|esri_arcmap_0.5|esri_arcmap_0.5 or esri_arcmap_pro_0.5|   |
-| -l          | depth lines     | No           |10         |          |        |
-| -li         | depth lines increment| No      |30         |          |        |
+|             | input directory | Yes          |None       |          |A non zipped folder containing required files|
+|             | output directory| Yes          |None       |          |        |
+|             | crs - GDA/MGA zone EPSG| No    |28349      |28349, 28350, 28351, 28352, 28354, 28355, 28356|   |
+|             | Interpretation GIS software| No|esri_arcmap_0.5|esri_arcmap_0.5 or esri_arcmap_pro_0.5|   |
+|             | depth lines     | No           |10         |          |        |
+|             | depth lines increment| No      |30         |          |        |
 
 ### Interpretation
 
 ```
-python interpretation.py -i "{input_directory}" -o "{output_directory}"
+aemworkflow interpret "{input_directory}" "{output_directory}"
 ```
 **Parameter examples:**
 
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
-| -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
-| -o          | output directory| Yes          |None       |          |  |
-| -c          | crs - GDA/MGA zone EPSG| No    |28349      |28349, 28350, 28351, 28352, 28354, 28355, 28356|  |
-| -g          | Interpretation GIS software| No|esri_arcmap_0.5|esri_arcmap_0.5 or esri_arcmap_pro_0.5|  |
-| -l          | depth lines     | No           |10         |          |  |
-| -li         | depth lines increment| No      |30         |          |  |
+|             | input directory | Yes          |None       |          |A non zipped folder containing required files|
+|             | output directory| Yes          |None       |          |  |
+|             | crs - GDA/MGA zone EPSG| No    |28349      |28349, 28350, 28351, 28352, 28354, 28355, 28356|  |
+|             | Interpretation GIS software| No|esri_arcmap_0.5|esri_arcmap_0.5 or esri_arcmap_pro_0.5|  |
+|             | depth lines     | No           |10         |          |  |
+|             | depth lines increment| No      |30         |          |  |
 
 ### Validation
 
 ```
-python validation.py -i "{input_directory}" -o "{output_directory}" -a "{asud_filename}"
+aemworkflow validate "{input_directory}" "{output_directory}" "{asud_filename}"
 ```
 **Parameter examples:**
 
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
-| -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
-| -o          | output directory| Yes          |None       |          |        |
-| -a          | ausd file name  | Yes          |None       |          |        |
+|             | input directory | Yes          |None       |          |A non zipped folder containing required files|
+|             | output directory| Yes          |None       |          |        |
+|             | ausd file name  | Yes          |None       |          |        |
 
 
 ### Conversion
 
 ```
-python conversion.py -i "{input_directory}" -o "{output_directory}"
+aemworkflow convert "{input_directory}" "{output_directory}"
 ```
 **Parameter examples:**
 
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
-| -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
-| -o          | output directory| Yes          |None       |          |        |
-| -c          | crs - GDA/MGA zone EPSG| No    |28349      |28349, 28350, 28351, 28352, 28354, 28355, 28356|        |
+|             | input directory | Yes          |None       |          |A non zipped folder containing required files|
+|             | output directory| Yes          |None       |          |        |
+|             | crs - GDA/MGA zone EPSG| No    |28349      |28349, 28350, 28351, 28352, 28354, 28355, 28356|        |
 
 
 ### Export
 
 ```
-python exports.py -i "{input_directory}" -o "{output_directory}" -m "y" -mh "n" -e "n" -b "{boundary_file}" -s "{split_file}"
+aemworkflow export "{input_directory}" "{output_directory}" "{boundary_file}" "{split_file}" -mdc -mdch -egs 
 ```
 **Parameter examples:**
 
 | Flag        | Argument        | Required     | Default   |Options   |Notes   |
 | ------------|-----------------| ------------ |-----------|----------|--------|
-| -i          | input directory | Yes          |None       |          |A non zipped folder containing required files|
-| -o          | output directory| Yes          |None       |          |        |
-| -m          | Export to MDC format| Yes      |None       |y or n    |        |
-| -mh         | Export to MDCH format| Yes     |None       |y or n    |        |
-| -e          | Export to EGS format| Yes      |None       |y or n    |        |
-| -b          | name of boundary file| Yes     |None       |          |        |
-| -s          | name of split file   | Yes     |None       |          |        |
+|             | input directory | Yes          |None       |          |A non zipped folder containing required files|
+|             | output directory| Yes          |None       |          |        |
+|             | name of boundary file| Yes     |None       |          |        |
+|             | name of split file   | Yes     |None       |          |        |
+| -mdc        | Export to MDC format | Yes     |False      |          |        |
+| -mdch       | Export to MDCH format| Yes     |False      |          |        |
+| -egs        | Export to EGS format | Yes     |False      |          |        |
+
 
 Useful Links
 ------------
