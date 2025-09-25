@@ -80,7 +80,7 @@ Argument                      Required       Default         Options            
 ============================= ============== =============== ================================================ =============================================
 input directory               Yes            None                                                             A non zipped folder containing required files 
 output directory              Yes            None                                                                    
-coordinate reference system   No             28349            28349, 28350, 28351, 28352, 28354, 28355, 28356 GDA/MGA zone EPSG
+coordinate reference system   No             28349            28349, 28350, 28351, 28352, 28354, 28355, 28356 GDA/MGA zone EPSGac
 ============================= ============== =============== ================================================ =============================================
 
 

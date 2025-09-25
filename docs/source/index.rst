@@ -10,4 +10,5 @@ Contents:
    background
    installation/index
    run_scripts/index
+   using_web_ui/index
    genindex
