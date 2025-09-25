@@ -7,5 +7,5 @@ dependencies:
   - pip=25.0.1
   - python=3.12.9
   - pip:
-      - git+https://github.com/GeoscienceAustralia/aem-interpretation-conversion.git@PV-2471-align-anaconda-and-venv-setup-for-cli#egg=aemworkflow
+      - git+https://github.com/GeoscienceAustralia/aem-interpretation-conversion.git@main
 prefix: /opt/conda-env
