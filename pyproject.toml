@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aemworkflow"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   { name="Geoscience Australia", email="toolkits@ga.gov.au" },
 ]
@@ -28,18 +28,16 @@ dependencies = [
 ]
 
 [project.scripts]
-pre_interpretation = "aemworkflow.pre_interpretation:main"
-interpretation = "aemworkflow.interpretation:main"
-validation = "aemworkflow.validation:main"
-conversion = "aemworkflow.conversion:main"
-export = "aemworkflow.export:main"
+aemworkflow = "aemworkflow.aemworkflow:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aemworkflow*"]
+exclude = ["builds*"]
 
 [project.urls]
 Homepage = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion"
 Issues = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion/issues"
-
-[tool.setuptools.packages.find]
-where = ["aemworkflow"]
 
 [tool.pytest.ini_options]
 filterwarnings = [

@@ -1,5 +1,4 @@
 import os
-import argparse
 import glob
 import re
 import warnings
@@ -358,19 +357,9 @@ def interpol(col_1: float, frst: int, last: int, tdf: pd.DataFrame) -> Tuple[flo
     return x, y, t
 
 
-def main():
+def main(input_directory: str, output_directory: str, crs=28349) -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        ap = argparse.ArgumentParser()
-        ap.add_argument("--input_directory", "-i", required=True, help="Input directory with path and extent files")
-        ap.add_argument("--output_directory", "-o", required=True, help="Output directory for generated files")
-        ap.add_argument("--crs", "-c", required=False, help="Defaults to (GDA94 / MGA zone 49) EPSG:28349")
-
-        ARG = vars(ap.parse_args())
-
-        input_directory = ARG["input_directory"]
-        output_directory = ARG["output_directory"]
-        crs = ARG["crs"] if ARG["crs"] else 28349
         work_dir = output_directory
         path_dir = input_directory
 

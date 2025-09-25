@@ -90,13 +90,6 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     all_lines_geojson = all_lines_dir / "all_lines.geojson"
     all_lines_geojson.write_text('{"type": "FeatureCollection", "features": []}')
 
-    # Patch sys.argv so argparse doesn't fail
-    monkeypatch.setattr('sys.argv', [
-        'pre_interpretation.py',
-        '-i', str(input_dir),
-        '-o', str(output_dir),
-    ])
-
     # Patch get_ogr_path to return a dummy string
     monkeypatch.setattr(interpretation, "get_ogr_path", lambda: "ogr2ogr")
 
@@ -141,7 +134,7 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     monkeypatch.setattr(sys, "stdout", output)
 
     # Run main
-    interpretation.main()
+    interpretation.main(str(input_dir), str(output_dir))
 
     # Check that output files were created
     assert (interp_dir / "active_extent.txt").exists()
