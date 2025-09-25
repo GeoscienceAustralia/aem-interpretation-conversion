@@ -1,10 +1,10 @@
 import sys
 import click
-from aemworkflow.conversion import main as conversion
-from aemworkflow.validation import main as validation
-from aemworkflow.pre_interpretation import main as pre_interpretation
-from aemworkflow.interpretation import main as interpretation
-from aemworkflow.exports import main as exports
+from .conversion import main as conversion
+from .validation import main as validation
+from .pre_interpretation import main as pre_interpretation
+from .interpretation import main as interpretation
+from .exports import main as exports
 
 @click.group()
 def cli():

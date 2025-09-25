@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool"
 readme = "README.md"
-requires-python = ">=3.12.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -28,14 +28,16 @@ dependencies = [
 ]
 
 [project.scripts]
-aemworkflow = "scripts.commands:cli"
+aemworkflow = "aemworkflow.aemworkflow:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aemworkflow*"]
+exclude = ["builds*"]
 
 [project.urls]
 Homepage = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion"
 Issues = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion/issues"
-
-[tool.setuptools.packages.find]
-where = ["aemworkflow", "aemworkflow/scripts"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
