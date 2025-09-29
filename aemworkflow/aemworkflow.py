@@ -72,7 +72,7 @@ def convert(input_directory, output_directory, crs):
 @click.option("--s", "split_filename", type=click.Path(exists=True))
 @click.option("--mdc", is_flag=True, help="Export to MDC format", default=False)
 @click.option("--mdch", is_flag=True, help="Export to MDCH format", default=False)
-@click.option("-egs", is_flag=True, help="Export to EGS format", default=False)
+@click.option("--egs", is_flag=True, help="Export to EGS format", default=False)
 def export(input_directory, output_directory, boundary_filename, split_filename, mdc, mdch, egs):
     try:
         exports(input_directory, output_directory, boundary_filename, split_filename, mdc, mdch, egs)
