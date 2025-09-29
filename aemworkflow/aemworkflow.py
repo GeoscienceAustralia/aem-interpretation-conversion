@@ -1,4 +1,3 @@
-import re
 import sys
 import click
 from .conversion import main as conversion

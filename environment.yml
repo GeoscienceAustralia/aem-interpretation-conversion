@@ -7,7 +7,5 @@ dependencies:
   - pip=25.0.1
   - python=3.12.9
   - pip:
-      # - git+https://github.com/GeoscienceAustralia/aem-interpretation-conversion.git@main
-      - git+https://github.com/GeoscienceAustralia/aem-interpretation-conversion.git@PV-2480-add-flags-for-aem-workflow-cli-scripts#egg=aemworkflow
-
+      - git+https://github.com/GeoscienceAustralia/aem-interpretation-conversion.git@main
 prefix: /opt/conda-env
