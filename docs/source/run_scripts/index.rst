@@ -11,7 +11,7 @@ Pre-interpretation
 
 .. code-block:: bash
 
-    aemworkflow pre_interpret "{input_directory}" "{output_directory}" 
+    aemworkflow pre-interpret "{input_directory}" "{output_directory}" 
 
 
 **Parameter examples:**
