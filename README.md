@@ -98,7 +98,7 @@ If using Anaconda, activate conda environment if required before running the scr
 ### Pre-interpretation
 
 ```
-aemworkflow pre-interpret "{input_directory}" "{output_directory}" 
+aemworkflow pre-interpret --i "{input_directory}" --o "{output_directory}" 
 ```
 
 **Parameter examples:**
@@ -115,7 +115,7 @@ aemworkflow pre-interpret "{input_directory}" "{output_directory}"
 ### Interpretation
 
 ```
-aemworkflow interpret "{input_directory}" "{output_directory}"
+aemworkflow interpret --i "{input_directory}" --o "{output_directory}"
 ```
 **Parameter examples:**
 
@@ -131,7 +131,7 @@ aemworkflow interpret "{input_directory}" "{output_directory}"
 ### Validation
 
 ```
-aemworkflow validate "{input_directory}" "{output_directory}" "{asud_filename}"
+aemworkflow validate --o "{input_directory}" --i "{output_directory}" --a "{asud_filename}"
 ```
 **Parameter examples:**
 
@@ -145,7 +145,7 @@ aemworkflow validate "{input_directory}" "{output_directory}" "{asud_filename}"
 ### Conversion
 
 ```
-aemworkflow convert "{input_directory}" "{output_directory}"
+aemworkflow convert --i "{input_directory}" --o "{output_directory}"
 ```
 **Parameter examples:**
 
@@ -159,7 +159,7 @@ aemworkflow convert "{input_directory}" "{output_directory}"
 ### Export
 
 ```
-aemworkflow export "{input_directory}" "{output_directory}" "{boundary_file}" "{split_file}" -mdc -mdch -egs 
+aemworkflow export --o "{input_directory}" --i "{output_directory}" --b "{boundary_file}" --s "{split_file}" --mdc --mdch --egs 
 ```
 **Parameter examples:**
 
@@ -169,9 +169,9 @@ aemworkflow export "{input_directory}" "{output_directory}" "{boundary_file}" "{
 |             | output directory| Yes          |None       |          |        |
 |             | name of boundary file| Yes     |None       |          |        |
 |             | name of split file   | Yes     |None       |          |        |
-| -mdc        | Export to MDC format | Yes     |False      |          |        |
-| -mdch       | Export to MDCH format| Yes     |False      |          |        |
-| -egs        | Export to EGS format | Yes     |False      |          |        |
+| --mdc        | Export to MDC format | Yes     |False      |          |        |
+| --mdch       | Export to MDCH format| Yes     |False      |          |        |
+| --egs        | Export to EGS format | Yes     |False      |          |        |
 
 
 Useful Links
