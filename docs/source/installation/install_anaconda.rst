@@ -91,6 +91,6 @@ Once `Miniforge` is installed and activated we can now create an environment to 
 .. code-block:: bash
 
     conda env create -f environment.yml
-    conda activate aem_workflow-env
+    conda activate aemworkflow-env
 
     

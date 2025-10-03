@@ -27,12 +27,12 @@ __pycache__/
 
 # Packaging / build artifacts
 build/
-dist/
 downloads/
 .eggs/
 eggs/
 develop-eggs/
 sdist/
+dist/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -41,6 +41,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Test / coverage / tooling
+test-results/
 .tox/
 .nox/
 .pytest_cache/

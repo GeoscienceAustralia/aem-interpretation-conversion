@@ -14,120 +14,132 @@ decimal.getcontext().rounding = decimal.ROUND_HALF_UP
 
 
 def all_lines(path_file_path, output_file_path, crs, gis, mode):
-    proj = osr.SpatialReference()
-    proj.ImportFromEPSG(int(crs))
-    result_wkt = proj.ExportToWkt()
-    result_wkt = result_wkt.replace('"', '\\"')
-    result_proj = proj.ExportToProj4()
-    # print(f'epsg resutl is: {result_wkt}')
-    # print(f'proj string is: {result_proj}')
-    del proj
+    try:
+        proj = osr.SpatialReference()
+        proj.ImportFromEPSG(int(crs))
+        result_wkt = proj.ExportToWkt()
+        result_wkt = result_wkt.replace('"', '\\"')
+        result_proj = proj.ExportToProj4()
+        # print(f'epsg resutl is: {result_wkt}')
+        # print(f'proj string is: {result_proj}')
+        del proj
 
-    with open(output_file_path, mode) as out_file:
-        if mode == 'w':
-            out_file.write("# @VGMT1.0 @GLINESTRING\n")
-            out_file.write(f'# @Jp"{result_proj}"\n')
-            out_file.write(f'# @Jw"{result_wkt}"\n')
-            out_file.write("# @Nlinenum|flightnum|date|Survey|Company|Status\n")
-            out_file.write("# @Tinteger|integer|integer|string|string|string\n")
-            out_file.write("# FEATURE_DATA\n")
+        with open(output_file_path, mode) as out_file:
+            if mode == 'w':
+                out_file.write("# @VGMT1.0 @GLINESTRING\n")
+                out_file.write(f'# @Jp"{result_proj}"\n')
+                out_file.write(f'# @Jw"{result_wkt}"\n')
+                out_file.write("# @Nlinenum|flightnum|date|Survey|Company|Status\n")
+                out_file.write("# @Tinteger|integer|integer|string|string|string\n")
+                out_file.write("# FEATURE_DATA\n")
 
-        with open(path_file_path) as file:
-            first_line = file.readline().strip().split()
-            out_file.write(">\n")
-            out_file.write(f"# @D{first_line[0]}\n")
-            out_file.write(f"{first_line[4]} {first_line[5]}\n")
-            for line in file:
-                # Parse the input fields from the line
-                fields = line.strip().split()
-                if len(fields) > 0:
-                    out_file.write(f"{fields[4]} {fields[5]}\n")
+            with open(path_file_path) as file:
+                first_line = file.readline().strip().split()
+                out_file.write(">\n")
+                out_file.write(f"# @D{first_line[0]}\n")
+                out_file.write(f"{first_line[4]} {first_line[5]}\n")
+                for line in file:
+                    # Parse the input fields from the line
+                    fields = line.strip().split()
+                    if len(fields) > 0:
+                        out_file.write(f"{fields[4]} {fields[5]}\n")
+    except Exception as e:
+        print(f"Error processing file {path_file_path}: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def print_boxes(pl, pt, pr, pb, out_file, xpo, ypo):
-    out_file.write(">\n")
-    out_file.write("# @Dextent\n")
-    out_file.write(f"{pl - xpo} {pt + ypo}\n")
-    out_file.write(f"{pr - xpo} {pt + ypo}\n")
-    out_file.write(f"{pr - xpo} {pb + ypo}\n")
-    out_file.write(f"{pl - xpo} {pb + ypo}\n")
-    out_file.write(f"{pl - xpo} {pt + ypo}\n")
+    try:
+        out_file.write(">\n")
+        out_file.write("# @Dextent\n")
+        out_file.write(f"{pl - xpo} {pt + ypo}\n")
+        out_file.write(f"{pr - xpo} {pt + ypo}\n")
+        out_file.write(f"{pr - xpo} {pb + ypo}\n")
+        out_file.write(f"{pl - xpo} {pb + ypo}\n")
+        out_file.write(f"{pl - xpo} {pt + ypo}\n")
 
-    out_file.write(">\n")
-    out_file.write("# @Dupper_left\n")
-    out_file.write(f"{pl - xpo} {pt + ypo}\n")
-    out_file.write(f"{pl + 1 - xpo} {pt + ypo}\n")
-    out_file.write(f"{pl + 1 - xpo} {pt - 1 + ypo}\n")
-    out_file.write(f"{pl - xpo} {pt - 1 + ypo}\n")
-    out_file.write(f"{pl - xpo} {pt + ypo}\n")
+        out_file.write(">\n")
+        out_file.write("# @Dupper_left\n")
+        out_file.write(f"{pl - xpo} {pt + ypo}\n")
+        out_file.write(f"{pl + 1 - xpo} {pt + ypo}\n")
+        out_file.write(f"{pl + 1 - xpo} {pt - 1 + ypo}\n")
+        out_file.write(f"{pl - xpo} {pt - 1 + ypo}\n")
+        out_file.write(f"{pl - xpo} {pt + ypo}\n")
 
-    out_file.write(">\n")
-    out_file.write("# @Dlower_right\n")
-    out_file.write(f"{pr - xpo} {pb + ypo}\n")
-    out_file.write(f"{pr - 1 - xpo} {pb + ypo}\n")
-    out_file.write(f"{pr - 1 - xpo} {pb + 1 + ypo}\n")
-    out_file.write(f"{pr - xpo} {pb + 1 + ypo}\n")
-    out_file.write(f"{pr - xpo} {pb + ypo}\n")
+        out_file.write(">\n")
+        out_file.write("# @Dlower_right\n")
+        out_file.write(f"{pr - xpo} {pb + ypo}\n")
+        out_file.write(f"{pr - 1 - xpo} {pb + ypo}\n")
+        out_file.write(f"{pr - 1 - xpo} {pb + 1 + ypo}\n")
+        out_file.write(f"{pr - xpo} {pb + 1 + ypo}\n")
+        out_file.write(f"{pr - xpo} {pb + ypo}\n")
 
-    out_file.write(">\n")
-    out_file.write("# @Dground_level\n")
+        out_file.write(">\n")
+        out_file.write("# @Dground_level\n")
+    except Exception as e:
+        print(f"Error writing boxes: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def box_elevation(extent_file_path, path_file_path, output_file_path, depth_lines, line_increments, xpo, ypo):
-    last = None
-    yy = []
+    try:
+        last = None
+        yy = []
 
-    lines = int(depth_lines)
-    depth = depth_line_increments = int(line_increments)  # Set initial value for depth
+        lines = int(depth_lines)
+        depth = depth_line_increments = int(line_increments)  # Set initial value for depth
 
-    # This function will be modified to do the following:
-    # - Look for all path and extent files in folder
-    # - check that the numbers are equal, if not report on the ones that are missing.
-    # - modify jointjs icons to show actual numbers
-    # - create box.gmt files for all combination of path and extent files.
+        # This function will be modified to do the following:
+        # - Look for all path and extent files in folder
+        # - check that the numbers are equal, if not report on the ones that are missing.
+        # - modify jointjs icons to show actual numbers
+        # - create box.gmt files for all combination of path and extent files.
 
-    with open(output_file_path, 'w') as out_file:
+        with open(output_file_path, 'w') as out_file:
 
-        with open(extent_file_path) as file:
-            for line in file:
-                # Parse the input fields from the line
-                fields = line.strip().split()
-                if len(fields) > 0:
-                    nr1, pt, pl, pr, pb, nr2, dt, nr3, db = map(float, fields)
-                    y_of = dt
-                    y_fact = (db - dt) / (pb - pt)
+            with open(extent_file_path) as file:
+                for line in file:
+                    # Parse the input fields from the line
+                    fields = line.strip().split()
+                    if len(fields) > 0:
+                        nr1, pt, pl, pr, pb, nr2, dt, nr3, db = map(float, fields)
+                        y_of = dt
+                        y_fact = (db - dt) / (pb - pt)
 
-                    out_file.write("# @VGMT1.0 @GLINESTRING\n")
-                    out_file.write("# @Nlinename\n")
-                    out_file.write("# @Tstring\n")
-                    out_file.write("# FEATURE_DATA\n")
+                        out_file.write("# @VGMT1.0 @GLINESTRING\n")
+                        out_file.write("# @Nlinename\n")
+                        out_file.write("# @Tstring\n")
+                        out_file.write("# FEATURE_DATA\n")
 
-                    print_boxes(pl, pt, pr, pb, out_file, xpo, ypo)
+                        print_boxes(pl, pt, pr, pb, out_file, xpo, ypo)
 
-        with open(path_file_path) as path_file:
-            for line in path_file:
-                path_fields = line.strip().split()
+            with open(path_file_path) as path_file:
+                for line in path_file:
+                    path_fields = line.strip().split()
 
-                if len(path_fields) > 0:
-                    ppt = int(path_fields[1])
-                    py = (y_of - float(path_fields[8])) / y_fact
-                    out_file.write(f"{int(path_fields[1]) - 1} "
-                                   f"{round(decimal.Decimal((-py + ypo) - (2 / y_fact)), 4).normalize()}\n")
-                    yy.insert(ppt - 1, py * -1)
-                    last = ppt
+                    if len(path_fields) > 0:
+                        ppt = int(path_fields[1])
+                        py = (y_of - float(path_fields[8])) / y_fact
+                        out_file.write(f"{int(path_fields[1]) - 1} "
+                                    f"{round(decimal.Decimal((-py + ypo) - (2 / y_fact)), 4).normalize()}\n")
+                        yy.insert(ppt - 1, py * -1)
+                        last = ppt
 
-        for j in range(1, lines + 1):
-            out_file.write(">\n")
-            out_file.write(f"# @D{depth}\n")
+            for j in range(1, lines + 1):
+                out_file.write(">\n")
+                out_file.write(f"# @D{depth}\n")
 
-            for i in range(0, last):
-                # ly=(yy[i]-(ddd/y_fact))
-                # print i-1" "ly+ypo
+                for i in range(0, last):
+                    # ly=(yy[i]-(ddd/y_fact))
+                    # print i-1" "ly+ypo
 
-                ly = round(decimal.Decimal(str(yy[i] - (depth / y_fact) - (2 / y_fact))), 4).normalize()
-                out_file.write(f'{i} {round(ly + decimal.Decimal(ypo), 4).normalize()}\n')
+                    ly = round(decimal.Decimal(str(yy[i] - (depth / y_fact) - (2 / y_fact))), 4).normalize()
+                    out_file.write(f'{i} {round(ly + decimal.Decimal(ypo), 4).normalize()}\n')
 
-            depth += depth_line_increments
+                depth += depth_line_increments
+    except Exception as e:
+        print(f"Error processing box elevation: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def main(input_directory, output_directory, crs="28349", gis="esri_arcmap_0.5", lines=10, lines_increment=30):
