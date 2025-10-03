@@ -4,7 +4,13 @@ AEM Interpretation Conversion Tool (AEMInterpConvert)
 Background
 ==========
 
-This online Airborne Electromagnetic (AEM) data viewer is designed to provide a user-friendly interface for visualizing and analyzing AEM data.
+In response to the acquisition of national-scale airborne electromagnetic surveys and the development of a national depth estimates database, a new workflow has been established to interpret airborne electromagnetic conductivity sections. This workflow allows for high quantities of high quality interpretation-specific metadata to be attributed to each interpretation line or point. The conductivity sections are interpreted in 2D space, and are registered in 3D space using code developed at Geoscience Australia. This code also verifies stratigraphic unit information against the national Australian Stratigraphic Units Database, and extracts interpretation geometry and geological data, such as depth estimates compiled in the Estimates of Geological and Geophysical Surfaces database. Interpretations made using this workflow are spatially consistent and contain large amounts of useful stratigraphic unit information. These interpretations are made freely-accessible as
+
+1) Text files and 3D objects through an electronic catalogue, 
+2) As point data through a point database accessible via a data portal, and 
+3) Available for 3D visualisation and interrogation through a 3D data portal.
+
+These precompetitive data support the construction of national 3D geological architecture models, including cover and basement surface models, and resource prospectivity models. These models are in turn used to inform academia, industry and governments on decision-making, land use, environmental management, hazard mapping, and resource exploration.
 
 For more information please see the `Metadata Statement and User Guide`_ and `Workflow Document`_.
 
