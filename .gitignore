@@ -27,7 +27,6 @@ __pycache__/
 
 # Packaging / build artifacts
 build/
-dist/
 downloads/
 .eggs/
 eggs/

@@ -11,7 +11,7 @@ Pre-interpretation
 
 .. code-block:: bash
 
-    aemworkflow pre_interpret "{input_directory}" "{output_directory}" 
+    aemworkflow pre-interpret --i "{input_directory}" --o "{output_directory}" 
 
 
 **Parameter examples:**
@@ -34,7 +34,7 @@ Interpretation
 
 .. code-block:: bash
 
-    aemworkflow interpret "{input_directory}" "{output_directory}"
+    aemworkflow interpret --i "{input_directory}" --o "{output_directory}" 
 
 **Parameter examples:**
 
@@ -54,7 +54,7 @@ Validation
 
 .. code-block:: bash
 
-    aemworkflow validate "{input_directory}" "{output_directory}" "{asud_filename}"
+    aemworkflow validate --i "{input_directory}" --o "{output_directory}" --a "{asud_filename}"
 
 **Parameter examples:**
 
@@ -71,7 +71,7 @@ Conversion
 
 .. code-block:: bash
 
-    aemworkflow convert "{input_directory}" "{output_directory}"
+    aemworkflow convert --i "{input_directory}" --o "{output_directory}" 
 
 **Parameter examples:**
 
@@ -89,7 +89,7 @@ Export
 
 .. code-block:: bash
 
-    aemworkflow export "{input_directory}" "{output_directory}" "{boundary_file}" "{split_file}" -mdc -mdch -egs 
+    aemworkflow export --i "{input_directory}" --o "{output_directory}" --b "{boundary_file}" --s "{split_file}" --mdc --mdch --egs 
 
 **Parameter examples:**
 
