@@ -26,7 +26,7 @@ Installation
 -------------------------------
 .. code-block:: bash
 
-    git clone git@bitbucket.org:geoscienceaustralia/aem-interpretation-conversion.git
+    git clone https://github.com/GeoscienceAustralia/aem-interpretation-conversion.git
     cd aem-interpretation-conversion
 
 ---
