@@ -200,8 +200,8 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                             csvwriter.writerow([f"name:{filen[0]}_{segn}_{line[2]}"])
                             csvwriter.writerow(["*atoms:false"])
                             csvwriter.writerow(["*line*color: %f %f %f 1" % (r[line[2]] / 256,
-                                                                            g[line[2]] / 256,
-                                                                            b[line[2]] / 256)])
+                                                                             g[line[2]] / 256,
+                                                                             b[line[2]] / 256)])
                             csvwriter.writerow(["use_feature_color: false"])
                             csvwriter.writerow(["width: 5"])
                             csvwriter.writerow([f"*metadata*Line: {filen[0]}"])
@@ -284,14 +284,14 @@ def gmts_2_egs(wrk_dir: str, alt_colors: str, nm_lst: List[int]) -> None:
             sys.exit(0)
 
         header = "Vertex,SegmentID,X,Y,ELEVATION,PixelX," \
-                "PixelY,AusAEM_DEM,DEPTH,Type,OverAge,UnderAge," \
-                "BoundConf,ContactTyp,BasisOfInt,OvrStrtUnt," \
-                "OvrStratNo,OvrConf,UndStrtUnt,UndStratNo," \
-                "UndConf,WithinStrt,WithinStNo,WithinConf," \
-                "HydStrtType,HydStrConf,BOMNAFUnt,BOMNAFNo," \
-                "InterpRef,Comment,Annotation,NewObs,Operator," \
-                "" \
-                "Date,SURVEY_LINE\n"
+            "PixelY,AusAEM_DEM,DEPTH,Type,OverAge,UnderAge," \
+            "BoundConf,ContactTyp,BasisOfInt,OvrStrtUnt," \
+            "OvrStratNo,OvrConf,UndStrtUnt,UndStratNo," \
+            "UndConf,WithinStrt,WithinStNo,WithinConf," \
+            "HydStrtType,HydStrConf,BOMNAFUnt,BOMNAFNo," \
+            "InterpRef,Comment,Annotation,NewObs,Operator," \
+            "" \
+            "Date,SURVEY_LINE\n"
 
         regex2 = re.compile('[+-]?([0-9]*[.])?[0-9]+')
 
@@ -327,9 +327,9 @@ def gmts_2_egs(wrk_dir: str, alt_colors: str, nm_lst: List[int]) -> None:
                             while regex2.match(line.split()[0]):
                                 los = line.split()
                                 fou.write(f"{los[9]},{los[8]},{los[2]},"
-                                        f"{los[3]},{los[4]},{los[0]},"
-                                        f"{los[1]},{los[5]},{los[6]},"
-                                        f"{met},{nm}\n")
+                                          f"{los[3]},{los[4]},{los[0]},"
+                                          f"{los[1]},{los[5]},{los[6]},"
+                                          f"{met},{nm}\n")
                                 line = lines.pop(0)
                         except IndexError:
                             pass
@@ -355,46 +355,46 @@ def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
 
     try:
         fsctn = ("GOCAD PLine 1\n"
-                "HEADER {{\n"
-                "name:{}_{}_{}\n"
-                "*atoms:false\n"
-                "*line*color:{:.6f} {:.6f} {:.6f} 1\n"
-                "use_feature_color: false\n"
-                "width:5\n"
-                "*metadata*Line: {}\n"
-                "*metadata*Type: {}\n"
-                "*metadata*BoundaryNm: {}\n"
-                "*metadata*BoundConf: {}\n"
-                "*metadata*BasisOfInt: {}\n"
-                "*metadata*OvrStrtUnt: {}\n"
-                "*metadata*OvrStrtCod: {}\n"
-                "*metadata*OvrConf: {}\n"
-                "*metadata*UndStrtUnt: {}\n"
-                "*metadata*UndStrtCod: {}\n"
-                "*metadata*UndConf: {}\n"
-                "*metadata*WithinType: {}\n"
-                "*metadata*WithinStrt: {}\n"
-                "*metadata*WithinStNo: {}\n"
-                "*metadata*WithinConf: {}\n"
-                "*metadata*InterpRef: {}\n"
-                "*metadata*Comment: {}\n"
-                "*metadata*Annotation: {}\n"
-                "*metadata*NewObs: {}\n"
-                "*metadata*Operator: {}\n"
-                "*metadata*Organization: Geoscience Australia\n"
-                "}}\n"
-                "PROPERTIES px py gl depth\n"
-                "GOCAD_ORIGINAL_COORDINATE_SYSTEM\n"
-                'NAME " gocad Local"\n'
-                'PROJECTION " GDA94 / MGA zone 53"\n'
-                'DATUM " Mean Sea Level"\n'
-                "AXIS_NAME X Y Z\n"
-                "AXIS_UNIT m m m\n"
-                "ZPOSITIVE Elevation\n"
-                "END_ORIGINAL_COORDINATE_SYSTEM\n"
-                "GEOLOGICAL_FEATURE {}\n"
-                "ILINE\n"
-                )
+                 "HEADER {{\n"
+                 "name:{}_{}_{}\n"
+                 "*atoms:false\n"
+                 "*line*color:{:.6f} {:.6f} {:.6f} 1\n"
+                 "use_feature_color: false\n"
+                 "width:5\n"
+                 "*metadata*Line: {}\n"
+                 "*metadata*Type: {}\n"
+                 "*metadata*BoundaryNm: {}\n"
+                 "*metadata*BoundConf: {}\n"
+                 "*metadata*BasisOfInt: {}\n"
+                 "*metadata*OvrStrtUnt: {}\n"
+                 "*metadata*OvrStrtCod: {}\n"
+                 "*metadata*OvrConf: {}\n"
+                 "*metadata*UndStrtUnt: {}\n"
+                 "*metadata*UndStrtCod: {}\n"
+                 "*metadata*UndConf: {}\n"
+                 "*metadata*WithinType: {}\n"
+                 "*metadata*WithinStrt: {}\n"
+                 "*metadata*WithinStNo: {}\n"
+                 "*metadata*WithinConf: {}\n"
+                 "*metadata*InterpRef: {}\n"
+                 "*metadata*Comment: {}\n"
+                 "*metadata*Annotation: {}\n"
+                 "*metadata*NewObs: {}\n"
+                 "*metadata*Operator: {}\n"
+                 "*metadata*Organization: Geoscience Australia\n"
+                 "}}\n"
+                 "PROPERTIES px py gl depth\n"
+                 "GOCAD_ORIGINAL_COORDINATE_SYSTEM\n"
+                 'NAME " gocad Local"\n'
+                 'PROJECTION " GDA94 / MGA zone 53"\n'
+                 'DATUM " Mean Sea Level"\n'
+                 "AXIS_NAME X Y Z\n"
+                 "AXIS_UNIT m m m\n"
+                 "ZPOSITIVE Elevation\n"
+                 "END_ORIGINAL_COORDINATE_SYSTEM\n"
+                 "GEOLOGICAL_FEATURE {}\n"
+                 "ILINE\n"
+                 )
         fmt = "PVRTX {:0.0f} {:6.1f} {:7.1f} {:.1f} {:.6f} {:.6f} {:.1f} {:.1f}\n"
 
         srt_dir = Path(wrk_dir) / "SORT"
@@ -429,11 +429,11 @@ def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
                         frst = int(frst)
                         # segn = int(segn)
                         fou.write(fsctn.format(nm, segn, met[2],
-                                row['Red'].iloc[0], row['Green'].iloc[0], row['Blue'].iloc[0],
-                                nm,
-                                *met[2:21],
-                                nm
-                                ))
+                                  row['Red'].iloc[0], row['Green'].iloc[0], row['Blue'].iloc[0],
+                                  nm,
+                                  *met[2:21],
+                                  nm
+                                  ))
                         try:
                             while regex2.match(line.split()[0]):
                                 los = [int(_l) if i == 7 else float(_l) for i, _l in enumerate(line.split())]

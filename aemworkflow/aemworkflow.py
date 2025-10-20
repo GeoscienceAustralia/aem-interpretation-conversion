@@ -6,10 +6,12 @@ from .pre_interpretation import main as pre_interpretation
 from .interpretation import main as interpretation
 from .exports import main as exports
 
+
 @click.group()
 def cli():
     """AEM Interpretation Conversion CLI."""
     pass
+
 
 @cli.command()
 @click.option("--i", "input_directory", type=click.Path(exists=True), required=True)
@@ -21,10 +23,11 @@ def cli():
 def pre_interpret(input_directory, output_directory, crs, gis="esri_arcmap_0.5", lines=10, lines_increment=30):
     try:
         pre_interpretation(input_directory, output_directory, crs, gis, lines, lines_increment)
-        click.echo(f"Completed pre-interpretation")
+        click.echo("Completed pre-interpretation")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
+
 
 @cli.command()
 @click.option("--i", "input_directory", type=click.Path(exists=True), required=True)
@@ -36,10 +39,11 @@ def pre_interpret(input_directory, output_directory, crs, gis="esri_arcmap_0.5",
 def interpret(input_directory, output_directory, crs="28349", gis="esri_arcmap_0.5", lines=10, lines_increment=30):
     try:
         interpretation(input_directory, output_directory, crs, gis, lines, lines_increment)
-        click.echo(f"Completed interpretation")
+        click.echo("Completed interpretation")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
+
 
 @cli.command()
 @click.option("--i", "input_directory", type=click.Path(exists=True), required=True)
@@ -48,10 +52,11 @@ def interpret(input_directory, output_directory, crs="28349", gis="esri_arcmap_0
 def validate(input_directory, output_directory, asud_filename):
     try:
         validation(input_directory, output_directory, asud_filename)
-        click.echo(f"Completed validation")
+        click.echo("Completed validation")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
+
 
 @cli.command()
 @click.option("--i", "input_directory", type=click.Path(exists=True), required=True)
@@ -60,10 +65,11 @@ def validate(input_directory, output_directory, asud_filename):
 def convert(input_directory, output_directory, crs):
     try:
         conversion(input_directory, output_directory, crs)
-        click.echo(f"Completed conversion")
+        click.echo("Completed conversion")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
+
 
 @cli.command()
 @click.option("--i", "input_directory", type=click.Path(exists=True), required=True)
@@ -76,7 +82,7 @@ def convert(input_directory, output_directory, crs):
 def export(input_directory, output_directory, boundary_filename, split_filename, mdc, mdch, egs):
     try:
         exports(input_directory, output_directory, boundary_filename, split_filename, mdc, mdch, egs)
-        click.echo(f"Completed export")
+        click.echo("Completed export")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
