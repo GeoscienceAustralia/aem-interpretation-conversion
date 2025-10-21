@@ -54,7 +54,7 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
             fidd = 0
             row = exdf.query("nm == @nm")
             y_scale = (row['t_bot'].iloc[0] - row['t_top'].iloc[0]) /\
-                    (row['frame_bot'].iloc[0] - row['frame_top'].iloc[0])
+                (row['frame_bot'].iloc[0] - row['frame_top'].iloc[0])
             p_file = Path(path_dir) / f"{nm}.path.txt"
             tdf = pd.read_csv(p_file, sep=r'\s+', names=pcols, header=None, index_col=False)
             # pdf_list.append(tdf)

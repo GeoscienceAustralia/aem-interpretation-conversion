@@ -121,7 +121,7 @@ def box_elevation(extent_file_path, path_file_path, output_file_path, depth_line
                         ppt = int(path_fields[1])
                         py = (y_of - float(path_fields[8])) / y_fact
                         out_file.write(f"{int(path_fields[1]) - 1} "
-                                    f"{round(decimal.Decimal((-py + ypo) - (2 / y_fact)), 4).normalize()}\n")
+                                       f"{round(decimal.Decimal((-py + ypo) - (2 / y_fact)), 4).normalize()}\n")
                         yy.insert(ppt - 1, py * -1)
                         last = ppt
 
