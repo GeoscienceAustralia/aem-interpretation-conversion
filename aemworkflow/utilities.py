@@ -23,6 +23,7 @@ def validate_file(filepath: str, logger_session=logger) -> bool:
         return False
     return True
 
+
 def validate_shapefile(root_dir: str, logger_session=logger) -> bool:
     """
     Validates that the provided shapefile path is a valid shapefile and not any file with .shp extension
