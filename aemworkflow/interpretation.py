@@ -95,7 +95,7 @@ def main(input_directory, output_directory, crs=28349, gis="esri_arcmap_0.5", li
         ogr2ogr_active_gmt_log = os.path.join(output_directory, 'interp', 'gdal_active.log')
 
         shp_dir = input_directory
-        shp_list = sorted(glob.glob(os.path.join(shp_dir, '*_interp_*.shp')))
+        shp_list = sorted(glob.glob(os.path.join(shp_dir, '*_interp*.shp')))
         mode = 'w'
 
         for shp in shp_list:

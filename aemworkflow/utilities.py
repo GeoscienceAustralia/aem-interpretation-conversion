@@ -2,7 +2,9 @@ import os
 import sys
 import shutil
 import subprocess  # nosec B404: subprocess usage is controlled and arguments are not user-supplied
+import fiona
 
+from fiona.errors import DriverError
 from loguru import logger
 from typing import List
 from pathlib import Path
@@ -19,6 +21,41 @@ def validate_file(filepath: str, logger_session=logger) -> bool:
     if not Path(filepath).is_file():
         logger_session.error(f"Invalid file path: {filepath}")
         return False
+    return True
+
+
+def validate_shapefile(root_dir: str, logger_session=logger) -> bool:
+    """
+    Validates that the provided shapefile path is a valid shapefile and not any file with .shp extension
+    """
+    for dirpath, _, filenames in os.walk(root_dir):
+        for fname in filenames:
+            if not fname.lower().endswith('.shp'):
+                continue
+
+            shp_path = os.path.join(dirpath, fname)
+            logger_session.info(f'Validating shapefile: {shp_path}')
+
+            # check for minimum requirement for shape file (.shp + .shx + dbf)
+            base, _ = os.path.splitext(shp_path)
+            shx_path = f'{base}.shx'
+            dbf_path = f'{base}.dbf'
+
+            for path in (shx_path, dbf_path):
+                if not os.path.exists(path):
+                    logger_session.error(f'Shapefile {os.path.basename(shp_path)} is missing {os.path.basename(path)}.')
+                    return False
+            try:
+                with fiona.open(shp_path) as src:
+                    if len(src) == 0:
+                        logger_session.error(f'Shapefile {os.path.basename(shp_path)} contains no features.')
+                        return False
+            except DriverError as e:
+                logger_session.error(f'Shapefile {os.path.basename(shp_path)} could not be opened: {e}')
+                return False
+            except Exception as e:
+                logger_session.error(f'Error reading shapefile {os.path.basename(shp_path)}: {e}')
+                return False
     return True
 
 
