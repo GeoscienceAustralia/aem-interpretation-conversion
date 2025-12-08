@@ -96,6 +96,9 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     # Patch run_command to do nothing
     monkeypatch.setattr(interpretation, "run_command", lambda *a, **k: None)
 
+    # Patch validate_shapefile to pass validation
+    monkeypatch.setattr(interpretation, "validate_shapefile", lambda *a, **k: True)
+
     # Patch geopandas.read_file to return a dummy GeoDataFrame
     class DummyGeoDF:
         crs = "epsg:28349"
