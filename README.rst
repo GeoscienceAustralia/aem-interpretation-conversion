@@ -258,6 +258,8 @@ Home Page
 Documentation
     http://GeoscienceAustralia.github.io/aem-interpretation-conversion
 
+    https://ecat.ga.gov.au/geonetwork/srv/eng/catalog.search#/metadata/150529
+
 Issue tracking
     https://github.com/GeoscienceAustralia/aem-interpretation-conversion/issues
 

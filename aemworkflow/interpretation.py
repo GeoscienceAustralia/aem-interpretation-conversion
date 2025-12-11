@@ -8,7 +8,7 @@ import warnings
 
 from osgeo import osr
 from pathlib import Path
-from aemworkflow.utilities import get_ogr_path, validate_file, run_command
+from aemworkflow.utilities import get_ogr_path, validate_file, run_command, validate_shapefile
 
 header = 0
 xpo = 0.5
@@ -96,6 +96,15 @@ def main(input_directory, output_directory, crs=28349, gis="esri_arcmap_0.5", li
 
         shp_dir = input_directory
         shp_list = sorted(glob.glob(os.path.join(shp_dir, '*_interp*.shp')))
+
+        if not shp_list:
+            print("Error: Interpretation shape files not found in project directory.", file=sys.stderr)
+            return
+
+        if not validate_shapefile(shp_dir):
+            print("Error: Invalid shapefile in input directory.", file=sys.stderr)
+            return
+
         mode = 'w'
 
         for shp in shp_list:
