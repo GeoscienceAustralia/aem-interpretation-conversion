@@ -29,7 +29,7 @@ def gmtsddd_to_egs(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
             with open(alt_colors, 'r') as prn_file:
                 for line in prn_file:
                     # parts = line.strip().split(',')
-                    parts = re.split(r'\s{2,}', line)
+                    parts = re.split(r'\s{2,}', line.strip())
                     ov[parts[0]] = ' ' if len(parts) < 2 else parts[1]
                     un[parts[0]] = ' ' if len(parts) < 3 else parts[2]
 
@@ -42,7 +42,7 @@ def gmtsddd_to_egs(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
                             # seg += 1
                             parts = line.strip().split('|')
                             # l = parts[3].split('_')
-                            met = [parts[2]] + [ov.get(parts[3], '')] + [un.get(parts[3], '')] + parts[3:25]
+                            met = [parts[2]] + [ov.get(parts[2], '')] + [un.get(parts[2], '')] + parts[3:25]
                         elif line[0].isdigit():
                             # Handle lines starting with a digit
                             parts = line.strip().split(' ')
