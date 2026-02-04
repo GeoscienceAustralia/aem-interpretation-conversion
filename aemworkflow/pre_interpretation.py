@@ -102,7 +102,8 @@ def box_elevation(extent_file_path, path_file_path, output_file_path, depth_line
                     # Parse the input fields from the line
                     fields = line.strip().split()
                     if len(fields) > 0:
-                        nr1, pt, pl, pr, pb, nr2, dt, nr3, db = map(float, fields)
+                        # nr1, pt, pl, pr, pb, nr2, dt, nr3, db = map(float, fields)
+                        pt, pl, pr, pb, nr2, dt, nr3, db = map(float, fields[1:])
                         y_of = dt
                         y_fact = (db - dt) / (pb - pt)
 

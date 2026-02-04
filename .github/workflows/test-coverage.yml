@@ -27,6 +27,7 @@ jobs:
       run: |
         pytest --cov --cov-report xml:results.xml --cov-report json --disable-warnings
     - name: Get Cover
+      if: github.actor != 'dependabot[bot]'
       uses: orgoro/coverage@v3.2
       with:
           coverageFile: results.xml
