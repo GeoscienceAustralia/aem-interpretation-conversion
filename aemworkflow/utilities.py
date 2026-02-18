@@ -118,7 +118,7 @@ def find_geometry_file(shp_dir, prefix, geometryfile, logger_session=logger) -> 
     for base_suffix in BASE_SUFFIX:
         geometry_file_path = Path(shp_dir) / f'{prefix}{base_suffix}{required_suffix}'
         if geometry_file_path.is_file():
-            print(f'{geometryfile} file ../{geometry_file_path.name} exists: True')
+            logger_session.info(f'{geometryfile} file ../{geometry_file_path.name} exists: True')
             return geometry_file_path, base_suffix
 
     logger_session.error(f'No {geometryfile} file found for "{prefix}".')
