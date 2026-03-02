@@ -8,7 +8,7 @@ import warnings
 
 from osgeo import osr
 from pathlib import Path
-from aemworkflow.utilities import get_ogr_path, validate_file, run_command, validate_shapefile
+from aemworkflow.utilities import get_ogr_path, validate_file, run_command, validate_shapefile, find_geometry_file
 
 header = 0
 xpo = 0.5
@@ -110,10 +110,8 @@ def main(input_directory, output_directory, crs=28349, gis="esri_arcmap_0.5", li
         for shp in shp_list:
             fname = Path(shp).stem
             prefix = fname.split("_")[0]
-            extent_file_path = os.path.join(shp_dir, f'{prefix}.extent.txt')
-            print(f'extent file {extent_file_path} exists: {os.path.isfile(extent_file_path)}')
-            path_file_path = os.path.join(shp_dir, f'{prefix}.path.txt')
-            print(f'path file {path_file_path} exists: {os.path.isfile(path_file_path)}')
+            extent_file_path, extent_suffix = find_geometry_file(shp_dir, prefix, "extent")
+            path_file_path, path_suffix = find_geometry_file(shp_dir, prefix, "path")
             active_extent_control_file(extent_file_path,
                                        path_file_path,
                                        active_gmt_out_file_path,
@@ -122,7 +120,7 @@ def main(input_directory, output_directory, crs=28349, gis="esri_arcmap_0.5", li
                                        gis,
                                        mode)
 
-            gmt_file_path = os.path.join(output_directory, 'interp', f'{prefix}_interp.gmt')
+            gmt_file_path = os.path.join(output_directory, 'interp', f'{prefix}{extent_suffix}_interp.gmt')
             active_shp_to_gmt(shp, gmt_file_path)
 
             bdf_file_path = os.path.join(output_directory, 'interp', 'met.bdf')
