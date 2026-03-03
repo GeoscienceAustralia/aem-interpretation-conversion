@@ -1,11 +1,12 @@
-import sys
 import csv
 import os
-from pathlib import Path
-import pandas as pd
 import re
-from loguru import logger
+import sys
+from pathlib import Path
 from typing import List
+
+import pandas as pd
+from loguru import logger
 
 
 def gmtsddd_to_egs(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:

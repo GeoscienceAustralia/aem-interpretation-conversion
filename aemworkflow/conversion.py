@@ -1,14 +1,15 @@
-import os
 import glob
+import os
 import re
 import warnings
-
 from pathlib import Path
-import pandas as pd
 from typing import List, Tuple
-from osgeo import osr
+
+import pandas as pd
 from loguru import logger
-from aemworkflow.utilities import get_ogr_path, get_make_srt_dir, validate_file, run_command
+from osgeo import osr
+
+from aemworkflow.utilities import get_make_srt_dir, get_ogr_path, run_command, validate_file
 
 
 def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, logger_session=logger) -> List[int]:

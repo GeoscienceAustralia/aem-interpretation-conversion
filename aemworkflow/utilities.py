@@ -1,14 +1,13 @@
 import os
-import sys
 import shutil
 import subprocess  # nosec B404: subprocess usage is controlled and arguments are not user-supplied
-import fiona
+import sys
+from pathlib import Path
+from typing import List, Tuple
 
+import fiona
 from fiona.errors import DriverError
 from loguru import logger
-from typing import List
-from pathlib import Path
-from typing import Tuple
 
 BASE_SUFFIX = ("", "_high", "_mid", "_low")
 

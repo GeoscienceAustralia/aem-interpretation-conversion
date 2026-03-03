@@ -1,14 +1,15 @@
 import decimal
-import sys
-import os
 import glob
-import geopandas
-import folium
+import os
+import sys
 import warnings
-
-from osgeo import osr
 from pathlib import Path
-from aemworkflow.utilities import get_ogr_path, validate_file, run_command
+
+import folium
+import geopandas
+from osgeo import osr
+
+from aemworkflow.utilities import get_ogr_path, run_command, validate_file
 
 decimal.getcontext().rounding = decimal.ROUND_HALF_UP
 

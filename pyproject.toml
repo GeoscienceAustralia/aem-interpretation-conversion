@@ -28,6 +28,15 @@ dependencies = [
     "pyyaml==6.0.2",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "codecov",
+    "coverage",
+    "ruff",
+]
+
 [project.scripts]
 aemworkflow = "aemworkflow.aemworkflow:cli"
 
@@ -44,6 +53,7 @@ Issues = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion/i
 filterwarnings = [
     "ignore::RuntimeWarning",
     "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
 ]
 addopts = [
     "--cov=aemworkflow",
@@ -57,3 +67,10 @@ addopts = [
 [tool.flake8]
 max-line-length = 120
 ignore = ["E402", "F401", "F841"]
+
+[tool.ruff]
+line-length = 120
+preview = true
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
