@@ -1,10 +1,12 @@
 import sys
+
 import click
+
 from .conversion import main as conversion
-from .validation import main as validation
-from .pre_interpretation import main as pre_interpretation
-from .interpretation import main as interpretation
 from .exports import main as exports
+from .interpretation import main as interpretation
+from .pre_interpretation import main as pre_interpretation
+from .validation import main as validation
 
 
 @click.group()

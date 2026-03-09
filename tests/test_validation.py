@@ -1,7 +1,9 @@
 import os
-import pytest
-from aemworkflow import validation
 from unittest import mock
+
+import pytest
+
+from aemworkflow import validation
 
 
 class DummyLogger:
@@ -10,6 +12,7 @@ class DummyLogger:
 
     def info(self, msg):
         self.messages.append(msg)
+
 
 @pytest.fixture
 def dummy_logger():
@@ -37,11 +40,11 @@ def test_validation_qc_units_basic(tmp_path, dummy_logger):
     bdf_2_path = os.path.join(validation_dir, "qc", "met2.bdf")
     # ERC file with 43 fields
     with open(erc_path, "w", encoding="utf-8") as f:
-        f.write("|".join(["unit1", "num1"] + ["x"]*41) + "\n")
+        f.write("|".join(["unit1", "num1"] + ["x"] * 41) + "\n")
     # Interp file with matching and non-matching units
     with open(bdf_2_path, "w") as f:
         # fields[7]=unit1, fields[8]=num1 (match)
-        fields = [""]*25
+        fields = [""] * 25
         fields[7] = "unit1"
         fields[8] = "num1"
         f.write("|".join(fields) + "\n")
@@ -50,7 +53,9 @@ def test_validation_qc_units_basic(tmp_path, dummy_logger):
         fields[8] = "num2"
         f.write("|".join(fields) + "\n")
     validation.validation_qc_units(erc_path, bdf_2_path, validation_dir, dummy_logger)
-    summary_files = [f for f in os.listdir(os.path.join(validation_dir, "qc")) if f.startswith("AEM_validation_summary_")]
+    summary_files = [
+        f for f in os.listdir(os.path.join(validation_dir, "qc")) if f.startswith("AEM_validation_summary_")
+    ]
     assert summary_files, "Summary file not created"
     with open(os.path.join(validation_dir, "qc", summary_files[0])) as f:
         lines = f.readlines()
@@ -66,7 +71,7 @@ def test_validation_qc_units_short_nf(tmp_path, dummy_logger):
     erc_path = os.path.join(validation_dir, "ERC_Stratigraphic_names_Current.txt")
     bdf_2_path = os.path.join(validation_dir, "qc", "met2.bdf")
     with open(erc_path, "w", encoding="utf-8") as f:
-        f.write("|".join(["unit1", "num1"] + ["x"]*40) + "\n")
+        f.write("|".join(["unit1", "num1"] + ["x"] * 40) + "\n")
     # Write a line with less than 25 fields
     with open(bdf_2_path, "w") as f:
         f.write("a|b|c|d|e|f|g|||j|||m||\n")
@@ -83,8 +88,8 @@ def test_validation_main_removes_quotes_and_validates(tmp_path):
     output_dir = tmp_path
     erc_path = os.path.join(input_dir, "test.asud")
     bdf_path = os.path.join(output_dir, "interp", "met.bdf")
-    with mock.patch('aemworkflow.validation.validation_remove_quotes') as remove_quotes:
-        with mock.patch('aemworkflow.validation.validation_qc_units') as qc_units:
+    with mock.patch("aemworkflow.validation.validation_remove_quotes") as remove_quotes:
+        with mock.patch("aemworkflow.validation.validation_qc_units") as qc_units:
             validation.main(str(input_dir), str(output_dir), "test.asud")
             remove_quotes.assert_called_once_with(bdf_path, os.path.join(output_dir, "qc", "met2.bdf"))
             qc_units.assert_called_once_with(erc_path, os.path.join(output_dir, "qc", "met2.bdf"), str(output_dir))

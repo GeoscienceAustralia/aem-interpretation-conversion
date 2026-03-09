@@ -21,8 +21,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libgdal-dev
         pip install GDAL==$(gdal-config --version)
-        pip install pytest codecov coverage pytest-cov
-        pip install -r requirements.txt
+        pip install .[dev]
+    - name: Lint with ruff
+      run: |
+        ruff check .
     - name: Run tests with coverage
       run: |
         pytest --cov --cov-report xml:results.xml --cov-report json --disable-warnings

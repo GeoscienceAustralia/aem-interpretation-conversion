@@ -1,16 +1,17 @@
 """
 GA AEM interpretation workflow, awk2python script translation
 """
-from pathlib import Path
-import os
-import glob
 import argparse
+import glob
+import os
 import re
-import pandas as pd
+from pathlib import Path
+from typing import List, TextIO, Tuple
 
+import pandas as pd
 from loguru import logger
-from typing import List, Tuple, TextIO
-from aemworkflow.utilities import get_ogr_path, run_command, validate_file, get_make_srt_dir
+
+from aemworkflow.utilities import get_make_srt_dir, get_ogr_path, run_command, validate_file
 
 
 def first(shp_dir: str, wrk_dir: str) -> None:

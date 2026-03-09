@@ -1,14 +1,15 @@
 import decimal
-import os
 import glob
+import os
 import sys
-import geopandas
-import folium
 import warnings
-
-from osgeo import osr
 from pathlib import Path
-from aemworkflow.utilities import get_ogr_path, validate_file, run_command, validate_shapefile, find_geometry_file
+
+import folium
+import geopandas
+from osgeo import osr
+
+from aemworkflow.utilities import find_geometry_file, get_ogr_path, run_command, validate_file, validate_shapefile
 
 header = 0
 xpo = 0.5
