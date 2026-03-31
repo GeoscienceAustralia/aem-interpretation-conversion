@@ -1,8 +1,9 @@
-from aemworkflow import interpretation
-import sys
 import builtins
 import io
-from unittest import mock
+import sys
+
+from aemworkflow import interpretation
+
 
 def test_active_gmt_metadata_to_bdf(tmp_path):
     gmt_content = "@D some metadata\nother line\n@D another metadata\n"
@@ -12,23 +13,22 @@ def test_active_gmt_metadata_to_bdf(tmp_path):
 
     interpretation.active_gmt_metadata_to_bdf(str(gmt_file), str(bdf_file), "w")
     result = bdf_file.read_text().splitlines()
-    assert result == [
-        "test.gmt|0|@D some metadata",
-        "test.gmt|1|@D another metadata"
-    ]
+    assert result == ["test.gmt|0|@D some metadata", "test.gmt|1|@D another metadata"]
+
 
 def test_active_shp_to_gmt(monkeypatch):
     command = {}
 
     def fake_run(cmd):
-        command['command'] = cmd
+        command["command"] = cmd
 
     monkeypatch.setattr(interpretation, "validate_file", lambda x: True)
     monkeypatch.setattr(interpretation, "run_command", fake_run)
     monkeypatch.setattr(interpretation, "get_ogr_path", lambda: "ogr2ogr")
 
     interpretation.active_shp_to_gmt("input.shp", "output.gmt")
-    assert command['command'] == ["ogr2ogr", "-f", "GMT", "output.gmt", "input.shp"]
+    assert command["command"] == ["ogr2ogr", "-f", "GMT", "output.gmt", "input.shp"]
+
 
 def test_active_extent_control_file(tmp_path):
     extent_file = tmp_path / "extent.txt"
@@ -42,16 +42,14 @@ def test_active_extent_control_file(tmp_path):
     mode = "w"
 
     interpretation.active_extent_control_file(
-        str(extent_file), str(path_file),
-        str(output_file), str(out_active_extent),
-        crs, gis, mode
+        str(extent_file), str(path_file), str(output_file), str(out_active_extent), crs, gis, mode
     )
 
     out_lines = output_file.read_text().splitlines()
     assert "# @VGMT1.0 @GLINESTRING" == out_lines[0]
-    assert out_lines[1].startswith("# @Jp\"")
+    assert out_lines[1].startswith('# @Jp"')
     assert crs in out_lines[2]
-    assert out_lines[2].startswith("# @Jw\"")
+    assert out_lines[2].startswith('# @Jw"')
     assert "# @Nlinenum" == out_lines[3]
     assert "# @Tinteger" == out_lines[4]
     assert "# FEATURE_DATA" == out_lines[5]
@@ -64,6 +62,7 @@ def test_active_extent_control_file(tmp_path):
     assert "5.5 6.6" == out_lines[12]
 
     assert out_active_extent.read_text().strip() == "123 456 789 012"
+
 
 def test_main_creates_outputs(monkeypatch, tmp_path):
     # Setup fake input directory and files
@@ -102,33 +101,48 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     # Patch geopandas.read_file to return a dummy GeoDataFrame
     class DummyGeoDF:
         crs = "epsg:28349"
+
         def to_crs(self, epsg=None):
             self.crs = f"epsg:{epsg}"
             return self
+
         def to_file(self, *a, **k):
             # Write a minimal geojson file for folium
             with open(a[0], "w") as f:
                 f.write('{"type": "FeatureCollection", "features": []}')
+
     monkeypatch.setattr(interpretation.geopandas, "read_file", lambda *a, **k: DummyGeoDF())
 
     # Patch folium.Map and folium.GeoJson to dummy classes
     class DummyLayer:
-        def get_bounds(self): return [[0,0],[1,1]]
-        def add_to(self, m): return self
+        def get_bounds(self):
+            return [[0, 0], [1, 1]]
+
+        def add_to(self, m):
+            return self
+
     class DummyMap:
-        def __init__(self, *a, **k): self.saved = False
-        def save(self, path): self.saved = True
-        def add_to(self, m): return self
+        def __init__(self, *a, **k):
+            self.saved = False
+
+        def save(self, path):
+            self.saved = True
+
+        def add_to(self, m):
+            return self
+
     monkeypatch.setattr(interpretation.folium, "Map", DummyMap)
     monkeypatch.setattr(interpretation.folium, "GeoJson", lambda *a, **k: DummyLayer())
     monkeypatch.setattr(interpretation.folium, "LayerControl", lambda: DummyLayer())
 
     # Patch open for folium.GeoJson to read geojson
     orig_open = builtins.open
-    def fake_open(file, mode='r', *args, **kwargs):
+
+    def fake_open(file, mode="r", *args, **kwargs):
         if isinstance(file, str) and file.endswith(".geojson"):
             return orig_open(file, mode, *args, **kwargs)
         return orig_open(file, mode, *args, **kwargs)
+
     monkeypatch.setattr(builtins, "open", fake_open)
 
     # Patch print to capture output

@@ -1,13 +1,15 @@
 import os
-import sys
 import shutil
 import subprocess  # nosec B404: subprocess usage is controlled and arguments are not user-supplied
-import fiona
+import sys
+from pathlib import Path
+from typing import List, Tuple
 
+import fiona
 from fiona.errors import DriverError
 from loguru import logger
-from typing import List
-from pathlib import Path
+
+BASE_SUFFIX = ("", "_high", "_mid", "_low")
 
 
 def get_ogr_path():
@@ -108,3 +110,15 @@ def get_make_srt_dir(wrk_dir: str, logger_session=logger) -> None:
     except OSError as osx:
         logger_session.error(osx.args)
         sys.exit()
+
+
+def find_geometry_file(shp_dir, prefix, geometryfile, logger_session=logger) -> Tuple[Path, str]:
+    required_suffix = '.path.txt' if geometryfile == 'path' else '.extent.txt'
+    for base_suffix in BASE_SUFFIX:
+        geometry_file_path = Path(shp_dir) / f'{prefix}{base_suffix}{required_suffix}'
+        if geometry_file_path.is_file():
+            logger_session.info(f'{geometryfile} file ../{geometry_file_path.name} exists: True')
+            return geometry_file_path, base_suffix
+
+    logger_session.error(f'No {geometryfile} file found for "{prefix}".')
+    raise FileNotFoundError(f'No {geometryfile} file found for "{prefix}"')

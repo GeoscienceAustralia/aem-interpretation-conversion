@@ -1,8 +1,9 @@
-import pytest
-from aemworkflow import pre_interpretation
-import pandas as pd
-import geopandas as gpd
 import folium
+import geopandas as gpd
+import pytest
+
+from aemworkflow import pre_interpretation
+
 
 def test_all_lines_creates_gmt_file(tmp_path):
     # Prepare input path file
@@ -11,7 +12,7 @@ def test_all_lines_creates_gmt_file(tmp_path):
     output_file = tmp_path / "test.gmt"
     crs = 4326
     gis = None
-    mode = 'w'
+    mode = "w"
 
     pre_interpretation.all_lines(str(path_file), str(output_file), crs, gis, mode)
 
@@ -20,6 +21,7 @@ def test_all_lines_creates_gmt_file(tmp_path):
     assert "# FEATURE_DATA" in content
     assert "100.0 200.0" in content
     assert "110.0 210.0" in content
+
 
 def test_print_boxes_writes_box(tmp_path):
     out_file_path = tmp_path / "box.txt"
@@ -31,6 +33,7 @@ def test_print_boxes_writes_box(tmp_path):
     assert "# @Dlower_right" in content
     assert "# @Dground_level" in content
     assert ">\n" in content
+
 
 def test_box_elevation_creates_box_gmt(tmp_path):
     extent_file = tmp_path / "test.extent.txt"
@@ -52,20 +55,22 @@ def test_box_elevation_creates_box_gmt(tmp_path):
     assert "# @Dground_level" in content
     assert ">\n" in content
 
+
 def test_all_lines_appends_when_mode_a(tmp_path):
     path_file = tmp_path / "test2.path.txt"
     path_file.write_text("1 2 3 4 120.0 220.0 7 8 9\n")
     output_file = tmp_path / "test2.gmt"
     crs = 4326
     gis = None
-    mode = 'w'
+    mode = "w"
     pre_interpretation.all_lines(str(path_file), str(output_file), crs, gis, mode)
     # Append another line
-    mode = 'a'
+    mode = "a"
     pre_interpretation.all_lines(str(path_file), str(output_file), crs, gis, mode)
     content = output_file.read_text()
     assert content.count("# @VGMT1.0 @GLINESTRING") == 1  # Only written once
     assert content.count(">") >= 2  # Two features
+
 
 @pytest.mark.parametrize("depth_lines,line_increments", [(1, 1), (5, 10)])
 def test_box_elevation_various_layers(tmp_path, depth_lines, line_increments):
@@ -74,11 +79,14 @@ def test_box_elevation_various_layers(tmp_path, depth_lines, line_increments):
     path_file = tmp_path / "test3.path.txt"
     path_file.write_text("0 1 0 0 0 0 0 0 120\n")
     output_file = tmp_path / "test3.box.gmt"
-    pre_interpretation.box_elevation(str(extent_file), str(path_file), str(output_file), depth_lines, line_increments, 0.5, 0.5)
+    pre_interpretation.box_elevation(
+        str(extent_file), str(path_file), str(output_file), depth_lines, line_increments, 0.5, 0.5
+    )
     content = output_file.read_text()
     assert "# @VGMT1.0 @GLINESTRING" in content
     assert "# FEATURE_DATA" in content
     assert content.count(">") >= depth_lines + 3  # 3 boxes + layers
+
 
 def test_main_prints_bounds(monkeypatch, tmp_path, capsys):
     # Setup fake input/output directories
@@ -95,21 +103,34 @@ def test_main_prints_bounds(monkeypatch, tmp_path, capsys):
     # Patch get_ogr_path to return a dummy string
     monkeypatch.setattr(pre_interpretation, "get_ogr_path", lambda: "ogr2ogr")
     # Patch geopandas.read_file to return a dummy GeoDataFrame
-    dummy_gdf = gpd.GeoDataFrame({'geometry': []}, geometry='geometry', crs="EPSG:4326")
+    dummy_gdf = gpd.GeoDataFrame({"geometry": []}, geometry="geometry", crs="EPSG:4326")
     monkeypatch.setattr(gpd, "read_file", lambda *a, **k: dummy_gdf)
     # Patch GeoDataFrame.to_crs to just return self
     monkeypatch.setattr(dummy_gdf, "to_crs", lambda *a, **k: dummy_gdf)
     # Patch folium.Map and folium.GeoJson to avoid file IO
+
     class DummyMap:
-        def __init__(self, *a, **k): pass
-        def save(self, *a, **k): pass
+        def __init__(self, *a, **k):
+            pass
+
+        def save(self, *a, **k):
+            pass
+
     class DummyGeoJson:
-        def __init__(self, *a, **k): pass
-        def add_to(self, m): return self
-        def get_bounds(self): return [[0, 0], [1, 1]]
+        def __init__(self, *a, **k):
+            pass
+
+        def add_to(self, m):
+            return self
+
+        def get_bounds(self):
+            return [[0, 0], [1, 1]]
+
     monkeypatch.setattr(folium, "Map", DummyMap)
     monkeypatch.setattr(folium, "GeoJson", DummyGeoJson)
     # Run main and ensure no exception
-    pre_interpretation.main(str(input_dir), str(output_dir), crs="4326", gis="esri_arcmap_0.5", lines=2, lines_increment=10)
+    pre_interpretation.main(
+        str(input_dir), str(output_dir), crs="4326", gis="esri_arcmap_0.5", lines=2, lines_increment=10
+    )
     out = capsys.readouterr().out
     assert "bounds are: [[0, 0], [1, 1]]" in out

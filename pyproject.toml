@@ -22,10 +22,18 @@ dependencies = [
     "geopandas==1.1.2",
     "importlib-metadata==8.6.1",
     "loguru==0.7.3",
-    "markdown==3.7",
     "pandas==2.2.3",
     "pytz==2025.1",
     "pyyaml==6.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "codecov",
+    "coverage",
+    "ruff",
 ]
 
 [project.scripts]
@@ -44,6 +52,7 @@ Issues = "https://github.com/GeoscienceAustralia/aem-interpretation-conversion/i
 filterwarnings = [
     "ignore::RuntimeWarning",
     "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
 ]
 addopts = [
     "--cov=aemworkflow",
@@ -54,6 +63,9 @@ addopts = [
     "-o junit_family=legacy",
 ]
 
-[tool.flake8]
-max-line-length = 120
-ignore = ["E402", "F401", "F841"]
+[tool.ruff]
+line-length = 120
+preview = true
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
