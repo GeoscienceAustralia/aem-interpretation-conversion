@@ -81,9 +81,11 @@ def convert(input_directory, output_directory, crs):
 @click.option("--mdc", is_flag=True, help="Export to MDC format", default=False)
 @click.option("--mdch", is_flag=True, help="Export to MDCH format", default=False)
 @click.option("--egs", is_flag=True, help="Export to EGS format", default=False)
-def export(input_directory, output_directory, boundary_filename, split_filename, mdc, mdch, egs):
+@click.option("--es", is_flag=True, help="Export to GA Portal / Earth Sciences format", default=False)
+@click.option("--3d", "export_3d", is_flag=True, help="Export to 3D shape file format", default=False)
+def export(input_directory, output_directory, boundary_filename, split_filename, mdc, mdch, egs, es, export_3d):
     try:
-        exports(input_directory, output_directory, boundary_filename, split_filename, mdc, mdch, egs)
+        exports(input_directory, output_directory, boundary_filename, split_filename, mdc, mdch, egs, es, export_3d)
         click.echo("Completed export")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)

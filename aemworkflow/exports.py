@@ -263,6 +263,114 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
         logger.error(f"Error during gmtsddd_to_mdch conversion: {e}")
 
 
+def gmtsddd_to_es(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
+    """
+    Create GA Portal / Earth Sciences outputs.
+
+    Input:
+        SORT/<line>.gmtsddd
+
+    Output:
+        export/<line>.pl
+        export/<line>.xml
+    """
+    r = {}
+    g = {}
+    b = {}
+
+    sort_directory = Path(wrk_dir) / "SORT"
+    export_directory = Path(wrk_dir) / "export"
+
+    try:
+        # Read the input file
+        with open(colors, 'r') as prn_file:
+            prn_file.readline()
+            for line in prn_file:
+                data = re.split(r'\s{2,}', line)
+                if len(data) > 4:
+                    r[data[0]] = float(data[1])
+                    g[data[0]] = float(data[2])
+                    b[data[0]] = float(data[3])
+
+        for filename in nm_list:
+            feature_segment_counts = {}
+
+            input_path = sort_directory / f'{filename}.gmtsddd'
+            pl_output_path = export_directory / f'{filename}.pl'
+            xml_output_path = export_directory / f'{filename}.xml'
+
+            with (
+                open(input_path, 'r') as file,
+                open(pl_output_path, 'w', newline='') as expfile
+            ):
+                csvwriter_export = csv.writer(expfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
+
+                for line in file:
+                    if line.startswith("# @D0"):
+                        metadata = line.strip().split("|")
+                        feature_type = metadata[2]
+
+                        if feature_type not in r:
+                            raise ValueError(f"Feature class '{feature_type}' was not found in {colors}")
+
+                        feature_segment_counts[feature_type] = feature_segment_counts.get(feature_type, 0) + 1
+                        segment_number = feature_segment_counts[feature_type]
+
+                        line = file.readline().strip().split()
+
+                        if len(line) < 7:
+                            raise ValueError(f"Invalid coordinate row in {input_path}")
+
+                        red = r[feature_type] / 256
+                        green = g[feature_type] / 256
+                        blue = b[feature_type] / 256
+
+                        csvwriter_export.writerow(["GOCAD PLine 1"])
+                        csvwriter_export.writerow(["HEADER {"])
+                        csvwriter_export.writerow([f"name:{filename}_{segment_number}_{feature_type}"])
+                        csvwriter_export.writerow(["*atoms:false"])
+                        csvwriter_export.writerow([f"*line*color:{red:g} {green:g} {blue:g} 1"])
+                        csvwriter_export.writerow(["width:5"])
+                        csvwriter_export.writerow(["}"])
+                        csvwriter_export.writerow(["PROPERTIES px py gl depth"])
+                        csvwriter_export.writerow(["ILINE"])
+
+                        vertex_number = 1
+
+                        while True:
+                            csvwriter_export.writerow([f"PVRTX {vertex_number} {float(line[0]):.1f} "
+                                                       f"{float(line[1]):.1f} {float(line[2]):.1f} "
+                                                       f"{float(line[3]):.6f} {float(line[4]):.6f} "
+                                                       f"{float(line[5]):.1f} {float(line[6]):.1f}"])
+                            line = file.readline().strip().split()
+
+                            if not line or not line[0].replace('.', '', 1).replace('-', '', 1).isdigit():
+                                break
+
+                            vertex_number += 1
+
+                        for i in range(1, vertex_number):
+                            csvwriter_export.writerow([f"SEG {i} {i + 1}"])
+
+                        csvwriter_export.writerow(["END"])
+
+            with open(xml_output_path, 'w') as xmlfile:
+                xmlfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                xmlfile.write('<Layer version="1" layerType="ModelLayer">\n')
+                xmlfile.write(f"<DisplayName>{filename} Interp</DisplayName>\n")
+                xmlfile.write(f"<URL>{filename}.pl</URL>\n")
+                xmlfile.write("<DataFormat>GOCAD</DataFormat>\n")
+                xmlfile.write("<LineWidth>5</LineWidth>\n")
+                xmlfile.write(f"<DataCacheName>GA/EFTF/AEM/{filename}.pl</DataCacheName>\n")
+                xmlfile.write("<CoordinateSystem>EPSG:28351</CoordinateSystem>\n")
+                xmlfile.write("</Layer>\n")
+
+            logger.info(f"Created Earth Sciences outputs: {filename}.pl and {filename}.xml")
+
+    except Exception as e:
+        logger.exception(f"Error during gmtsddd_to_es conversion: {e}")
+
+
 def gmts_2_egs(wrk_dir: str, alt_colors: str, nm_lst: List[int]) -> None:
     """
     Implements the following action from the AWK script:
@@ -452,7 +560,7 @@ def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
 
 
 def main(input_directory: str, output_directory: str, boundary: str, split: str,
-         export_mdc=False, export_mdch=False, export_egs=False) -> None:
+         export_mdc=False, export_mdch=False, export_egs=False, export_es=False, export_3d=False) -> None:
     active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
     exdf = pd.read_csv(active_extent_out_file_path, sep=r'\s+', usecols=[0])
     nm_list = exdf.iloc[:, 0].tolist()
@@ -470,6 +578,13 @@ def main(input_directory: str, output_directory: str, boundary: str, split: str,
     if export_egs:
         split_file_path = os.path.join(path_dir, split)
         gmtsddd_to_egs(work_dir, split_file_path, nm_list)
+
+    if export_es:
+        boundary_file_path = os.path.join(path_dir, boundary)
+        gmtsddd_to_es(work_dir, boundary_file_path, nm_list)
+
+    if export_3d:
+        None  # to be implemented
 
 
 if __name__ == "__main__":

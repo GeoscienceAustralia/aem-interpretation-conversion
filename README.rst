@@ -230,7 +230,7 @@ Export
 
 .. code-block:: bash
 
-    aemworkflow export --i "{input_directory}" --o "{output_directory}" --b "{boundary_file}" --s "{split_file}" --mdc --mdch --egs 
+    aemworkflow export --i "{input_directory}" --o "{output_directory}" --b "{boundary_file}" --s "{split_file}" --mdc --mdch --egs --es --3d
 
 **Parameter examples:**
 
@@ -245,6 +245,8 @@ split file                    No             None
 --mdc                         No             False            Add the flag if you want to set to true         Export to MDC format
 --mdch                        No             False            Add the flag if you want to set to true         Export to MDCH format
 --egs                         No             False            Add the flag if you want to set to true         Export to EGS format
+--es                          No             False            Add the flag if you want to set to true         Export to GA Portal / Earth Sciences format
+--3d                          No             False            Add the flag if you want to set to true         Export to 3D shape file format
 ============================= ============== =============== ================================================ =============================================           
 
 

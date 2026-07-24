@@ -144,6 +144,55 @@ def test_gmts_2_mdc(temp_sort_dir):
     assert "A" in lines
 
 
+def test_gmtsddd_to_es(temp_sort_dir):
+    temp_dir, sort_dir = temp_sort_dir
+    prn_content = "TYPE  Red  Green  Blue  Other\nA  10  20  30  1\nB  40  50  60  2\n"
+    prn_path = os.path.join(temp_dir, "colors.prn")
+    create_prn_file(prn_path, prn_content)
+
+    gmts_content = (
+        "# @D0|0|A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V\n"
+        "1 2 3 4 5 6 7 8 9 10\n"
+        "11 12 13 14 15 16 17 18 19 20\n"
+    )
+    gmts_path = os.path.join(sort_dir, "103.gmtsddd")
+    create_gmtsddd_file(
+        gmts_path,
+        gmts_content[: gmts_content.index("\n") + 1],
+        gmts_content[gmts_content.index("\n") + 1 :],
+    )
+
+    exports.gmtsddd_to_es(temp_dir, prn_path, [103])
+
+    pl_output_path = os.path.join(temp_dir, "export", "103.pl")
+    xml_output_path = os.path.join(temp_dir, "export", "103.xml")
+
+    assert os.path.exists(pl_output_path)
+    assert os.path.exists(xml_output_path)
+
+    with open(pl_output_path) as f:
+        pl_content = f.read()
+
+    with open(xml_output_path) as f:
+        xml_content = f.read()
+
+    assert "GOCAD PLine 1" in pl_content
+    assert "name:103_1_A" in pl_content
+    assert "PVRTX 1" in pl_content
+    assert "PVRTX 2" in pl_content
+    assert "SEG 1 2" in pl_content
+    assert "*line*color:" in pl_content
+    assert "END" in pl_content
+
+    assert '<?xml version="1.0" encoding="UTF-8"?>' in xml_content
+    assert "<DisplayName>103 Interp</DisplayName>" in xml_content
+    assert "<URL>103.pl</URL>" in xml_content
+    assert "<DataFormat>GOCAD</DataFormat>" in xml_content
+    assert "<LineWidth>5</LineWidth>" in xml_content
+    assert "<DataCacheName>GA/EFTF/AEM/103.pl</DataCacheName>" in xml_content
+    assert "<CoordinateSystem>EPSG:28351</CoordinateSystem>" in xml_content
+
+
 def test_main(tmp_path):
     output_directory = tmp_path / "output"
     interp_directory = output_directory / "interp"
@@ -153,15 +202,19 @@ def test_main(tmp_path):
     with mock.patch("aemworkflow.exports.gmtsddd_to_egs") as to_egs:
         with mock.patch("aemworkflow.exports.gmtsddd_to_mdc") as to_mdc:
             with mock.patch("aemworkflow.exports.gmtsddd_to_mdch") as to_mdch:
-                exports.main(
-                    "input_dir",
-                    str(output_directory),
-                    export_mdc=True,
-                    export_mdch=False,
-                    export_egs=True,
-                    boundary="boundary",
-                    split="split",
-                )
-                to_egs.assert_called_once()
-                to_mdc.assert_called_once()
-                to_mdch.assert_not_called()
+                with mock.patch("aemworkflow.exports.gmtsddd_to_es") as to_es:
+                    exports.main(
+                        "input_dir",
+                        str(output_directory),
+                        export_mdc=True,
+                        export_mdch=False,
+                        export_egs=True,
+                        export_es=True,
+                        export_3d=False,
+                        boundary="boundary",
+                        split="split",
+                    )
+                    to_egs.assert_called_once()
+                    to_mdc.assert_called_once()
+                    to_mdch.assert_not_called()
+                    to_es.assert_called_once()
