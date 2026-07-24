@@ -9,7 +9,7 @@ import pandas as pd
 from loguru import logger
 from osgeo import osr
 
-from aemworkflow.utilities import get_make_srt_dir, get_ogr_path, run_command, validate_file
+from aemworkflow.utilities import get_make_export_dir, get_make_srt_dir, get_ogr_path, run_command, validate_file
 
 
 def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, logger_session=logger) -> List[int]:
@@ -42,6 +42,9 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
 
         srt_dir = Path(wrk_dir) / "SORT"
         get_make_srt_dir(srt_dir, logger_session=logger)
+
+        export_directory = Path(wrk_dir) / "export"
+        get_make_export_dir(export_directory, logger_session=logger)
 
         dcols = ("nm", "frame_l", "frame_top", "frame_r", "frame_bot", "t_l", "t_top", "t_r", "t_bot")
         exdf = pd.read_csv(ext_file, sep=r'\s+', names=dcols, header=None, index_col=False)
@@ -147,6 +150,9 @@ def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_se
         srt_dir = Path(wrk_dir) / "SORT"
         get_make_srt_dir(srt_dir, logger_session=logger)
 
+        export_directory = Path(wrk_dir) / "export"
+        get_make_export_dir(export_directory, logger_session=logger)
+
         zfshp_dir = Path(wrk_dir) / "ZF_SHP"
         if not Path(zfshp_dir).exists():
             Path(zfshp_dir).mkdir(parents=True, exist_ok=False)
@@ -240,6 +246,9 @@ def conversion_sort_gmtp(wrk_dir: str, nm_lst: List[int], logger_session=logger)
     try:
         srt_dir = Path(wrk_dir) / "SORT"
         get_make_srt_dir(srt_dir, logger_session=logger)
+
+        export_directory = Path(wrk_dir) / "export"
+        get_make_export_dir(export_directory, logger_session=logger)
 
         zfshp_dir = Path(wrk_dir) / "ZF_SHP"
         if not Path(zfshp_dir).exists():

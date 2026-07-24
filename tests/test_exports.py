@@ -13,8 +13,19 @@ import aemworkflow.exports as exports
 def temp_sort_dir():
     temp_dir = tempfile.mkdtemp()
     sort_dir = os.path.join(temp_dir, "SORT")
+    export_dir = os.path.join(temp_dir, "export")
     os.makedirs(sort_dir)
+    os.makedirs(export_dir) 
     yield temp_dir, sort_dir
+    shutil.rmtree(temp_dir)
+
+
+@pytest.fixture
+def temp_export_dir():
+    temp_dir = tempfile.mkdtemp()
+    export_dir = os.path.join(temp_dir, "export")
+    os.makedirs(export_dir)
+    yield temp_dir, export_dir
     shutil.rmtree(temp_dir)
 
 

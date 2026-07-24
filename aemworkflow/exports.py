@@ -61,16 +61,7 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
     # Open the CSV file for writing
     try:
         with open(os.path.join(wrk_dir, 'SORT', 'output.mdc'), 'w', newline='') as csvfile:
-            csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
-            # Write the header to stderr and the CSV file
-            # sys.stderr.write("Export EGGS CSV\n")
-            # csvwriter.writerow(["Vertex", "SegmentID", "X", "Y", "ELEVATION", "PixelX",
-            # "PixelY", "AusAEM_DEM", "DEPTH", "Type", "OverAge", "UnderAge", "BoundConf",
-            # "ContactTyp", "BasisOfInt", "OvrStrtUnt", "OvrStratNo", "OvrConf", "UndStrtUnt",
-            # "UndStratNo", "UndConf", "WithinStrt", "WithinStNo", "WithinConf", "HydStrtType",
-            # "HydStrConf", "BOMNAFUnt", "BOMNAFNo", "InterpRef", "Comment", "Annotation", "NewObs",
-            # "Operator", "Date", "SURVEY_LINE"])
-
+            csvwriter_sort = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
             # Read the input file
             with open(colors, 'r') as prn_file:
                 prn_file.readline()
@@ -83,7 +74,15 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                         b[data[0]] = float(data[3])
 
             for filename in nm_list:
-                with open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file:
+                with (
+                    open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file,
+                    open(os.path.join(wrk_dir, 'export', f'{filename}.mdc'), 'w', newline='') as expfile
+                ):
+                    csvwriter_export = csv.writer(expfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
+
+                    def write_row(row):
+                        csvwriter_sort.writerow(row)
+                        csvwriter_export.writerow(row)
                     for line in file:
                         if line.startswith("# @D0"):
                             filen = [filename, '']  # filename.split(".")
@@ -91,69 +90,69 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                             second_line = file.readline().strip().split()
                             segn = second_line[8]
 
-                            csvwriter.writerow(["GOCAD PLine 1"])
-                            csvwriter.writerow(["HEADER {"])
-                            csvwriter.writerow([f"name:{filen[0]}_{segn}_{line[2]}"])
-                            csvwriter.writerow(["*atoms:false"])
-                            csvwriter.writerow(["*line*color:%f %f %f 1" % (r[line[2]] / 256,
+                            write_row(["GOCAD PLine 1"])
+                            write_row(["HEADER {"])
+                            write_row([f"name:{filen[0]}_{segn}_{line[2]}"])
+                            write_row(["*atoms:false"])
+                            write_row(["*line*color:%f %f %f 1" % (r[line[2]] / 256,
                                                                             g[line[2]] / 256,
                                                                             b[line[2]] / 256)])
-                            csvwriter.writerow(["use_feature_color: false"])
-                            csvwriter.writerow(["width:5"])
-                            csvwriter.writerow([f"*metadata*Line: {filen[0]}"])
-                            csvwriter.writerow([f"*metadata*Type: {line[2]}"])
-                            csvwriter.writerow([f"*metadata*BoundaryNm: {line[3]}"])
-                            csvwriter.writerow([f"*metadata*BoundConf: {line[4]}"])
-                            csvwriter.writerow([f"*metadata*BasisOfInt: {line[5]}"])
-                            csvwriter.writerow([f"*metadata*OvrStrtUnt: {line[6]}"])
-                            csvwriter.writerow([f"*metadata*OvrStrtCod: {line[7]}"])
-                            csvwriter.writerow([f"*metadata*OvrConf: {line[8]}"])
-                            csvwriter.writerow([f"*metadata*UndStrtUnt: {line[9]}"])
-                            csvwriter.writerow([f"*metadata*UndStrtCod: {line[10]}"])
-                            csvwriter.writerow([f"*metadata*UndConf: {line[11]}"])
-                            csvwriter.writerow([f"*metadata*WithinType: {line[12]}"])
-                            csvwriter.writerow([f"*metadata*WithinStrt: {line[13]}"])
-                            csvwriter.writerow([f"*metadata*WithinStNo: {line[14]}"])
-                            csvwriter.writerow([f"*metadata*WithinConf: {line[15]}"])
-                            csvwriter.writerow([f"*metadata*InterpRef: {line[16]}"])
-                            csvwriter.writerow([f"*metadata*Comment: {line[17]}"])
-                            csvwriter.writerow([f"*metadata*Annotation: {line[18]}"])
-                            csvwriter.writerow([f"*metadata*NewObs: {line[19]}"])
-                            csvwriter.writerow([f"*metadata*Operator: {line[20]}"])
-                            csvwriter.writerow(["*metadata*Organization: Geoscience Australia"])
-                            csvwriter.writerow(["}"])
-                            csvwriter.writerow(["PROPERTIES px py gl depth"])
+                            write_row(["use_feature_color: false"])
+                            write_row(["width:5"])
+                            write_row([f"*metadata*Line: {filen[0]}"])
+                            write_row([f"*metadata*Type: {line[2]}"])
+                            write_row([f"*metadata*BoundaryNm: {line[3]}"])
+                            write_row([f"*metadata*BoundConf: {line[4]}"])
+                            write_row([f"*metadata*BasisOfInt: {line[5]}"])
+                            write_row([f"*metadata*OvrStrtUnt: {line[6]}"])
+                            write_row([f"*metadata*OvrStrtCod: {line[7]}"])
+                            write_row([f"*metadata*OvrConf: {line[8]}"])
+                            write_row([f"*metadata*UndStrtUnt: {line[9]}"])
+                            write_row([f"*metadata*UndStrtCod: {line[10]}"])
+                            write_row([f"*metadata*UndConf: {line[11]}"])
+                            write_row([f"*metadata*WithinType: {line[12]}"])
+                            write_row([f"*metadata*WithinStrt: {line[13]}"])
+                            write_row([f"*metadata*WithinStNo: {line[14]}"])
+                            write_row([f"*metadata*WithinConf: {line[15]}"])
+                            write_row([f"*metadata*InterpRef: {line[16]}"])
+                            write_row([f"*metadata*Comment: {line[17]}"])
+                            write_row([f"*metadata*Annotation: {line[18]}"])
+                            write_row([f"*metadata*NewObs: {line[19]}"])
+                            write_row([f"*metadata*Operator: {line[20]}"])
+                            write_row(["*metadata*Organization: Geoscience Australia"])
+                            write_row(["}"])
+                            write_row(["PROPERTIES px py gl depth"])
 
                             # Coordinate reference system
-                            csvwriter.writerow(["GOCAD_ORIGINAL_COORDINATE_SYSTEM"])
-                            csvwriter.writerow(["NAME \" gocad Local\""])
-                            csvwriter.writerow(["PROJECTION \" GDA94 / MGA zone 53\""])
-                            csvwriter.writerow(["DATUM \" Mean Sea Level\""])
-                            csvwriter.writerow(["AXIS_NAME X Y Z"])
-                            csvwriter.writerow(["AXIS_UNIT m m m"])
-                            csvwriter.writerow(["ZPOSITIVE Elevation"])
-                            csvwriter.writerow(["END_ORIGINAL_COORDINATE_SYSTEM"])
+                            write_row(["GOCAD_ORIGINAL_COORDINATE_SYSTEM"])
+                            write_row(["NAME \" gocad Local\""])
+                            write_row(["PROJECTION \" GDA94 / MGA zone 53\""])
+                            write_row(["DATUM \" Mean Sea Level\""])
+                            write_row(["AXIS_NAME X Y Z"])
+                            write_row(["AXIS_UNIT m m m"])
+                            write_row(["ZPOSITIVE Elevation"])
+                            write_row(["END_ORIGINAL_COORDINATE_SYSTEM"])
 
                             # Feature class used to group section components (AEM section)
-                            csvwriter.writerow([f"GEOLOGICAL_FEATURE {filen[0]}"])
-                            csvwriter.writerow(["ILINE"])
+                            write_row([f"GEOLOGICAL_FEATURE {filen[0]}"])
+                            write_row(["ILINE"])
 
                             line = second_line
                             first = last = int(line[9])
                             while True:
                                 last = int(line[9])
-                                csvwriter.writerow([f"PVRTX {int(line[9])} {float(line[0]):.1f} "
-                                                    f"{float(line[1]):.1f} {float(line[2]):.1f} "
-                                                    f"{float(line[3])} {float(line[4])} "
-                                                    f"{float(line[5]):.1f} {float(line[6]):.1f}"])
+                                write_row([f"PVRTX {int(line[9])} {float(line[0]):.1f} "
+                                           f"{float(line[1]):.1f} {float(line[2]):.1f} "
+                                           f"{float(line[3])} {float(line[4])} "
+                                           f"{float(line[5]):.1f} {float(line[6]):.1f}"])
                                 line = file.readline().strip().split()
                                 if not line or not line[0].replace('.', '').isdigit():
                                     break
 
                             for i in range(first, last):
-                                csvwriter.writerow([f"seg {i} {i + 1}"])
+                                write_row([f"seg {i} {i + 1}"])
 
-                            csvwriter.writerow(["END"])
+                            write_row(["END"])
     except Exception as e:
         logger.error(f"Error during gmtsddd_to_mdc conversion: {e}")
 
@@ -166,15 +165,7 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
     # Open the CSV file for writing
     try:
         with open(os.path.join(wrk_dir, 'SORT', 'output.mdch'), 'w', newline='') as csvfile:
-            csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
-            # Write the header to stderr and the CSV file
-            # sys.stderr.write("Export EGGS CSV\n")
-            # csvwriter.writerow(["Vertex", "SegmentID", "X", "Y", "ELEVATION", "PixelX", "PixelY",
-            # "AusAEM_DEM", "DEPTH", "Type", "OverAge", "UnderAge", "BoundConf", "ContactTyp",
-            # "BasisOfInt", "OvrStrtUnt", "OvrStratNo", "OvrConf", "UndStrtUnt", "UndStratNo",
-            # "UndConf", "WithinStrt", "WithinStNo", "WithinConf", "HydStrtType", "HydStrConf",
-            # "BOMNAFUnt", "BOMNAFNo", "InterpRef", "Comment", "Annotation", "NewObs", "Operator",
-            # "Date", "SURVEY_LINE"])
+            csvwriter_sort = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
 
             # Read the input file
             with open(colors, 'r') as prn_file:
@@ -188,7 +179,16 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                         b[data[0]] = float(data[3])
 
             for filename in nm_list:
-                with open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file:
+                with (
+                    open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file,
+                    open(os.path.join(wrk_dir, 'export', f'{filename}.mdch'), 'w', newline='') as expfile
+                ):
+                    csvwriter_export = csv.writer(expfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
+
+                    def write_row(row):
+                        csvwriter_sort.writerow(row)
+                        csvwriter_export.writerow(row)
+
                     for line in file:
                         if line.startswith("# @D0"):
                             filen = [filename, 'gmtsddd']  # filename.split(".")
@@ -196,69 +196,69 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                             second_line = file.readline().strip().split()
                             segn = second_line[8]
 
-                            csvwriter.writerow(["GOCAD PLine 1"])
-                            csvwriter.writerow(["HEADER {"])
-                            csvwriter.writerow([f"name:{filen[0]}_{segn}_{line[2]}"])
-                            csvwriter.writerow(["*atoms:false"])
-                            csvwriter.writerow(["*line*color: %f %f %f 1" % (r[line[2]] / 256,
-                                                                             g[line[2]] / 256,
+                            write_row(["GOCAD PLine 1"])
+                            write_row(["HEADER {"])
+                            write_row([f"name:{filen[0]}_{segn}_{line[2]}"])
+                            write_row(["*atoms:false"])
+                            write_row(["*line*color: %f %f %f 1" % (r[line[2]] / 256,
+                                                                     g[line[2]] / 256,
                                                                              b[line[2]] / 256)])
-                            csvwriter.writerow(["use_feature_color: false"])
-                            csvwriter.writerow(["width: 5"])
-                            csvwriter.writerow([f"*metadata*Line: {filen[0]}"])
-                            csvwriter.writerow([f"*metadata*Type: {line[2]}"])
-                            csvwriter.writerow([f"*metadata*BoundaryNm: {line[3]}"])
-                            csvwriter.writerow([f"*metadata*BoundConf: {line[4]}"])
-                            csvwriter.writerow([f"*metadata*BasisOfInt: {line[5]}"])
-                            csvwriter.writerow([f"*metadata*OvrStrtUnt: {line[6]}"])
-                            csvwriter.writerow([f"*metadata*OvrStrtCod: {line[7]}"])
-                            csvwriter.writerow([f"*metadata*OvrConf: {line[8]}"])
-                            csvwriter.writerow([f"*metadata*UndStrtUnt: {line[9]}"])
-                            csvwriter.writerow([f"*metadata*UndStrtCod: {line[10]}"])
-                            csvwriter.writerow([f"*metadata*UndConf: {line[11]}"])
-                            csvwriter.writerow([f"*metadata*WithinType: {line[12]}"])
-                            csvwriter.writerow([f"*metadata*WithinStrt: {line[13]}"])
-                            csvwriter.writerow([f"*metadata*WithinStNo: {line[14]}"])
-                            csvwriter.writerow([f"*metadata*WithinConf: {line[15]}"])
-                            csvwriter.writerow([f"*metadata*InterpRef: {line[16]}"])
-                            csvwriter.writerow([f"*metadata*Comment: {line[17]}"])
-                            csvwriter.writerow([f"*metadata*Annotation: {line[18]}"])
-                            csvwriter.writerow([f"*metadata*NewObs: {line[19]}"])
-                            csvwriter.writerow([f"*metadata*Operator: {line[20]}"])
-                            csvwriter.writerow(["*metadata*Organization: Geoscience Australia"])
-                            csvwriter.writerow(["}"])
-                            csvwriter.writerow(["PROPERTIES px py gl depth"])
+                            write_row(["use_feature_color: false"])
+                            write_row(["width: 5"])
+                            write_row([f"*metadata*Line: {filen[0]}"])
+                            write_row([f"*metadata*Type: {line[2]}"])
+                            write_row([f"*metadata*BoundaryNm: {line[3]}"])
+                            write_row([f"*metadata*BoundConf: {line[4]}"])
+                            write_row([f"*metadata*BasisOfInt: {line[5]}"])
+                            write_row([f"*metadata*OvrStrtUnt: {line[6]}"])
+                            write_row([f"*metadata*OvrStrtCod: {line[7]}"])
+                            write_row([f"*metadata*OvrConf: {line[8]}"])
+                            write_row([f"*metadata*UndStrtUnt: {line[9]}"])
+                            write_row([f"*metadata*UndStrtCod: {line[10]}"])
+                            write_row([f"*metadata*UndConf: {line[11]}"])
+                            write_row([f"*metadata*WithinType: {line[12]}"])
+                            write_row([f"*metadata*WithinStrt: {line[13]}"])
+                            write_row([f"*metadata*WithinStNo: {line[14]}"])
+                            write_row([f"*metadata*WithinConf: {line[15]}"])
+                            write_row([f"*metadata*InterpRef: {line[16]}"])
+                            write_row([f"*metadata*Comment: {line[17]}"])
+                            write_row([f"*metadata*Annotation: {line[18]}"])
+                            write_row([f"*metadata*NewObs: {line[19]}"])
+                            write_row([f"*metadata*Operator: {line[20]}"])
+                            write_row(["*metadata*Organization: Geoscience Australia"])
+                            write_row(["}"])
+                            write_row(["PROPERTIES px py gl depth"])
 
                             # Coordinate reference system
-                            csvwriter.writerow(["GOCAD_ORIGINAL_COORDINATE_SYSTEM"])
-                            csvwriter.writerow(["NAME \" gocad Local\""])
-                            csvwriter.writerow(["PROJECTION \" GDA94 / MGA zone 53\""])
-                            csvwriter.writerow(["DATUM \" Mean Sea Level\""])
-                            csvwriter.writerow(["AXIS_NAME X Y Z"])
-                            csvwriter.writerow(["AXIS_UNIT m m m"])
-                            csvwriter.writerow(["ZPOSITIVE Elevation"])
-                            csvwriter.writerow(["END_ORIGINAL_COORDINATE_SYSTEM"])
+                            write_row(["GOCAD_ORIGINAL_COORDINATE_SYSTEM"])
+                            write_row(["NAME \" gocad Local\""])
+                            write_row(["PROJECTION \" GDA94 / MGA zone 53\""])
+                            write_row(["DATUM \" Mean Sea Level\""])
+                            write_row(["AXIS_NAME X Y Z"])
+                            write_row(["AXIS_UNIT m m m"])
+                            write_row(["ZPOSITIVE Elevation"])
+                            write_row(["END_ORIGINAL_COORDINATE_SYSTEM"])
 
                             # Feature class used to group section components (AEM section)
-                            csvwriter.writerow([f"GEOLOGICAL_FEATURE {line[2]}"])
-                            csvwriter.writerow(["ILINE"])
+                            write_row([f"GEOLOGICAL_FEATURE {line[2]}"])
+                            write_row(["ILINE"])
 
                             line = second_line
                             first = last = int(line[9])
                             while True:
                                 last = int(line[9])
-                                csvwriter.writerow([f"PVRTX {int(line[9])} {float(line[0]):.1f} "
-                                                    f"{float(line[1]):.1f} {float(line[2]):.1f} "
-                                                    f"{float(line[3])} {float(line[4])} "
-                                                    f"{float(line[5]):.1f} {float(line[6]):.1f}"])
+                                write_row([f"PVRTX {int(line[9])} {float(line[0]):.1f} "
+                                           f"{float(line[1]):.1f} {float(line[2]):.1f} "
+                                           f"{float(line[3])} {float(line[4])} "
+                                           f"{float(line[5]):.1f} {float(line[6]):.1f}"])
                                 line = file.readline().strip().split()
                                 if not line or not line[0].replace('.', '').isdigit():
                                     break
 
                             for i in range(first, last):
-                                csvwriter.writerow([f"seg {i} {i + 1}"])
+                                write_row([f"seg {i} {i + 1}"])
 
-                            csvwriter.writerow(["END"])
+                            write_row(["END"])
     except Exception as e:
         logger.error(f"Error during gmtsddd_to_mdch conversion: {e}")
 
