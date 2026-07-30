@@ -8,18 +8,20 @@ from typing import List
 import pandas as pd
 from loguru import logger
 
+from aemworkflow.utilities import get_ogr_path, run_command, validate_file
 
-def gmtsddd_to_egs(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
+
+def gmtsddd_to_csv(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
     # Initialize dictionaries for over and under age
     ov = {}
     un = {}
 
     # Open the CSV file for writing
     try:
-        with open(os.path.join(wrk_dir, 'SORT', 'output.egs'), 'w', newline='') as csvfile:
+        with open(os.path.join(wrk_dir, 'export', 'output.csv'), 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
             # Write the header to stderr and the CSV file
-            sys.stderr.write("Export EGGS CSV\n")
+            sys.stderr.write("Export CSV\n")
             csvwriter.writerow(["Vertex", "SegmentID", "X", "Y", "ELEVATION", "PixelX", "PixelY", "AusAEM_DEM", "DEPTH",
                                 "Type", "OverAge", "UnderAge", "BoundConf", "ContactTyp", "BasisOfInt", "OvrStrtUnt",
                                 "OvrStratNo", "OvrConf", "UndStrtUnt", "UndStratNo", "UndConf", "WithinStrt",
@@ -50,7 +52,7 @@ def gmtsddd_to_egs(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
                             row_to_write = parts[9:10] + parts[8:9] + parts[0:7] + met + [filename]
                             csvwriter.writerow(row_to_write)
     except Exception as e:
-        logger.error(f"Error during gmtsddd_to_egs conversion: {e}")
+        logger.error(f"Error during gmtsddd_to_csv conversion: {e}")
 
 
 def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
@@ -60,8 +62,8 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
 
     # Open the CSV file for writing
     try:
-        with open(os.path.join(wrk_dir, 'SORT', 'output.mdc'), 'w', newline='') as csvfile:
-            csvwriter_sort = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
+        with open(os.path.join(wrk_dir, 'export', 'output.mdc'), 'w', newline='') as combined_file:
+            csvwriter_combined = csv.writer(combined_file, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
             # Read the input file
             with open(colors, 'r') as prn_file:
                 prn_file.readline()
@@ -76,13 +78,14 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
             for filename in nm_list:
                 with (
                     open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file,
-                    open(os.path.join(wrk_dir, 'export', f'{filename}.mdc'), 'w', newline='') as expfile
+                    open(os.path.join(wrk_dir, 'export', f'{filename}.mdc'), 'w', newline='') as individual_file
                 ):
-                    csvwriter_export = csv.writer(expfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
+                    csvwriter_individual = csv.writer(individual_file, quoting=csv.QUOTE_NONE, quotechar=None,
+                                                      escapechar='\\')
 
                     def write_row(row):
-                        csvwriter_sort.writerow(row)
-                        csvwriter_export.writerow(row)
+                        csvwriter_combined.writerow(row)
+                        csvwriter_individual.writerow(row)
                     for line in file:
                         if line.startswith("# @D0"):
                             filen = [filename, '']  # filename.split(".")
@@ -164,8 +167,8 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
 
     # Open the CSV file for writing
     try:
-        with open(os.path.join(wrk_dir, 'SORT', 'output.mdch'), 'w', newline='') as csvfile:
-            csvwriter_sort = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
+        with open(os.path.join(wrk_dir, 'export', 'output.mdch'), 'w', newline='') as combined_file:
+            csvwriter_combined = csv.writer(combined_file, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
 
             # Read the input file
             with open(colors, 'r') as prn_file:
@@ -181,13 +184,14 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
             for filename in nm_list:
                 with (
                     open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file,
-                    open(os.path.join(wrk_dir, 'export', f'{filename}.mdch'), 'w', newline='') as expfile
+                    open(os.path.join(wrk_dir, 'export', f'{filename}.mdch'), 'w', newline='') as individual_file
                 ):
-                    csvwriter_export = csv.writer(expfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
+                    csvwriter_individual = csv.writer(individual_file, quoting=csv.QUOTE_NONE, quotechar=None,
+                                                      escapechar='\\')
 
                     def write_row(row):
-                        csvwriter_sort.writerow(row)
-                        csvwriter_export.writerow(row)
+                        csvwriter_combined.writerow(row)
+                        csvwriter_individual.writerow(row)
 
                     for line in file:
                         if line.startswith("# @D0"):
@@ -263,7 +267,7 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
         logger.error(f"Error during gmtsddd_to_mdch conversion: {e}")
 
 
-def gmtsddd_to_es(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
+def gmtsddd_to_es(wrk_dir: str, colors: str, nm_list: List[int], crs: str,) -> None:
     """
     Create GA Portal / Earth Sciences outputs.
 
@@ -281,6 +285,7 @@ def gmtsddd_to_es(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
     sort_directory = Path(wrk_dir) / "SORT"
     export_directory = Path(wrk_dir) / "export"
 
+    xml_files = []
     try:
         # Read the input file
         with open(colors, 'r') as prn_file:
@@ -362,205 +367,279 @@ def gmtsddd_to_es(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                 xmlfile.write("<DataFormat>GOCAD</DataFormat>\n")
                 xmlfile.write("<LineWidth>5</LineWidth>\n")
                 xmlfile.write(f"<DataCacheName>GA/EFTF/AEM/{filename}.pl</DataCacheName>\n")
-                xmlfile.write("<CoordinateSystem>EPSG:28351</CoordinateSystem>\n")
+                xmlfile.write(f"<CoordinateSystem>EPSG:{crs}</CoordinateSystem>\n")
                 xmlfile.write("</Layer>\n")
 
-            logger.info(f"Created Earth Sciences outputs: {filename}.pl and {filename}.xml")
+            logger.info("Created Earth Sciences outputs")
+
+            xml_files.append(xml_output_path)
+        create_earthsci_wrapper(wrk_dir, xml_files=xml_files)
 
     except Exception as e:
         logger.exception(f"Error during gmtsddd_to_es conversion: {e}")
 
 
-def gmts_2_egs(wrk_dir: str, alt_colors: str, nm_lst: List[int]) -> None:
+def create_earthsci_wrapper(wrk_dir: str, xml_files: List[Path]) -> None:
     """
-    Implements the following action from the AWK script:
-    awk -f gmts_2_egs.awk LU_SPLIT_FEATURE_CLASSES_20220215.prn $1.gmts > $1.egs
+    Create a combined EarthSci XML from individual XML files.
 
-    Parameters:
-    ----------
-    wrk_dir: str
-        The path to the existing work folder
-    alt_colors: str
-        The path to the other *.prn file with RGB values for geo features
-    nm_lst: List[int]
-        The list of path identifiers from the the common extent file
+    Output:
+        export/dataset.xml
     """
+    export_directory = Path(wrk_dir) / "export"
+    wrapper_path = export_directory / "dataset.xml"
+    dataset_name = Path(wrk_dir).resolve().name
+
+    if not xml_files:
+        raise ValueError("Cannot create EarthSci wrapper because no XML files were created.")
+
+    with open(wrapper_path, "w", encoding="utf-8") as wrapper_file:
+        wrapper_file.write("<DatasetList>\n")
+        wrapper_file.write(f'<Dataset name="{dataset_name}">\n')
+
+        for xml_file in xml_files:
+            layer_name = xml_file.name.split("_", 1)[0]
+            wrapper_file.write(f'<Layer name="{layer_name}" url="{xml_file.name}" />\n')
+
+        wrapper_file.write("</Dataset>\n")
+        wrapper_file.write("</DatasetList>\n")
+
+    logger.info("Created combined EarthSci wrapper")
+
+
+def gmtsddd_to_3d(wrk_dir: str, nm_list: List[int], crs: str) -> None:
+    '''
+    Create individual 3D shapefiles for each survey line.
+
+    Input:
+        SORT/<line>.gmtsddd
+
+    Output:
+        export/<line>.shp
+        export/<line>.shx
+        export/<line>.dbf
+        export/<line>.prj
+    '''
 
     try:
-        srt_dir = Path(wrk_dir) / "SORT"
-        if not (srt_dir).exists():
-            logger.error("SORT folder missing")
-            sys.exit(0)
+        sort_directory = Path(wrk_dir) / "SORT"
+        export_directory = Path(wrk_dir) / "export"
 
-        header = "Vertex,SegmentID,X,Y,ELEVATION,PixelX," \
-            "PixelY,AusAEM_DEM,DEPTH,Type,OverAge,UnderAge," \
-            "BoundConf,ContactTyp,BasisOfInt,OvrStrtUnt," \
-            "OvrStratNo,OvrConf,UndStrtUnt,UndStratNo," \
-            "UndConf,WithinStrt,WithinStNo,WithinConf," \
-            "HydStrtType,HydStrConf,BOMNAFUnt,BOMNAFNo," \
-            "InterpRef,Comment,Annotation,NewObs,Operator," \
-            "" \
-            "Date,SURVEY_LINE\n"
+        for line_number in nm_list:
+            input_path = sort_directory / f"{line_number}.gmtsddd"
+            output_path = export_directory / f"{line_number}.shp"
 
-        regex2 = re.compile('[+-]?([0-9]*[.])?[0-9]+')
+            if not validate_file(input_path):
+                return
 
-        cdf = pd.read_csv(alt_colors, sep=r"\s{2,}", header=0, index_col=False, engine="python")
-        cdf.fillna('', inplace=True)
-        seg = 0
+            cmd = [
+                get_ogr_path(),
+                '-f', 'ESRI Shapefile',
+                '-s_srs', f'EPSG:{crs}',
+                '-t_srs', f'EPSG:{crs}',
+                '-lco', 'SHPT=ARCZ',
+                str(output_path),
+                str(input_path),
+            ]
 
-        for nm in nm_lst:
-            gmts = Path(srt_dir) / f"{nm}.gmtsddd"
-            if not gmts.exists():
-                continue
-            lines = gmts.read_text().split("\n")
-            with open(Path(srt_dir) / f"{nm}.egs", "w") as fou:
-                fou.write(header)
-                while lines:
-                    try:
-                        line = lines.pop(0)
-                    except IndexError:
-                        logger.info(f"{nm}.gmts processed")
-                        break
-                    if "@D" in line:
-                        seg += 1
-                        m_lst = line.split("|")
-                        gnm = m_lst[2]
-                        row = cdf[cdf["TYPE"] == gnm]
-                        # row = cdf.query("TYPE == @gnm")
-                        met = f"{gnm},{row['OVERAGE'].iloc[0]},"
-                        f"{row['UNDERAGE'].iloc[0]},"
-                        f"{','.join(str(x) for x in m_lst[2:24])}"
-                        line = lines.pop(0)
+            run_command(cmd)
+            # if output_path.exists():
+            #     logger.info(f"Created 3D shapefile outputs for line {line_number}")
 
-                        try:
-                            while regex2.match(line.split()[0]):
-                                los = line.split()
-                                fou.write(f"{los[9]},{los[8]},{los[2]},"
-                                          f"{los[3]},{los[4]},{los[0]},"
-                                          f"{los[1]},{los[5]},{los[6]},"
-                                          f"{met},{nm}\n")
-                                line = lines.pop(0)
-                        except IndexError:
-                            pass
-    except Exception as e:
-        logger.error(f"Error during gmts_2_egs conversion: {e}")
-        sys.exit(1)
+    except Exception:
+        logger.exception("Error during gmtsddd_to_3d conversion")
 
 
-def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
-    """
-    Implements the following action from the AWK script:
-    awk -f gmts_2_mdc_colr.awk New_feature_classes_20210623.prn $1.gmts > $1.mdc
+# def gmts_2_egs(wrk_dir: str, alt_colors: str, nm_lst: List[int]) -> None:
+#     """
+#     Implements the following action from the AWK script:
+#     awk -f gmts_2_egs.awk LU_SPLIT_FEATURE_CLASSES_20220215.prn $1.gmts > $1.egs
 
-    Parameters:
-    ----------
-    wrk_dir: str
-        The path to the existing work folder
-    colors: str
-        The path to the *.prn file with RGB values for geo features
-    nm_lst: List[int]
-        The list of path identifiers from the the common extent file
-    """
+#     Parameters:
+#     ----------
+#     wrk_dir: str
+#         The path to the existing work folder
+#     alt_colors: str
+#         The path to the other *.prn file with RGB values for geo features
+#     nm_lst: List[int]
+#         The list of path identifiers from the the common extent file
+#     """
 
-    try:
-        fsctn = ("GOCAD PLine 1\n"
-                 "HEADER {{\n"
-                 "name:{}_{}_{}\n"
-                 "*atoms:false\n"
-                 "*line*color:{:.6f} {:.6f} {:.6f} 1\n"
-                 "use_feature_color: false\n"
-                 "width:5\n"
-                 "*metadata*Line: {}\n"
-                 "*metadata*Type: {}\n"
-                 "*metadata*BoundaryNm: {}\n"
-                 "*metadata*BoundConf: {}\n"
-                 "*metadata*BasisOfInt: {}\n"
-                 "*metadata*OvrStrtUnt: {}\n"
-                 "*metadata*OvrStrtCod: {}\n"
-                 "*metadata*OvrConf: {}\n"
-                 "*metadata*UndStrtUnt: {}\n"
-                 "*metadata*UndStrtCod: {}\n"
-                 "*metadata*UndConf: {}\n"
-                 "*metadata*WithinType: {}\n"
-                 "*metadata*WithinStrt: {}\n"
-                 "*metadata*WithinStNo: {}\n"
-                 "*metadata*WithinConf: {}\n"
-                 "*metadata*InterpRef: {}\n"
-                 "*metadata*Comment: {}\n"
-                 "*metadata*Annotation: {}\n"
-                 "*metadata*NewObs: {}\n"
-                 "*metadata*Operator: {}\n"
-                 "*metadata*Organization: Geoscience Australia\n"
-                 "}}\n"
-                 "PROPERTIES px py gl depth\n"
-                 "GOCAD_ORIGINAL_COORDINATE_SYSTEM\n"
-                 'NAME " gocad Local"\n'
-                 'PROJECTION " GDA94 / MGA zone 53"\n'
-                 'DATUM " Mean Sea Level"\n'
-                 "AXIS_NAME X Y Z\n"
-                 "AXIS_UNIT m m m\n"
-                 "ZPOSITIVE Elevation\n"
-                 "END_ORIGINAL_COORDINATE_SYSTEM\n"
-                 "GEOLOGICAL_FEATURE {}\n"
-                 "ILINE\n"
-                 )
-        fmt = "PVRTX {:0.0f} {:6.1f} {:7.1f} {:.1f} {:.6f} {:.6f} {:.1f} {:.1f}\n"
+#     try:
+#         srt_dir = Path(wrk_dir) / "SORT"
+#         if not (srt_dir).exists():
+#             logger.error("SORT folder missing")
+#             sys.exit(0)
 
-        srt_dir = Path(wrk_dir) / "SORT"
-        if not (srt_dir).exists():
-            logger.error("SORT folder missing")
-            sys.exit(0)
+#         header = "Vertex,SegmentID,X,Y,ELEVATION,PixelX," \
+#             "PixelY,AusAEM_DEM,DEPTH,Type,OverAge,UnderAge," \
+#             "BoundConf,ContactTyp,BasisOfInt,OvrStrtUnt," \
+#             "OvrStratNo,OvrConf,UndStrtUnt,UndStratNo," \
+#             "UndConf,WithinStrt,WithinStNo,WithinConf," \
+#             "HydStrtType,HydStrConf,BOMNAFUnt,BOMNAFNo," \
+#             "InterpRef,Comment,Annotation,NewObs,Operator," \
+#             "" \
+#             "Date,SURVEY_LINE\n"
 
-        regex2 = re.compile('[+-]?([0-9]*[.])?[0-9]+')
+#         regex2 = re.compile('[+-]?([0-9]*[.])?[0-9]+')
 
-        cdf = pd.read_csv(colors, sep=r"\s{2,}", header=0, index_col=False, engine="python")
-        cdf.iloc[:, 1:4] /= 256.0
+#         cdf = pd.read_csv(alt_colors, sep=r"\s{2,}", header=0, index_col=False, engine="python")
+#         cdf.fillna('', inplace=True)
+#         seg = 0
 
-        for nm in nm_lst:
-            gmts = Path(srt_dir) / f"{nm}.gmtsddd"
-            if not gmts.exists():
-                continue
-            lines = gmts.read_text().split("\n")
-            with open(Path(srt_dir) / f"{nm}.mdc", "w") as fou:
-                while lines:
-                    try:
-                        line = lines.pop(0)
-                    except IndexError:
-                        logger.info(f"{nm}.gmts processed")
-                        break
-                    if "@D" in line:
-                        met = line.split("|")
-                        gname = met[2]
-                        row = cdf[cdf["Feature classes"] == gname]
-                        # row = cdf.query("`Feature classes` == @gname")
-                        line = lines.pop(0)
-                        segn, frst = line.split()[8: 10]
-                        frst = int(frst)
-                        # segn = int(segn)
-                        fou.write(fsctn.format(nm, segn, met[2],
-                                  row['Red'].iloc[0], row['Green'].iloc[0], row['Blue'].iloc[0],
-                                  nm,
-                                  *met[2:21],
-                                  nm
-                                  ))
-                        try:
-                            while regex2.match(line.split()[0]):
-                                los = [int(_l) if i == 7 else float(_l) for i, _l in enumerate(line.split())]
-                                fou.write(fmt.format(los[9], los[2], los[3], los[4], los[0], los[1], los[5], los[6]))
-                                last = int(los[9])
-                                line = lines.pop(0)
-                        except IndexError:
-                            pass
-                        for i in range(frst, last):
-                            fou.write(f"seg {i} {i + 1}\n")
-                        fou.write("END\n")
-    except Exception as e:
-        logger.error(f"Error during gmts_2_mdc conversion: {e}")
-        sys.exit(1)
+#         for nm in nm_lst:
+#             gmts = Path(srt_dir) / f"{nm}.gmtsddd"
+#             if not gmts.exists():
+#                 continue
+#             lines = gmts.read_text().split("\n")
+#             with open(Path(srt_dir) / f"{nm}.egs", "w") as fou:
+#                 fou.write(header)
+#                 while lines:
+#                     try:
+#                         line = lines.pop(0)
+#                     except IndexError:
+#                         logger.info(f"{nm}.gmts processed")
+#                         break
+#                     if "@D" in line:
+#                         seg += 1
+#                         m_lst = line.split("|")
+#                         gnm = m_lst[2]
+#                         row = cdf[cdf["TYPE"] == gnm]
+#                         # row = cdf.query("TYPE == @gnm")
+#                         met = f"{gnm},{row['OVERAGE'].iloc[0]},"
+#                         f"{row['UNDERAGE'].iloc[0]},"
+#                         f"{','.join(str(x) for x in m_lst[2:24])}"
+#                         line = lines.pop(0)
+
+#                         try:
+#                             while regex2.match(line.split()[0]):
+#                                 los = line.split()
+#                                 fou.write(f"{los[9]},{los[8]},{los[2]},"
+#                                           f"{los[3]},{los[4]},{los[0]},"
+#                                           f"{los[1]},{los[5]},{los[6]},"
+#                                           f"{met},{nm}\n")
+#                                 line = lines.pop(0)
+#                         except IndexError:
+#                             pass
+#     except Exception as e:
+#         logger.error(f"Error during gmts_2_egs conversion: {e}")
+#         sys.exit(1)
+
+
+# def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
+#     """
+#     Implements the following action from the AWK script:
+#     awk -f gmts_2_mdc_colr.awk New_feature_classes_20210623.prn $1.gmts > $1.mdc
+
+#     Parameters:
+#     ----------
+#     wrk_dir: str
+#         The path to the existing work folder
+#     colors: str
+#         The path to the *.prn file with RGB values for geo features
+#     nm_lst: List[int]
+#         The list of path identifiers from the the common extent file
+#     """
+
+#     try:
+#         fsctn = ("GOCAD PLine 1\n"
+#                  "HEADER {{\n"
+#                  "name:{}_{}_{}\n"
+#                  "*atoms:false\n"
+#                  "*line*color:{:.6f} {:.6f} {:.6f} 1\n"
+#                  "use_feature_color: false\n"
+#                  "width:5\n"
+#                  "*metadata*Line: {}\n"
+#                  "*metadata*Type: {}\n"
+#                  "*metadata*BoundaryNm: {}\n"
+#                  "*metadata*BoundConf: {}\n"
+#                  "*metadata*BasisOfInt: {}\n"
+#                  "*metadata*OvrStrtUnt: {}\n"
+#                  "*metadata*OvrStrtCod: {}\n"
+#                  "*metadata*OvrConf: {}\n"
+#                  "*metadata*UndStrtUnt: {}\n"
+#                  "*metadata*UndStrtCod: {}\n"
+#                  "*metadata*UndConf: {}\n"
+#                  "*metadata*WithinType: {}\n"
+#                  "*metadata*WithinStrt: {}\n"
+#                  "*metadata*WithinStNo: {}\n"
+#                  "*metadata*WithinConf: {}\n"
+#                  "*metadata*InterpRef: {}\n"
+#                  "*metadata*Comment: {}\n"
+#                  "*metadata*Annotation: {}\n"
+#                  "*metadata*NewObs: {}\n"
+#                  "*metadata*Operator: {}\n"
+#                  "*metadata*Organization: Geoscience Australia\n"
+#                  "}}\n"
+#                  "PROPERTIES px py gl depth\n"
+#                  "GOCAD_ORIGINAL_COORDINATE_SYSTEM\n"
+#                  'NAME " gocad Local"\n'
+#                  'PROJECTION " GDA94 / MGA zone 53"\n'
+#                  'DATUM " Mean Sea Level"\n'
+#                  "AXIS_NAME X Y Z\n"
+#                  "AXIS_UNIT m m m\n"
+#                  "ZPOSITIVE Elevation\n"
+#                  "END_ORIGINAL_COORDINATE_SYSTEM\n"
+#                  "GEOLOGICAL_FEATURE {}\n"
+#                  "ILINE\n"
+#                  )
+#         fmt = "PVRTX {:0.0f} {:6.1f} {:7.1f} {:.1f} {:.6f} {:.6f} {:.1f} {:.1f}\n"
+
+#         srt_dir = Path(wrk_dir) / "SORT"
+#         if not (srt_dir).exists():
+#             logger.error("SORT folder missing")
+#             sys.exit(0)
+
+#         regex2 = re.compile('[+-]?([0-9]*[.])?[0-9]+')
+
+#         cdf = pd.read_csv(colors, sep=r"\s{2,}", header=0, index_col=False, engine="python")
+#         cdf.iloc[:, 1:4] /= 256.0
+
+#         for nm in nm_lst:
+#             gmts = Path(srt_dir) / f"{nm}.gmtsddd"
+#             if not gmts.exists():
+#                 continue
+#             lines = gmts.read_text().split("\n")
+#             with open(Path(srt_dir) / f"{nm}.mdc", "w") as fou:
+#                 while lines:
+#                     try:
+#                         line = lines.pop(0)
+#                     except IndexError:
+#                         logger.info(f"{nm}.gmts processed")
+#                         break
+#                     if "@D" in line:
+#                         met = line.split("|")
+#                         gname = met[2]
+#                         row = cdf[cdf["Feature classes"] == gname]
+#                         # row = cdf.query("`Feature classes` == @gname")
+#                         line = lines.pop(0)
+#                         segn, frst = line.split()[8: 10]
+#                         frst = int(frst)
+#                         # segn = int(segn)
+#                         fou.write(fsctn.format(nm, segn, met[2],
+#                                   row['Red'].iloc[0], row['Green'].iloc[0], row['Blue'].iloc[0],
+#                                   nm,
+#                                   *met[2:21],
+#                                   nm
+#                                   ))
+#                         try:
+#                             while regex2.match(line.split()[0]):
+#                                 los = [int(_l) if i == 7 else float(_l) for i, _l in enumerate(line.split())]
+#                                 fou.write(fmt.format(los[9], los[2], los[3], los[4], los[0], los[1], los[5], los[6]))
+#                                 last = int(los[9])
+#                                 line = lines.pop(0)
+#                         except IndexError:
+#                             pass
+#                         for i in range(frst, last):
+#                             fou.write(f"seg {i} {i + 1}\n")
+#                         fou.write("END\n")
+#     except Exception as e:
+#         logger.error(f"Error during gmts_2_mdc conversion: {e}")
+#         sys.exit(1)
 
 
 def main(input_directory: str, output_directory: str, boundary: str, split: str,
-         export_mdc=False, export_mdch=False, export_egs=False, export_es=False, export_3d=False) -> None:
+         export_mdc=False, export_mdch=False, export_csv=False, export_es=False, export_3d=False, crs=28349) -> None:
     active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
     exdf = pd.read_csv(active_extent_out_file_path, sep=r'\s+', usecols=[0])
     nm_list = exdf.iloc[:, 0].tolist()
@@ -575,16 +654,16 @@ def main(input_directory: str, output_directory: str, boundary: str, split: str,
         boundary_file_path = os.path.join(path_dir, boundary)
         gmtsddd_to_mdch(work_dir, boundary_file_path, nm_list)
 
-    if export_egs:
+    if export_csv:
         split_file_path = os.path.join(path_dir, split)
-        gmtsddd_to_egs(work_dir, split_file_path, nm_list)
+        gmtsddd_to_csv(work_dir, split_file_path, nm_list)
 
     if export_es:
         boundary_file_path = os.path.join(path_dir, boundary)
-        gmtsddd_to_es(work_dir, boundary_file_path, nm_list)
+        gmtsddd_to_es(work_dir, boundary_file_path, nm_list, crs)
 
     if export_3d:
-        None  # to be implemented
+        gmtsddd_to_3d(work_dir, nm_list, crs)
 
 
 if __name__ == "__main__":
