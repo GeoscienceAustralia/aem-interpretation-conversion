@@ -106,8 +106,6 @@ def test_gmtsddd_to_mdch(temp_sort_dir):
     assert "A" in lines
 
 
-
-
 def test_gmtsddd_to_es(temp_sort_dir):
     temp_dir, sort_dir = temp_sort_dir
     export_dir = os.path.join(temp_dir, "export")
