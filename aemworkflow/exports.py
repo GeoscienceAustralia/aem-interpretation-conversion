@@ -8,18 +8,20 @@ from typing import List
 import pandas as pd
 from loguru import logger
 
+from aemworkflow.utilities import get_ogr_path, run_command, validate_file
 
-def gmtsddd_to_egs(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
+
+def gmtsddd_to_csv(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
     # Initialize dictionaries for over and under age
     ov = {}
     un = {}
 
     # Open the CSV file for writing
     try:
-        with open(os.path.join(wrk_dir, 'SORT', 'output.egs'), 'w', newline='') as csvfile:
+        with open(os.path.join(wrk_dir, 'export', 'output.csv'), 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
             # Write the header to stderr and the CSV file
-            sys.stderr.write("Export EGGS CSV\n")
+            sys.stderr.write("Export CSV\n")
             csvwriter.writerow(["Vertex", "SegmentID", "X", "Y", "ELEVATION", "PixelX", "PixelY", "AusAEM_DEM", "DEPTH",
                                 "Type", "OverAge", "UnderAge", "BoundConf", "ContactTyp", "BasisOfInt", "OvrStrtUnt",
                                 "OvrStratNo", "OvrConf", "UndStrtUnt", "UndStratNo", "UndConf", "WithinStrt",
@@ -50,7 +52,7 @@ def gmtsddd_to_egs(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
                             row_to_write = parts[9:10] + parts[8:9] + parts[0:7] + met + [filename]
                             csvwriter.writerow(row_to_write)
     except Exception as e:
-        logger.error(f"Error during gmtsddd_to_egs conversion: {e}")
+        logger.error(f"Error during gmtsddd_to_csv conversion: {e}")
 
 
 def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
@@ -60,17 +62,8 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
 
     # Open the CSV file for writing
     try:
-        with open(os.path.join(wrk_dir, 'SORT', 'output.mdc'), 'w', newline='') as csvfile:
-            csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
-            # Write the header to stderr and the CSV file
-            # sys.stderr.write("Export EGGS CSV\n")
-            # csvwriter.writerow(["Vertex", "SegmentID", "X", "Y", "ELEVATION", "PixelX",
-            # "PixelY", "AusAEM_DEM", "DEPTH", "Type", "OverAge", "UnderAge", "BoundConf",
-            # "ContactTyp", "BasisOfInt", "OvrStrtUnt", "OvrStratNo", "OvrConf", "UndStrtUnt",
-            # "UndStratNo", "UndConf", "WithinStrt", "WithinStNo", "WithinConf", "HydStrtType",
-            # "HydStrConf", "BOMNAFUnt", "BOMNAFNo", "InterpRef", "Comment", "Annotation", "NewObs",
-            # "Operator", "Date", "SURVEY_LINE"])
-
+        with open(os.path.join(wrk_dir, 'export', 'output.mdc'), 'w', newline='') as combined_file:
+            csvwriter_combined = csv.writer(combined_file, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
             # Read the input file
             with open(colors, 'r') as prn_file:
                 prn_file.readline()
@@ -83,7 +76,16 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                         b[data[0]] = float(data[3])
 
             for filename in nm_list:
-                with open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file:
+                with (
+                    open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file,
+                    open(os.path.join(wrk_dir, 'export', f'{filename}.mdc'), 'w', newline='') as individual_file
+                ):
+                    csvwriter_individual = csv.writer(individual_file, quoting=csv.QUOTE_NONE, quotechar=None,
+                                                      escapechar='\\')
+
+                    def write_row(row):
+                        csvwriter_combined.writerow(row)
+                        csvwriter_individual.writerow(row)
                     for line in file:
                         if line.startswith("# @D0"):
                             filen = [filename, '']  # filename.split(".")
@@ -91,69 +93,69 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                             second_line = file.readline().strip().split()
                             segn = second_line[8]
 
-                            csvwriter.writerow(["GOCAD PLine 1"])
-                            csvwriter.writerow(["HEADER {"])
-                            csvwriter.writerow([f"name:{filen[0]}_{segn}_{line[2]}"])
-                            csvwriter.writerow(["*atoms:false"])
-                            csvwriter.writerow(["*line*color:%f %f %f 1" % (r[line[2]] / 256,
+                            write_row(["GOCAD PLine 1"])
+                            write_row(["HEADER {"])
+                            write_row([f"name:{filen[0]}_{segn}_{line[2]}"])
+                            write_row(["*atoms:false"])
+                            write_row(["*line*color:%f %f %f 1" % (r[line[2]] / 256,
                                                                             g[line[2]] / 256,
                                                                             b[line[2]] / 256)])
-                            csvwriter.writerow(["use_feature_color: false"])
-                            csvwriter.writerow(["width:5"])
-                            csvwriter.writerow([f"*metadata*Line: {filen[0]}"])
-                            csvwriter.writerow([f"*metadata*Type: {line[2]}"])
-                            csvwriter.writerow([f"*metadata*BoundaryNm: {line[3]}"])
-                            csvwriter.writerow([f"*metadata*BoundConf: {line[4]}"])
-                            csvwriter.writerow([f"*metadata*BasisOfInt: {line[5]}"])
-                            csvwriter.writerow([f"*metadata*OvrStrtUnt: {line[6]}"])
-                            csvwriter.writerow([f"*metadata*OvrStrtCod: {line[7]}"])
-                            csvwriter.writerow([f"*metadata*OvrConf: {line[8]}"])
-                            csvwriter.writerow([f"*metadata*UndStrtUnt: {line[9]}"])
-                            csvwriter.writerow([f"*metadata*UndStrtCod: {line[10]}"])
-                            csvwriter.writerow([f"*metadata*UndConf: {line[11]}"])
-                            csvwriter.writerow([f"*metadata*WithinType: {line[12]}"])
-                            csvwriter.writerow([f"*metadata*WithinStrt: {line[13]}"])
-                            csvwriter.writerow([f"*metadata*WithinStNo: {line[14]}"])
-                            csvwriter.writerow([f"*metadata*WithinConf: {line[15]}"])
-                            csvwriter.writerow([f"*metadata*InterpRef: {line[16]}"])
-                            csvwriter.writerow([f"*metadata*Comment: {line[17]}"])
-                            csvwriter.writerow([f"*metadata*Annotation: {line[18]}"])
-                            csvwriter.writerow([f"*metadata*NewObs: {line[19]}"])
-                            csvwriter.writerow([f"*metadata*Operator: {line[20]}"])
-                            csvwriter.writerow(["*metadata*Organization: Geoscience Australia"])
-                            csvwriter.writerow(["}"])
-                            csvwriter.writerow(["PROPERTIES px py gl depth"])
+                            write_row(["use_feature_color: false"])
+                            write_row(["width:5"])
+                            write_row([f"*metadata*Line: {filen[0]}"])
+                            write_row([f"*metadata*Type: {line[2]}"])
+                            write_row([f"*metadata*BoundaryNm: {line[3]}"])
+                            write_row([f"*metadata*BoundConf: {line[4]}"])
+                            write_row([f"*metadata*BasisOfInt: {line[5]}"])
+                            write_row([f"*metadata*OvrStrtUnt: {line[6]}"])
+                            write_row([f"*metadata*OvrStrtCod: {line[7]}"])
+                            write_row([f"*metadata*OvrConf: {line[8]}"])
+                            write_row([f"*metadata*UndStrtUnt: {line[9]}"])
+                            write_row([f"*metadata*UndStrtCod: {line[10]}"])
+                            write_row([f"*metadata*UndConf: {line[11]}"])
+                            write_row([f"*metadata*WithinType: {line[12]}"])
+                            write_row([f"*metadata*WithinStrt: {line[13]}"])
+                            write_row([f"*metadata*WithinStNo: {line[14]}"])
+                            write_row([f"*metadata*WithinConf: {line[15]}"])
+                            write_row([f"*metadata*InterpRef: {line[16]}"])
+                            write_row([f"*metadata*Comment: {line[17]}"])
+                            write_row([f"*metadata*Annotation: {line[18]}"])
+                            write_row([f"*metadata*NewObs: {line[19]}"])
+                            write_row([f"*metadata*Operator: {line[20]}"])
+                            write_row(["*metadata*Organization: Geoscience Australia"])
+                            write_row(["}"])
+                            write_row(["PROPERTIES px py gl depth"])
 
                             # Coordinate reference system
-                            csvwriter.writerow(["GOCAD_ORIGINAL_COORDINATE_SYSTEM"])
-                            csvwriter.writerow(["NAME \" gocad Local\""])
-                            csvwriter.writerow(["PROJECTION \" GDA94 / MGA zone 53\""])
-                            csvwriter.writerow(["DATUM \" Mean Sea Level\""])
-                            csvwriter.writerow(["AXIS_NAME X Y Z"])
-                            csvwriter.writerow(["AXIS_UNIT m m m"])
-                            csvwriter.writerow(["ZPOSITIVE Elevation"])
-                            csvwriter.writerow(["END_ORIGINAL_COORDINATE_SYSTEM"])
+                            write_row(["GOCAD_ORIGINAL_COORDINATE_SYSTEM"])
+                            write_row(["NAME \" gocad Local\""])
+                            write_row(["PROJECTION \" GDA94 / MGA zone 53\""])
+                            write_row(["DATUM \" Mean Sea Level\""])
+                            write_row(["AXIS_NAME X Y Z"])
+                            write_row(["AXIS_UNIT m m m"])
+                            write_row(["ZPOSITIVE Elevation"])
+                            write_row(["END_ORIGINAL_COORDINATE_SYSTEM"])
 
                             # Feature class used to group section components (AEM section)
-                            csvwriter.writerow([f"GEOLOGICAL_FEATURE {filen[0]}"])
-                            csvwriter.writerow(["ILINE"])
+                            write_row([f"GEOLOGICAL_FEATURE {filen[0]}"])
+                            write_row(["ILINE"])
 
                             line = second_line
                             first = last = int(line[9])
                             while True:
                                 last = int(line[9])
-                                csvwriter.writerow([f"PVRTX {int(line[9])} {float(line[0]):.1f} "
-                                                    f"{float(line[1]):.1f} {float(line[2]):.1f} "
-                                                    f"{float(line[3])} {float(line[4])} "
-                                                    f"{float(line[5]):.1f} {float(line[6]):.1f}"])
+                                write_row([f"PVRTX {int(line[9])} {float(line[0]):.1f} "
+                                           f"{float(line[1]):.1f} {float(line[2]):.1f} "
+                                           f"{float(line[3])} {float(line[4])} "
+                                           f"{float(line[5]):.1f} {float(line[6]):.1f}"])
                                 line = file.readline().strip().split()
                                 if not line or not line[0].replace('.', '').isdigit():
                                     break
 
                             for i in range(first, last):
-                                csvwriter.writerow([f"seg {i} {i + 1}"])
+                                write_row([f"seg {i} {i + 1}"])
 
-                            csvwriter.writerow(["END"])
+                            write_row(["END"])
     except Exception as e:
         logger.error(f"Error during gmtsddd_to_mdc conversion: {e}")
 
@@ -165,16 +167,8 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
 
     # Open the CSV file for writing
     try:
-        with open(os.path.join(wrk_dir, 'SORT', 'output.mdch'), 'w', newline='') as csvfile:
-            csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
-            # Write the header to stderr and the CSV file
-            # sys.stderr.write("Export EGGS CSV\n")
-            # csvwriter.writerow(["Vertex", "SegmentID", "X", "Y", "ELEVATION", "PixelX", "PixelY",
-            # "AusAEM_DEM", "DEPTH", "Type", "OverAge", "UnderAge", "BoundConf", "ContactTyp",
-            # "BasisOfInt", "OvrStrtUnt", "OvrStratNo", "OvrConf", "UndStrtUnt", "UndStratNo",
-            # "UndConf", "WithinStrt", "WithinStNo", "WithinConf", "HydStrtType", "HydStrConf",
-            # "BOMNAFUnt", "BOMNAFNo", "InterpRef", "Comment", "Annotation", "NewObs", "Operator",
-            # "Date", "SURVEY_LINE"])
+        with open(os.path.join(wrk_dir, 'export', 'output.mdch'), 'w', newline='') as combined_file:
+            csvwriter_combined = csv.writer(combined_file, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
 
             # Read the input file
             with open(colors, 'r') as prn_file:
@@ -188,7 +182,17 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                         b[data[0]] = float(data[3])
 
             for filename in nm_list:
-                with open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file:
+                with (
+                    open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file,
+                    open(os.path.join(wrk_dir, 'export', f'{filename}.mdch'), 'w', newline='') as individual_file
+                ):
+                    csvwriter_individual = csv.writer(individual_file, quoting=csv.QUOTE_NONE, quotechar=None,
+                                                      escapechar='\\')
+
+                    def write_row(row):
+                        csvwriter_combined.writerow(row)
+                        csvwriter_individual.writerow(row)
+
                     for line in file:
                         if line.startswith("# @D0"):
                             filen = [filename, 'gmtsddd']  # filename.split(".")
@@ -196,263 +200,256 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                             second_line = file.readline().strip().split()
                             segn = second_line[8]
 
-                            csvwriter.writerow(["GOCAD PLine 1"])
-                            csvwriter.writerow(["HEADER {"])
-                            csvwriter.writerow([f"name:{filen[0]}_{segn}_{line[2]}"])
-                            csvwriter.writerow(["*atoms:false"])
-                            csvwriter.writerow(["*line*color: %f %f %f 1" % (r[line[2]] / 256,
-                                                                             g[line[2]] / 256,
+                            write_row(["GOCAD PLine 1"])
+                            write_row(["HEADER {"])
+                            write_row([f"name:{filen[0]}_{segn}_{line[2]}"])
+                            write_row(["*atoms:false"])
+                            write_row(["*line*color: %f %f %f 1" % (r[line[2]] / 256,
+                                                                     g[line[2]] / 256,
                                                                              b[line[2]] / 256)])
-                            csvwriter.writerow(["use_feature_color: false"])
-                            csvwriter.writerow(["width: 5"])
-                            csvwriter.writerow([f"*metadata*Line: {filen[0]}"])
-                            csvwriter.writerow([f"*metadata*Type: {line[2]}"])
-                            csvwriter.writerow([f"*metadata*BoundaryNm: {line[3]}"])
-                            csvwriter.writerow([f"*metadata*BoundConf: {line[4]}"])
-                            csvwriter.writerow([f"*metadata*BasisOfInt: {line[5]}"])
-                            csvwriter.writerow([f"*metadata*OvrStrtUnt: {line[6]}"])
-                            csvwriter.writerow([f"*metadata*OvrStrtCod: {line[7]}"])
-                            csvwriter.writerow([f"*metadata*OvrConf: {line[8]}"])
-                            csvwriter.writerow([f"*metadata*UndStrtUnt: {line[9]}"])
-                            csvwriter.writerow([f"*metadata*UndStrtCod: {line[10]}"])
-                            csvwriter.writerow([f"*metadata*UndConf: {line[11]}"])
-                            csvwriter.writerow([f"*metadata*WithinType: {line[12]}"])
-                            csvwriter.writerow([f"*metadata*WithinStrt: {line[13]}"])
-                            csvwriter.writerow([f"*metadata*WithinStNo: {line[14]}"])
-                            csvwriter.writerow([f"*metadata*WithinConf: {line[15]}"])
-                            csvwriter.writerow([f"*metadata*InterpRef: {line[16]}"])
-                            csvwriter.writerow([f"*metadata*Comment: {line[17]}"])
-                            csvwriter.writerow([f"*metadata*Annotation: {line[18]}"])
-                            csvwriter.writerow([f"*metadata*NewObs: {line[19]}"])
-                            csvwriter.writerow([f"*metadata*Operator: {line[20]}"])
-                            csvwriter.writerow(["*metadata*Organization: Geoscience Australia"])
-                            csvwriter.writerow(["}"])
-                            csvwriter.writerow(["PROPERTIES px py gl depth"])
+                            write_row(["use_feature_color: false"])
+                            write_row(["width: 5"])
+                            write_row([f"*metadata*Line: {filen[0]}"])
+                            write_row([f"*metadata*Type: {line[2]}"])
+                            write_row([f"*metadata*BoundaryNm: {line[3]}"])
+                            write_row([f"*metadata*BoundConf: {line[4]}"])
+                            write_row([f"*metadata*BasisOfInt: {line[5]}"])
+                            write_row([f"*metadata*OvrStrtUnt: {line[6]}"])
+                            write_row([f"*metadata*OvrStrtCod: {line[7]}"])
+                            write_row([f"*metadata*OvrConf: {line[8]}"])
+                            write_row([f"*metadata*UndStrtUnt: {line[9]}"])
+                            write_row([f"*metadata*UndStrtCod: {line[10]}"])
+                            write_row([f"*metadata*UndConf: {line[11]}"])
+                            write_row([f"*metadata*WithinType: {line[12]}"])
+                            write_row([f"*metadata*WithinStrt: {line[13]}"])
+                            write_row([f"*metadata*WithinStNo: {line[14]}"])
+                            write_row([f"*metadata*WithinConf: {line[15]}"])
+                            write_row([f"*metadata*InterpRef: {line[16]}"])
+                            write_row([f"*metadata*Comment: {line[17]}"])
+                            write_row([f"*metadata*Annotation: {line[18]}"])
+                            write_row([f"*metadata*NewObs: {line[19]}"])
+                            write_row([f"*metadata*Operator: {line[20]}"])
+                            write_row(["*metadata*Organization: Geoscience Australia"])
+                            write_row(["}"])
+                            write_row(["PROPERTIES px py gl depth"])
 
                             # Coordinate reference system
-                            csvwriter.writerow(["GOCAD_ORIGINAL_COORDINATE_SYSTEM"])
-                            csvwriter.writerow(["NAME \" gocad Local\""])
-                            csvwriter.writerow(["PROJECTION \" GDA94 / MGA zone 53\""])
-                            csvwriter.writerow(["DATUM \" Mean Sea Level\""])
-                            csvwriter.writerow(["AXIS_NAME X Y Z"])
-                            csvwriter.writerow(["AXIS_UNIT m m m"])
-                            csvwriter.writerow(["ZPOSITIVE Elevation"])
-                            csvwriter.writerow(["END_ORIGINAL_COORDINATE_SYSTEM"])
+                            write_row(["GOCAD_ORIGINAL_COORDINATE_SYSTEM"])
+                            write_row(["NAME \" gocad Local\""])
+                            write_row(["PROJECTION \" GDA94 / MGA zone 53\""])
+                            write_row(["DATUM \" Mean Sea Level\""])
+                            write_row(["AXIS_NAME X Y Z"])
+                            write_row(["AXIS_UNIT m m m"])
+                            write_row(["ZPOSITIVE Elevation"])
+                            write_row(["END_ORIGINAL_COORDINATE_SYSTEM"])
 
                             # Feature class used to group section components (AEM section)
-                            csvwriter.writerow([f"GEOLOGICAL_FEATURE {line[2]}"])
-                            csvwriter.writerow(["ILINE"])
+                            write_row([f"GEOLOGICAL_FEATURE {line[2]}"])
+                            write_row(["ILINE"])
 
                             line = second_line
                             first = last = int(line[9])
                             while True:
                                 last = int(line[9])
-                                csvwriter.writerow([f"PVRTX {int(line[9])} {float(line[0]):.1f} "
-                                                    f"{float(line[1]):.1f} {float(line[2]):.1f} "
-                                                    f"{float(line[3])} {float(line[4])} "
-                                                    f"{float(line[5]):.1f} {float(line[6]):.1f}"])
+                                write_row([f"PVRTX {int(line[9])} {float(line[0]):.1f} "
+                                           f"{float(line[1]):.1f} {float(line[2]):.1f} "
+                                           f"{float(line[3])} {float(line[4])} "
+                                           f"{float(line[5]):.1f} {float(line[6]):.1f}"])
                                 line = file.readline().strip().split()
                                 if not line or not line[0].replace('.', '').isdigit():
                                     break
 
                             for i in range(first, last):
-                                csvwriter.writerow([f"seg {i} {i + 1}"])
+                                write_row([f"seg {i} {i + 1}"])
 
-                            csvwriter.writerow(["END"])
+                            write_row(["END"])
     except Exception as e:
         logger.error(f"Error during gmtsddd_to_mdch conversion: {e}")
 
 
-def gmts_2_egs(wrk_dir: str, alt_colors: str, nm_lst: List[int]) -> None:
+def gmtsddd_to_es(wrk_dir: str, colors: str, nm_list: List[int], crs: str,) -> None:
     """
-    Implements the following action from the AWK script:
-    awk -f gmts_2_egs.awk LU_SPLIT_FEATURE_CLASSES_20220215.prn $1.gmts > $1.egs
+    Create GA Portal / Earth Sciences outputs.
 
-    Parameters:
-    ----------
-    wrk_dir: str
-        The path to the existing work folder
-    alt_colors: str
-        The path to the other *.prn file with RGB values for geo features
-    nm_lst: List[int]
-        The list of path identifiers from the the common extent file
+    Input:
+        SORT/<line>.gmtsddd
+
+    Output:
+        export/<line>.pl
+        export/<line>.xml
     """
+    r = {}
+    g = {}
+    b = {}
+
+    sort_directory = Path(wrk_dir) / "SORT"
+    export_directory = Path(wrk_dir) / "export"
+
+    xml_files = []
+    try:
+        # Read the input file
+        with open(colors, 'r') as prn_file:
+            prn_file.readline()
+            for line in prn_file:
+                data = re.split(r'\s{2,}', line)
+                if len(data) > 4:
+                    r[data[0]] = float(data[1])
+                    g[data[0]] = float(data[2])
+                    b[data[0]] = float(data[3])
+
+        for filename in nm_list:
+            feature_segment_counts = {}
+
+            input_path = sort_directory / f'{filename}.gmtsddd'
+            pl_output_path = export_directory / f'{filename}.pl'
+            xml_output_path = export_directory / f'{filename}.xml'
+
+            with (
+                open(input_path, 'r') as file,
+                open(pl_output_path, 'w', newline='') as expfile
+            ):
+                csvwriter_export = csv.writer(expfile, quoting=csv.QUOTE_NONE, quotechar=None, escapechar='\\')
+
+                for line in file:
+                    if line.startswith("# @D0"):
+                        metadata = line.strip().split("|")
+                        feature_type = metadata[2]
+
+                        if feature_type not in r:
+                            raise ValueError(f"Feature class '{feature_type}' was not found in {colors}")
+
+                        feature_segment_counts[feature_type] = feature_segment_counts.get(feature_type, 0) + 1
+                        segment_number = feature_segment_counts[feature_type]
+
+                        line = file.readline().strip().split()
+
+                        if len(line) < 7:
+                            raise ValueError(f"Invalid coordinate row in {input_path}")
+
+                        red = r[feature_type] / 256
+                        green = g[feature_type] / 256
+                        blue = b[feature_type] / 256
+
+                        csvwriter_export.writerow(["GOCAD PLine 1"])
+                        csvwriter_export.writerow(["HEADER {"])
+                        csvwriter_export.writerow([f"name:{filename}_{segment_number}_{feature_type}"])
+                        csvwriter_export.writerow(["*atoms:false"])
+                        csvwriter_export.writerow([f"*line*color:{red:g} {green:g} {blue:g} 1"])
+                        csvwriter_export.writerow(["width:5"])
+                        csvwriter_export.writerow(["}"])
+                        csvwriter_export.writerow(["PROPERTIES px py gl depth"])
+                        csvwriter_export.writerow(["ILINE"])
+
+                        vertex_number = 1
+
+                        while True:
+                            csvwriter_export.writerow([f"PVRTX {vertex_number} {float(line[0]):.1f} "
+                                                       f"{float(line[1]):.1f} {float(line[2]):.1f} "
+                                                       f"{float(line[3]):.6f} {float(line[4]):.6f} "
+                                                       f"{float(line[5]):.1f} {float(line[6]):.1f}"])
+                            line = file.readline().strip().split()
+
+                            if not line or not line[0].replace('.', '', 1).replace('-', '', 1).isdigit():
+                                break
+
+                            vertex_number += 1
+
+                        for i in range(1, vertex_number):
+                            csvwriter_export.writerow([f"SEG {i} {i + 1}"])
+
+                        csvwriter_export.writerow(["END"])
+
+            with open(xml_output_path, 'w') as xmlfile:
+                xmlfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                xmlfile.write('<Layer version="1" layerType="ModelLayer">\n')
+                xmlfile.write(f"<DisplayName>{filename} Interp</DisplayName>\n")
+                xmlfile.write(f"<URL>{filename}.pl</URL>\n")
+                xmlfile.write("<DataFormat>GOCAD</DataFormat>\n")
+                xmlfile.write("<LineWidth>5</LineWidth>\n")
+                xmlfile.write(f"<DataCacheName>GA/EFTF/AEM/{filename}.pl</DataCacheName>\n")
+                xmlfile.write(f"<CoordinateSystem>EPSG:{crs}</CoordinateSystem>\n")
+                xmlfile.write("</Layer>\n")
+
+            logger.info("Created Earth Sciences outputs")
+
+            xml_files.append(xml_output_path)
+        create_earthsci_wrapper(wrk_dir, xml_files=xml_files)
+
+    except Exception as e:
+        logger.exception(f"Error during gmtsddd_to_es conversion: {e}")
+
+
+def create_earthsci_wrapper(wrk_dir: str, xml_files: List[Path]) -> None:
+    """
+    Create a combined EarthSci XML from individual XML files.
+
+    Output:
+        export/dataset.xml
+    """
+    export_directory = Path(wrk_dir) / "export"
+    wrapper_path = export_directory / "dataset.xml"
+    dataset_name = Path(wrk_dir).resolve().name
+
+    if not xml_files:
+        raise ValueError("Cannot create EarthSci wrapper because no XML files were created.")
+
+    with open(wrapper_path, "w", encoding="utf-8") as wrapper_file:
+        wrapper_file.write("<DatasetList>\n")
+        wrapper_file.write(f'<Dataset name="{dataset_name}">\n')
+
+        for xml_file in xml_files:
+            layer_name = xml_file.name.split("_", 1)[0]
+            wrapper_file.write(f'<Layer name="{layer_name}" url="{xml_file.name}" />\n')
+
+        wrapper_file.write("</Dataset>\n")
+        wrapper_file.write("</DatasetList>\n")
+
+    logger.info("Created combined EarthSci wrapper")
+
+
+def gmtsddd_to_3d(wrk_dir: str, nm_list: List[int], crs: str) -> None:
+    '''
+    Create individual 3D shapefiles for each survey line.
+
+    Input:
+        SORT/<line>.gmtsddd
+
+    Output:
+        export/<line>.shp
+        export/<line>.shx
+        export/<line>.dbf
+        export/<line>.prj
+    '''
 
     try:
-        srt_dir = Path(wrk_dir) / "SORT"
-        if not (srt_dir).exists():
-            logger.error("SORT folder missing")
-            sys.exit(0)
+        sort_directory = Path(wrk_dir) / "SORT"
+        export_directory = Path(wrk_dir) / "export"
 
-        header = "Vertex,SegmentID,X,Y,ELEVATION,PixelX," \
-            "PixelY,AusAEM_DEM,DEPTH,Type,OverAge,UnderAge," \
-            "BoundConf,ContactTyp,BasisOfInt,OvrStrtUnt," \
-            "OvrStratNo,OvrConf,UndStrtUnt,UndStratNo," \
-            "UndConf,WithinStrt,WithinStNo,WithinConf," \
-            "HydStrtType,HydStrConf,BOMNAFUnt,BOMNAFNo," \
-            "InterpRef,Comment,Annotation,NewObs,Operator," \
-            "" \
-            "Date,SURVEY_LINE\n"
+        for line_number in nm_list:
+            input_path = sort_directory / f"{line_number}.gmtsddd"
+            output_path = export_directory / f"{line_number}.shp"
 
-        regex2 = re.compile('[+-]?([0-9]*[.])?[0-9]+')
+            if not validate_file(input_path):
+                return
 
-        cdf = pd.read_csv(alt_colors, sep=r"\s{2,}", header=0, index_col=False, engine="python")
-        cdf.fillna('', inplace=True)
-        seg = 0
+            cmd = [
+                get_ogr_path(),
+                '-f', 'ESRI Shapefile',
+                '-s_srs', f'EPSG:{crs}',
+                '-t_srs', f'EPSG:{crs}',
+                '-lco', 'SHPT=ARCZ',
+                str(output_path),
+                str(input_path),
+            ]
 
-        for nm in nm_lst:
-            gmts = Path(srt_dir) / f"{nm}.gmtsddd"
-            if not gmts.exists():
-                continue
-            lines = gmts.read_text().split("\n")
-            with open(Path(srt_dir) / f"{nm}.egs", "w") as fou:
-                fou.write(header)
-                while lines:
-                    try:
-                        line = lines.pop(0)
-                    except IndexError:
-                        logger.info(f"{nm}.gmts processed")
-                        break
-                    if "@D" in line:
-                        seg += 1
-                        m_lst = line.split("|")
-                        gnm = m_lst[2]
-                        row = cdf[cdf["TYPE"] == gnm]
-                        # row = cdf.query("TYPE == @gnm")
-                        met = f"{gnm},{row['OVERAGE'].iloc[0]},"
-                        f"{row['UNDERAGE'].iloc[0]},"
-                        f"{','.join(str(x) for x in m_lst[2:24])}"
-                        line = lines.pop(0)
+            run_command(cmd)
 
-                        try:
-                            while regex2.match(line.split()[0]):
-                                los = line.split()
-                                fou.write(f"{los[9]},{los[8]},{los[2]},"
-                                          f"{los[3]},{los[4]},{los[0]},"
-                                          f"{los[1]},{los[5]},{los[6]},"
-                                          f"{met},{nm}\n")
-                                line = lines.pop(0)
-                        except IndexError:
-                            pass
-    except Exception as e:
-        logger.error(f"Error during gmts_2_egs conversion: {e}")
-        sys.exit(1)
-
-
-def gmts_2_mdc(wrk_dir: str, colors: str, nm_lst: List[int]) -> None:
-    """
-    Implements the following action from the AWK script:
-    awk -f gmts_2_mdc_colr.awk New_feature_classes_20210623.prn $1.gmts > $1.mdc
-
-    Parameters:
-    ----------
-    wrk_dir: str
-        The path to the existing work folder
-    colors: str
-        The path to the *.prn file with RGB values for geo features
-    nm_lst: List[int]
-        The list of path identifiers from the the common extent file
-    """
-
-    try:
-        fsctn = ("GOCAD PLine 1\n"
-                 "HEADER {{\n"
-                 "name:{}_{}_{}\n"
-                 "*atoms:false\n"
-                 "*line*color:{:.6f} {:.6f} {:.6f} 1\n"
-                 "use_feature_color: false\n"
-                 "width:5\n"
-                 "*metadata*Line: {}\n"
-                 "*metadata*Type: {}\n"
-                 "*metadata*BoundaryNm: {}\n"
-                 "*metadata*BoundConf: {}\n"
-                 "*metadata*BasisOfInt: {}\n"
-                 "*metadata*OvrStrtUnt: {}\n"
-                 "*metadata*OvrStrtCod: {}\n"
-                 "*metadata*OvrConf: {}\n"
-                 "*metadata*UndStrtUnt: {}\n"
-                 "*metadata*UndStrtCod: {}\n"
-                 "*metadata*UndConf: {}\n"
-                 "*metadata*WithinType: {}\n"
-                 "*metadata*WithinStrt: {}\n"
-                 "*metadata*WithinStNo: {}\n"
-                 "*metadata*WithinConf: {}\n"
-                 "*metadata*InterpRef: {}\n"
-                 "*metadata*Comment: {}\n"
-                 "*metadata*Annotation: {}\n"
-                 "*metadata*NewObs: {}\n"
-                 "*metadata*Operator: {}\n"
-                 "*metadata*Organization: Geoscience Australia\n"
-                 "}}\n"
-                 "PROPERTIES px py gl depth\n"
-                 "GOCAD_ORIGINAL_COORDINATE_SYSTEM\n"
-                 'NAME " gocad Local"\n'
-                 'PROJECTION " GDA94 / MGA zone 53"\n'
-                 'DATUM " Mean Sea Level"\n'
-                 "AXIS_NAME X Y Z\n"
-                 "AXIS_UNIT m m m\n"
-                 "ZPOSITIVE Elevation\n"
-                 "END_ORIGINAL_COORDINATE_SYSTEM\n"
-                 "GEOLOGICAL_FEATURE {}\n"
-                 "ILINE\n"
-                 )
-        fmt = "PVRTX {:0.0f} {:6.1f} {:7.1f} {:.1f} {:.6f} {:.6f} {:.1f} {:.1f}\n"
-
-        srt_dir = Path(wrk_dir) / "SORT"
-        if not (srt_dir).exists():
-            logger.error("SORT folder missing")
-            sys.exit(0)
-
-        regex2 = re.compile('[+-]?([0-9]*[.])?[0-9]+')
-
-        cdf = pd.read_csv(colors, sep=r"\s{2,}", header=0, index_col=False, engine="python")
-        cdf.iloc[:, 1:4] /= 256.0
-
-        for nm in nm_lst:
-            gmts = Path(srt_dir) / f"{nm}.gmtsddd"
-            if not gmts.exists():
-                continue
-            lines = gmts.read_text().split("\n")
-            with open(Path(srt_dir) / f"{nm}.mdc", "w") as fou:
-                while lines:
-                    try:
-                        line = lines.pop(0)
-                    except IndexError:
-                        logger.info(f"{nm}.gmts processed")
-                        break
-                    if "@D" in line:
-                        met = line.split("|")
-                        gname = met[2]
-                        row = cdf[cdf["Feature classes"] == gname]
-                        # row = cdf.query("`Feature classes` == @gname")
-                        line = lines.pop(0)
-                        segn, frst = line.split()[8: 10]
-                        frst = int(frst)
-                        # segn = int(segn)
-                        fou.write(fsctn.format(nm, segn, met[2],
-                                  row['Red'].iloc[0], row['Green'].iloc[0], row['Blue'].iloc[0],
-                                  nm,
-                                  *met[2:21],
-                                  nm
-                                  ))
-                        try:
-                            while regex2.match(line.split()[0]):
-                                los = [int(_l) if i == 7 else float(_l) for i, _l in enumerate(line.split())]
-                                fou.write(fmt.format(los[9], los[2], los[3], los[4], los[0], los[1], los[5], los[6]))
-                                last = int(los[9])
-                                line = lines.pop(0)
-                        except IndexError:
-                            pass
-                        for i in range(frst, last):
-                            fou.write(f"seg {i} {i + 1}\n")
-                        fou.write("END\n")
-    except Exception as e:
-        logger.error(f"Error during gmts_2_mdc conversion: {e}")
-        sys.exit(1)
+    except Exception:
+        logger.exception("Error during gmtsddd_to_3d conversion")
 
 
 def main(input_directory: str, output_directory: str, boundary: str, split: str,
-         export_mdc=False, export_mdch=False, export_egs=False) -> None:
+         export_mdc=False, export_mdch=False, export_csv=False, export_es=False, export_3d=False, crs=28349) -> None:
     active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
     exdf = pd.read_csv(active_extent_out_file_path, sep=r'\s+', usecols=[0])
     nm_list = exdf.iloc[:, 0].tolist()
@@ -467,9 +464,16 @@ def main(input_directory: str, output_directory: str, boundary: str, split: str,
         boundary_file_path = os.path.join(path_dir, boundary)
         gmtsddd_to_mdch(work_dir, boundary_file_path, nm_list)
 
-    if export_egs:
+    if export_csv:
         split_file_path = os.path.join(path_dir, split)
-        gmtsddd_to_egs(work_dir, split_file_path, nm_list)
+        gmtsddd_to_csv(work_dir, split_file_path, nm_list)
+
+    if export_es:
+        boundary_file_path = os.path.join(path_dir, boundary)
+        gmtsddd_to_es(work_dir, boundary_file_path, nm_list, crs)
+
+    if export_3d:
+        gmtsddd_to_3d(work_dir, nm_list, crs)
 
 
 if __name__ == "__main__":

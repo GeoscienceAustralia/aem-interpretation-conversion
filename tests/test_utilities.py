@@ -178,6 +178,29 @@ def test_get_make_srt_dir_os_error(tmp_path):
             utilities.get_make_srt_dir(srt_dir)
 
 
+def test_get_make_export_dir_creates_dir(tmp_path):
+    export_dir = tmp_path / "export"
+    with mock.patch("pathlib.Path.exists", return_value=False):
+        with mock.patch("pathlib.Path.mkdir") as mock_mkdir:
+            utilities.get_make_export_dir(export_dir)
+            mock_mkdir.assert_called()
+
+
+def test_get_make_export_dir_does_not_creates_dir(tmp_path):
+    export_dir = tmp_path / "export"
+    with mock.patch("pathlib.Path.exists", return_value=True):
+        with mock.patch("pathlib.Path.mkdir") as mock_mkdir:
+            utilities.get_make_export_dir(export_dir)
+            mock_mkdir.assert_not_called()
+
+
+def test_get_make_export_dir_os_error(tmp_path):
+    export_dir = tmp_path / "export"
+    with mock.patch("pathlib.Path.exists", side_effect=OSError("fail")):
+        with pytest.raises(SystemExit):
+            utilities.get_make_export_dir(export_dir)
+
+
 def test_find_geometry_file_numeric(tmp_path):
     prefix = "1"
     f = tmp_path / f"{prefix}.path.txt"
