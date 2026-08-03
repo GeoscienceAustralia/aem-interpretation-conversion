@@ -443,8 +443,6 @@ def gmtsddd_to_3d(wrk_dir: str, nm_list: List[int], crs: str) -> None:
             ]
 
             run_command(cmd)
-            # if output_path.exists():
-            #     logger.info(f"Created 3D shapefile outputs for line {line_number}")
 
     except Exception:
         logger.exception("Error during gmtsddd_to_3d conversion")
