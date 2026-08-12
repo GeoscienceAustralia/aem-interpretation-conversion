@@ -195,7 +195,7 @@ Validation
 
 .. code-block:: bash
 
-    aemworkflow validate --i "{input_directory}" --o "{output_directory}" --a "{asud_filename}"
+    aemworkflow validate --i "{input_directory}" --o "{output_directory}" --a "{asud_filename}" --c "{confidence_filename}" --ct "{contact_filename}" --ib "{interp_basis_filename}"
 
 **Parameter examples:**
 
@@ -205,6 +205,9 @@ Argument                      Required       Default         Options   Notes
 input directory               Yes            None                      A non zipped folder containing required files 
 output directory              Yes            None                             
 asud filename                 Yes            None
+confidence filename           Yes            None
+contact filename              Yes            None
+interp basis filename         Yes            None
 ============================= ============== =============== ========= =============================================    
 
 Conversion
