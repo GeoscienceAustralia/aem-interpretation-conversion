@@ -1,3 +1,4 @@
+import csv
 import os
 from datetime import date
 from pathlib import Path
@@ -33,14 +34,17 @@ BDF_FIELD_NAMES = [
     'Date',
     ]
 
+ERROR_LOG_BDF_FIELD_NAMES = BDF_FIELD_NAMES[:2] + BDF_FIELD_NAMES[3:]
+
 ERROR_LOG_HEADER = [
     'ERROR_GENERAL',
     'ERROR_TYPE',
     'ERROR_FIELD1',
     'ERROR_FIELD1_ENTRY',
     'ERROR_FIELD2',
-    'ERROR_FIELD2_ENTRY'
-    ] + BDF_FIELD_NAMES
+    'ERROR_FIELD2_ENTRY', 
+    'ERROR_COUNT',
+    ] + ERROR_LOG_BDF_FIELD_NAMES
 
 
 def validation_remove_quotes(bdf_file_path, bdf_out_file_path, logger_session=logger):
@@ -88,20 +92,9 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
                     if len(fields) <= 25:
                         with open(fr"{qc_outputs_path}short_nf.log", "a") as short_nf_file:
                             short_nf_file.write(f"{len(fields)} {fields[0]} {fields[1]}\n")
+                        continue
 
-                    if fields[7] == '' and fields[8] == '':
-                        if fields[10] == '' and fields[11] == '':
-                            if fields[13] == '' and fields[14] == '':
-                                units[f"{fields[7]} {fields[8]}"] = f"{fields[7]},{fields[8]}"
-                                count[f"{fields[7]} {fields[8]}"] = count.get(f"{fields[7]} {fields[8]}", 0) + 1
-                                _write_validation_error(error_list_file, 'nulls', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A',
-                                                        fields)
-                                continue
-
-                    if (name.get(fields[7]) == fields[7] and stratno.get(fields[7]) == fields[8]) or \
-                        (name.get(fields[10]) == fields[10] and stratno.get(fields[10]) == fields[11]) or \
-                            (name.get(fields[13]) == fields[13] and stratno.get(fields[13]) == fields[14]):
-
+                    if fields[7]:
                         if name.get(fields[7]) == fields[7] and stratno.get(fields[7]) == fields[8]:
                             units[f"{fields[7]} {fields[8]}"] = f"{fields[7]},{fields[8]}"
                             count[f"{fields[7]} {fields[8]}"] = count.get(f"{fields[7]} {fields[8]}", 0) + 1
@@ -111,6 +104,7 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
                             _write_validation_error(error_list_file, 'over', 'no match', 'OvrStrtUnt', fields[7],
                                                     'OvrStratNo', fields[8], fields)
 
+                    if fields[10]:
                         if name.get(fields[10]) == fields[10] and stratno.get(fields[10]) == fields[11]:
                             units[f"{fields[10]} {fields[11]}"] = f"{fields[10]},{fields[11]}"
                             count[f"{fields[10]} {fields[11]}"] = count.get(f"{fields[10]} {fields[11]}", 0) + 1
@@ -120,6 +114,7 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
                             _write_validation_error(error_list_file, 'under', 'no match', 'UndStrtUnt', fields[10],
                                                     'UndStratNo', fields[11], fields)
 
+                    if fields[13]:
                         if name.get(fields[13]) == fields[13] and stratno.get(fields[13]) == fields[14]:
                             units[f"{fields[13]} {fields[14]}"] = f"{fields[13]},{fields[14]}"
                             count[f"{fields[13]} {fields[14]}"] = count.get(f"{fields[13]} {fields[14]}", 0) + 1
@@ -129,27 +124,10 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
                             _write_validation_error(error_list_file, 'within', 'no match', 'WithinStrt', fields[13],
                                                     'WithinStNo', fields[14], fields)
 
-                    else:
-                        # No match at all
-                        no_unit[f'{fields[7]} {fields[8]}'] = f'{fields[7]},{fields[8]}'
-                        no_unit[f'{fields[10]} {fields[11]}'] = f'{fields[10]},{fields[11]}'
-                        no_unit[f'{fields[13]} {fields[14]}'] = f'{fields[13]},{fields[14]}'
-
-                        count[f'{fields[7]} {fields[8]}'] = count.get(f'{fields[7]} {fields[8]}', 0) + 1
-                        count[f'{fields[10]} {fields[11]}'] = count.get(f'{fields[10]} {fields[11]}', 0) + 1
-                        count[f'{fields[13]} {fields[14]}'] = count.get(f'{fields[13]} {fields[14]}', 0) + 1
-
-                        _write_validation_error(error_list_file, 'over', 'no match', 'OvrStrtUnt', fields[7],
-                                                'OvrStratNo', fields[8], fields)
-                        _write_validation_error(error_list_file, 'under', 'no match', 'UndStrtUnt', fields[10],
-                                                'UndStratNo', fields[11], fields)
-                        _write_validation_error(error_list_file, 'within', 'no match', 'WithinStrt', fields[13],
-                                                'WithinStNo', fields[14], fields)
-
         d = date.today().strftime("%Y%m%d")
         summary_file = fr'{qc_outputs_path}ASUD_validation_summary_{d}.txt'
 
-        with open(summary_file, "a") as summary_file:
+        with open(summary_file, "w") as summary_file:
             logger_session.info("result,name,number,count")
             summary_file.write('result,name,number,count\n')
             for var in units:
@@ -222,7 +200,7 @@ def validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path
 
                     comma_error_count += 1
                     comma_field_name = BDF_FIELD_NAMES[field_index]
-                    comma_key = (comma_field_name, 'comma found', '')
+                    comma_key = (comma_field_name, 'comma found', field_value)
                     comma_summary[comma_key] = comma_summary.get(comma_key, 0) + 1
                     _write_validation_error(error_list_file, 'comma', 'comma found', comma_field_name, field_value,
                                             'N/A', 'N/A', fields)
@@ -308,14 +286,14 @@ def validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path
 
 
 def _write_validation_summary(summary_file_path, validation_summary, logger_session=logger):
-    with open(summary_file_path, 'w', encoding='utf-8') as summary_file:
-        logger_session.info('result,field,value,count')
-        summary_file.write('result,field,value,count\n')
+    with open(summary_file_path, 'w', encoding='utf-8', newline='') as summary_file:
+        writer = csv.writer(summary_file)
+        writer.writerow(['result', 'field', 'value', 'count'])
 
         for summary_key, count in validation_summary.items():
             field, result, value = summary_key
             logger_session.info(f'{result},{field},{value},{count}')
-            summary_file.write(f'{result},{field},{value},{count}\n')
+            writer.writerow([result, field, value, count])
 
 
 def initialise_error_log(qc_dir):
@@ -326,8 +304,33 @@ def initialise_error_log(qc_dir):
 def _write_validation_error(error_list_file, error_general, error_type, error_field1, error_field1_entry, error_field2,
                             error_field2_entry, fields):
     bdf_fields = fields[:26] + [''] * max(0, 26 - len(fields))
+    error_bdf_fields = bdf_fields[:2] + bdf_fields[3:]
     error_list_file.write('|'.join([error_general, error_type, error_field1, error_field1_entry,
-                                    error_field2, error_field2_entry] + bdf_fields) + '\n')
+                                    error_field2, error_field2_entry, ''] + error_bdf_fields) + '\n')
+
+
+def finalise_error_log(qc_dir):
+    error_list_path = Path(qc_dir) / 'error_list.log'
+
+    with open(error_list_path, 'r', encoding='utf-8') as error_list_file:
+        lines = error_list_file.readlines()
+
+    header = lines[0]
+    rows = [line.rstrip('\n').split('|') for line in lines[1:]]
+
+    error_counts = {}
+
+    for row in rows:
+        point_key = (row[7], row[8])
+        error_counts[point_key] = error_counts.get(point_key, 0) + 1
+
+    with open(error_list_path, 'w', encoding='utf-8') as error_list_file:
+        error_list_file.write(header)
+
+        for row in rows:
+            point_key = (row[7], row[8])
+            row[6] = str(error_counts[point_key])
+            error_list_file.write('|'.join(row) + '\n')
 
 
 def _load_lookup_values(lookup_file_path):
@@ -366,6 +369,7 @@ def main(input_directory, output_directory, asud, confidence_lookup, contact_typ
     validation_qc_units(erc_file_path, bdf_out_file_path, output_directory)
     validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path, interpretation_basis_lookup_path,
                                 bdf_out_file_path, output_directory)
+    finalise_error_log(qc_output_dir)
 
 
 if __name__ == "__main__":

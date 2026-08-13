@@ -135,8 +135,8 @@ def test_initialise_error_log_writes_header(tmp_path):
 
     assert content == "|".join(validation.ERROR_LOG_HEADER) + "\n"
     assert content.startswith("ERROR_GENERAL|ERROR_TYPE|ERROR_FIELD1|ERROR_FIELD1_ENTRY|ERROR_FIELD2|" 
-    "ERROR_FIELD2_ENTRY|")
-    assert "|FLIGHT_LINE|SHAPEFILE_FID|ARTEFACT|Type|BoundConf|" in content
+    "ERROR_FIELD2_ENTRY|ERROR_COUNT|")
+    assert "|FLIGHT_LINE|SHAPEFILE_FID|Type|BoundConf|" in content
 
 
 def test_load_lookup_values(tmp_path):
@@ -167,8 +167,7 @@ def test_write_validation_error_aligns_fields(tmp_path):
     line = error_log_path.read_text(encoding="utf-8").strip()
     output_fields = line.split("|")
 
-    assert output_fields[:6] == ["confidence", "no match", "BoundConf", "X", "N/A", "N/A"]
-    assert output_fields[6:] == fields
+    assert output_fields[:7] == ["confidence", "no match", "BoundConf", "X", "N/A", "N/A", ""]
     assert len(output_fields) == 32
 
 
@@ -182,10 +181,11 @@ def test_write_validation_error_pads_short_bdf_records(tmp_path):
 
     output_fields = error_log_path.read_text(encoding="utf-8").strip().split("|")
 
+    assert output_fields[:7] == ['bdf', 'incorrect field count', 'BDFFieldCount', '3', 'N/A', 'N/A', '']
+    assert output_fields[7] == 'flight'
+    assert output_fields[8] == '1'
+    assert output_fields[9] == ''
     assert len(output_fields) == 32
-    assert output_fields[:6] == ["bdf", "incorrect field count", "BDFFieldCount", "3", "N/A", "N/A"]
-    assert output_fields[6:9] == fields
-    assert output_fields[9:] == [""] * 23
 
 
 def test_validation_mandatory_fields_invalid_confidence_is_no_match(tmp_path, dummy_logger):
@@ -368,7 +368,7 @@ def test_validation_mandatory_fields_detects_comma_and_field_name(tmp_path, dumm
     comma_summary = (qc_dir / f"Comma_validation_summary_{d}.txt").read_text(encoding="utf-8")
     error_log = (qc_dir / "error_list.log").read_text(encoding="utf-8")
 
-    assert "comma found,Comment,,1" in comma_summary
+    assert 'comma found,Comment,"This comment, contains a comma",1' in comma_summary
     assert "comma|comma found|Comment|This comment, contains a comma|N/A|N/A|" in error_log
 
 
@@ -443,8 +443,9 @@ def test_validation_main_removes_quotes_and_validates(tmp_path):
         with mock.patch("aemworkflow.validation.initialise_error_log") as initialise_error_log:
             with mock.patch("aemworkflow.validation.validation_qc_units") as qc_units:
                 with mock.patch("aemworkflow.validation.validation_mandatory_fields") as mandatory_fields:
-                    validation.main(input_dir, output_dir, "test.asud", "LU_CONFIDENCE.txt", "LU_CONTACT_TYPES.txt",
-                                    "LU_INTERP_BASIS.txt")
+                    with mock.patch("aemworkflow.validation.finalise_error_log"):
+                        validation.main(input_dir, output_dir, "test.asud", "LU_CONFIDENCE.txt", "LU_CONTACT_TYPES.txt",
+                                        "LU_INTERP_BASIS.txt")
 
     remove_quotes.assert_called_once_with(bdf_path, bdf_out_path)
     initialise_error_log.assert_called_once_with(qc_output_dir)
