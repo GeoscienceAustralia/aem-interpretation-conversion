@@ -451,3 +451,51 @@ def test_validation_main_removes_quotes_and_validates(tmp_path):
     initialise_error_log.assert_called_once_with(qc_output_dir)
     qc_units.assert_called_once_with(erc_path, bdf_out_path, output_dir)
     mandatory_fields.assert_called_once_with(confidence_path, contact_path, interp_path, bdf_out_path, output_dir)
+
+
+def test_finalise_error_log_adds_error_counts(tmp_path):
+    error_log_path = tmp_path / 'error_list.log'
+
+    error_log_path.write_text(
+        'ERROR_GENERAL|ERROR_TYPE|ERROR_FIELD1|ERROR_FIELD1_ENTRY|ERROR_FIELD2|ERROR_FIELD2_ENTRY|ERROR_COUNT|'
+        'FLIGHT_LINE|SHAPEFILE_FID|Type\n'
+        'confidence|missing|BoundConf|<blank>|N/A|N/A||5001001_interp.gmt|10|Major_fault\n'
+        'contact type|missing|ContactTyp|<blank>|N/A|N/A||5001001_interp.gmt|10|Major_fault\n'
+        'interpretation basis|missing|BasisOfInt|<blank>|N/A|N/A||5001001_interp.gmt|10|Major_fault\n'
+        'confidence|no match|BoundConf|X|N/A|N/A||5001001_interp.gmt|11|Major_fault\n',
+        encoding='utf-8'
+    )
+
+    validation.finalise_error_log(tmp_path)
+
+    lines = error_log_path.read_text(encoding='utf-8').splitlines()
+
+    assert lines[0].startswith('ERROR_GENERAL|ERROR_TYPE|ERROR_FIELD1')
+    assert lines[1].split('|')[6] == '3'
+    assert lines[2].split('|')[6] == '3'
+    assert lines[3].split('|')[6] == '3'
+    assert lines[4].split('|')[6] == '1'
+
+
+def test_finalise_error_log_counts_by_flight_line_and_fid(tmp_path):
+    error_log_path = tmp_path / 'error_list.log'
+
+    error_log_path.write_text(
+        'ERROR_GENERAL|ERROR_TYPE|ERROR_FIELD1|ERROR_FIELD1_ENTRY|ERROR_FIELD2|ERROR_FIELD2_ENTRY|ERROR_COUNT|'
+        'FLIGHT_LINE|SHAPEFILE_FID|Type\n'
+        'confidence|missing|BoundConf|<blank>|N/A|N/A||5001001_interp.gmt|10|Major_fault\n'
+        'contact type|missing|ContactTyp|<blank>|N/A|N/A||5001001_interp.gmt|10|Major_fault\n'
+        'confidence|missing|BoundConf|<blank>|N/A|N/A||5002001_interp.gmt|10|Major_fault\n',
+        encoding='utf-8'
+    )
+
+    validation.finalise_error_log(tmp_path)
+
+    rows = [
+        line.split('|')
+        for line in error_log_path.read_text(encoding='utf-8').splitlines()[1:]
+    ]
+
+    assert rows[0][6] == '2'
+    assert rows[1][6] == '2'
+    assert rows[2][6] == '1'

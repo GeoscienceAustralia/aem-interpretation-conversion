@@ -74,14 +74,14 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
         Path(qc_outputs_path).mkdir(exist_ok=True)
 
         with open(erc_file_path, "r", encoding='utf-8') as strat_file:
-            for line in strat_file:
-                fields = line.strip().split("|")
-                if len(fields) != 43:
-                    with open(fr"{qc_outputs_path}asud_nf.asc", "a") as nf_file:
+            with open(fr"{qc_outputs_path}asud_nf.asc", "w") as nf_file:
+                for line in strat_file:
+                    fields = line.strip().split("|")
+                    if len(fields) != 43:
                         nf_file.write(f"{len(fields)} {line}")
-                else:
-                    stratno[fields[0]] = fields[1]
-                    name[fields[0]] = fields[0]
+                    else:
+                        stratno[fields[0]] = fields[1]
+                        name[fields[0]] = fields[0]
 
         # Read AusAEM1_Interp.csv and compare unit name-number
         with open(bdf_2_file_path, "r") as interp_file:
