@@ -94,7 +94,7 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
                             short_nf_file.write(f"{len(fields)} {fields[0]} {fields[1]}\n")
                         continue
 
-                    if fields[7]:
+                    if fields[7] or fields[8]:
                         if name.get(fields[7]) == fields[7] and stratno.get(fields[7]) == fields[8]:
                             units[f"{fields[7]} {fields[8]}"] = f"{fields[7]},{fields[8]}"
                             count[f"{fields[7]} {fields[8]}"] = count.get(f"{fields[7]} {fields[8]}", 0) + 1
@@ -104,7 +104,7 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
                             _write_validation_error(error_list_file, 'over', 'no match', 'OvrStrtUnt', fields[7],
                                                     'OvrStratNo', fields[8], fields)
 
-                    if fields[10]:
+                    if fields[10] or fields[11]:
                         if name.get(fields[10]) == fields[10] and stratno.get(fields[10]) == fields[11]:
                             units[f"{fields[10]} {fields[11]}"] = f"{fields[10]},{fields[11]}"
                             count[f"{fields[10]} {fields[11]}"] = count.get(f"{fields[10]} {fields[11]}", 0) + 1
@@ -114,7 +114,7 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
                             _write_validation_error(error_list_file, 'under', 'no match', 'UndStrtUnt', fields[10],
                                                     'UndStratNo', fields[11], fields)
 
-                    if fields[13]:
+                    if fields[13] or fields[14]:
                         if name.get(fields[13]) == fields[13] and stratno.get(fields[13]) == fields[14]:
                             units[f"{fields[13]} {fields[14]}"] = f"{fields[13]},{fields[14]}"
                             count[f"{fields[13]} {fields[14]}"] = count.get(f"{fields[13]} {fields[14]}", 0) + 1
