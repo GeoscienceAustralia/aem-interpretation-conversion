@@ -203,7 +203,6 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, alt_colors: str, nm_list: List[in
                     ov[parts[0]] = ' ' if len(parts) < 2 else parts[1]
                     un[parts[0]] = ' ' if len(parts) < 3 else parts[2]
 
-
             for filename in nm_list:
                 with (
                     open(os.path.join(wrk_dir, 'SORT', f'{filename}.gmtsddd'), 'r') as file,
