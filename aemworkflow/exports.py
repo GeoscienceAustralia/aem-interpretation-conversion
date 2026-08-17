@@ -55,10 +55,12 @@ def gmtsddd_to_csv(wrk_dir: str, alt_colors: str, nm_list: List[int]) -> None:
         logger.error(f"Error during gmtsddd_to_csv conversion: {e}")
 
 
-def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
+def gmtsddd_to_mdc(wrk_dir: str, colors: str, alt_colors: str, nm_list: List[int]) -> None:
     r = {}
     g = {}
     b = {}
+    ov = {}
+    un = {}
 
     # Open the CSV file for writing
     try:
@@ -74,6 +76,12 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                         r[data[0]] = float(data[1])
                         g[data[0]] = float(data[2])
                         b[data[0]] = float(data[3])
+
+            with open(alt_colors, 'r') as prn_file:
+                for line in prn_file:
+                    parts = re.split(r'\s{2,}', line.strip())
+                    ov[parts[0]] = ' ' if len(parts) < 2 else parts[1]
+                    un[parts[0]] = ' ' if len(parts) < 3 else parts[2]
 
             for filename in nm_list:
                 with (
@@ -102,27 +110,33 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                                                                             b[line[2]] / 256)])
                             write_row(["use_feature_color: false"])
                             write_row(["width:5"])
-                            write_row([f"*metadata*Line: {filen[0]}"])
+                            write_row([f"*metadata*SURVEY_LINE: {filen[0]}"])
                             write_row([f"*metadata*Type: {line[2]}"])
-                            write_row([f"*metadata*BoundaryNm: {line[3]}"])
-                            write_row([f"*metadata*BoundConf: {line[4]}"])
+                            write_row([f"*metadata*OverAge: {ov.get(line[2], '')}"])
+                            write_row([f"*metadata*UnderAge: {un.get(line[2], '')}"])
+                            write_row([f"*metadata*BoundConf: {line[3]}"])
+                            write_row([f"*metadata*ContactTyp: {line[4]}"])
                             write_row([f"*metadata*BasisOfInt: {line[5]}"])
                             write_row([f"*metadata*OvrStrtUnt: {line[6]}"])
-                            write_row([f"*metadata*OvrStrtCod: {line[7]}"])
+                            write_row([f"*metadata*OvrStratNo: {line[7]}"])
                             write_row([f"*metadata*OvrConf: {line[8]}"])
                             write_row([f"*metadata*UndStrtUnt: {line[9]}"])
-                            write_row([f"*metadata*UndStrtCod: {line[10]}"])
+                            write_row([f"*metadata*UndStratNo: {line[10]}"])
                             write_row([f"*metadata*UndConf: {line[11]}"])
-                            write_row([f"*metadata*WithinType: {line[12]}"])
-                            write_row([f"*metadata*WithinStrt: {line[13]}"])
-                            write_row([f"*metadata*WithinStNo: {line[14]}"])
-                            write_row([f"*metadata*WithinConf: {line[15]}"])
-                            write_row([f"*metadata*InterpRef: {line[16]}"])
-                            write_row([f"*metadata*Comment: {line[17]}"])
-                            write_row([f"*metadata*Annotation: {line[18]}"])
-                            write_row([f"*metadata*NewObs: {line[19]}"])
-                            write_row([f"*metadata*Operator: {line[20]}"])
-                            write_row(["*metadata*Organization: Geoscience Australia"])
+                            write_row([f"*metadata*WithinStrt: {line[12]}"])
+                            write_row([f"*metadata*WithinStNo: {line[13]}"])
+                            write_row([f"*metadata*WithinConf: {line[14]}"])
+                            write_row([f"*metadata*HydStrtType: {line[15]}"])
+                            write_row([f"*metadata*HydStrConf: {line[16]}"])
+                            write_row([f"*metadata*BOMNAFUnt: {line[17]}"])
+                            write_row([f"*metadata*BOMNAFNo: {line[18]}"])
+                            write_row([f"*metadata*InterpRef: {line[19]}"])
+                            write_row([f"*metadata*Comment: {line[20]}"])
+                            write_row([f"*metadata*Annotation: {line[21]}"])
+                            write_row([f"*metadata*NewObs: {line[22]}"])
+                            write_row([f"*metadata*Operator: {line[23]}"])
+                            write_row([f"*metadata*Date: {line[24]}"])
+                            write_row(["*metadata*Organisation: Geoscience Australia"])
                             write_row(["}"])
                             write_row(["PROPERTIES px py gl depth"])
 
@@ -160,10 +174,12 @@ def gmtsddd_to_mdc(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
         logger.error(f"Error during gmtsddd_to_mdc conversion: {e}")
 
 
-def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
+def gmtsddd_to_mdch(wrk_dir: str, colors: str, alt_colors: str, nm_list: List[int]) -> None:
     r = {}
     g = {}
     b = {}
+    ov = {}
+    un = {}
 
     # Open the CSV file for writing
     try:
@@ -180,6 +196,13 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                         r[data[0]] = float(data[1])
                         g[data[0]] = float(data[2])
                         b[data[0]] = float(data[3])
+
+            with open(alt_colors, 'r') as prn_file:
+                for line in prn_file:
+                    parts = re.split(r'\s{2,}', line.strip())
+                    ov[parts[0]] = ' ' if len(parts) < 2 else parts[1]
+                    un[parts[0]] = ' ' if len(parts) < 3 else parts[2]
+
 
             for filename in nm_list:
                 with (
@@ -209,27 +232,33 @@ def gmtsddd_to_mdch(wrk_dir: str, colors: str, nm_list: List[int]) -> None:
                                                                              b[line[2]] / 256)])
                             write_row(["use_feature_color: false"])
                             write_row(["width: 5"])
-                            write_row([f"*metadata*Line: {filen[0]}"])
+                            write_row([f"*metadata*SURVEY_LINE: {filen[0]}"])
                             write_row([f"*metadata*Type: {line[2]}"])
-                            write_row([f"*metadata*BoundaryNm: {line[3]}"])
-                            write_row([f"*metadata*BoundConf: {line[4]}"])
+                            write_row([f"*metadata*OverAge: {ov.get(line[2], '')}"])
+                            write_row([f"*metadata*UnderAge: {un.get(line[2], '')}"])
+                            write_row([f"*metadata*BoundConf: {line[3]}"])
+                            write_row([f"*metadata*ContactTyp: {line[4]}"])
                             write_row([f"*metadata*BasisOfInt: {line[5]}"])
                             write_row([f"*metadata*OvrStrtUnt: {line[6]}"])
-                            write_row([f"*metadata*OvrStrtCod: {line[7]}"])
+                            write_row([f"*metadata*OvrStratNo: {line[7]}"])
                             write_row([f"*metadata*OvrConf: {line[8]}"])
                             write_row([f"*metadata*UndStrtUnt: {line[9]}"])
-                            write_row([f"*metadata*UndStrtCod: {line[10]}"])
+                            write_row([f"*metadata*UndStratNo: {line[10]}"])
                             write_row([f"*metadata*UndConf: {line[11]}"])
-                            write_row([f"*metadata*WithinType: {line[12]}"])
-                            write_row([f"*metadata*WithinStrt: {line[13]}"])
-                            write_row([f"*metadata*WithinStNo: {line[14]}"])
-                            write_row([f"*metadata*WithinConf: {line[15]}"])
-                            write_row([f"*metadata*InterpRef: {line[16]}"])
-                            write_row([f"*metadata*Comment: {line[17]}"])
-                            write_row([f"*metadata*Annotation: {line[18]}"])
-                            write_row([f"*metadata*NewObs: {line[19]}"])
-                            write_row([f"*metadata*Operator: {line[20]}"])
-                            write_row(["*metadata*Organization: Geoscience Australia"])
+                            write_row([f"*metadata*WithinStrt: {line[12]}"])
+                            write_row([f"*metadata*WithinStNo: {line[13]}"])
+                            write_row([f"*metadata*WithinConf: {line[14]}"])
+                            write_row([f"*metadata*HydStrtType: {line[15]}"])
+                            write_row([f"*metadata*HydStrConf: {line[16]}"])
+                            write_row([f"*metadata*BOMNAFUnt: {line[17]}"])
+                            write_row([f"*metadata*BOMNAFNo: {line[18]}"])
+                            write_row([f"*metadata*InterpRef: {line[19]}"])
+                            write_row([f"*metadata*Comment: {line[20]}"])
+                            write_row([f"*metadata*Annotation: {line[21]}"])
+                            write_row([f"*metadata*NewObs: {line[22]}"])
+                            write_row([f"*metadata*Operator: {line[23]}"])
+                            write_row([f"*metadata*Date: {line[24]}"])
+                            write_row(["*metadata*Organisation: Geoscience Australia"])
                             write_row(["}"])
                             write_row(["PROPERTIES px py gl depth"])
 
@@ -458,11 +487,13 @@ def main(input_directory: str, output_directory: str, boundary: str, split: str,
     path_dir = input_directory
     if export_mdc:
         boundary_file_path = os.path.join(path_dir, boundary)
-        gmtsddd_to_mdc(work_dir, boundary_file_path, nm_list)
+        split_file_path = os.path.join(path_dir, split)
+        gmtsddd_to_mdc(work_dir, boundary_file_path, split_file_path, nm_list)
 
     if export_mdch:
         boundary_file_path = os.path.join(path_dir, boundary)
-        gmtsddd_to_mdch(work_dir, boundary_file_path, nm_list)
+        split_file_path = os.path.join(path_dir, split)
+        gmtsddd_to_mdch(work_dir, boundary_file_path, split_file_path, nm_list)
 
     if export_csv:
         split_file_path = os.path.join(path_dir, split)

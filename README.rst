@@ -244,7 +244,7 @@ input directory               Yes            None                               
 output directory              Yes            None                                                                    
 asud filename                 Yes            None
 boundary file                 Yes            None                                                            
-split file                    No             None                                                   
+split file                    Yes             None                                                   
 --mdc                         No             False            Add the flag if you want to set to true         Export to MDC format
 --mdch                        No             False            Add the flag if you want to set to true         Export to MDCH format
 --csv                         No             False            Add the flag if you want to set to true         Export to CSV format
