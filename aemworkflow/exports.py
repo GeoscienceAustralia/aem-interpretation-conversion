@@ -479,7 +479,7 @@ def gmtsddd_to_3d(wrk_dir: str, nm_list: List[int], crs: str) -> None:
 def main(input_directory: str, output_directory: str, boundary: str, split: str,
          export_mdc=False, export_mdch=False, export_csv=False, export_es=False, export_3d=False, crs=28349) -> None:
     active_extent_out_file_path = os.path.join(output_directory, 'interp', 'active_extent.txt')
-    exdf = pd.read_csv(active_extent_out_file_path, sep=r'\s+', usecols=[0])
+    exdf = pd.read_csv(active_extent_out_file_path, sep=r'\s+', usecols=[0], header=None)
     nm_list = exdf.iloc[:, 0].tolist()
 
     work_dir = output_directory
