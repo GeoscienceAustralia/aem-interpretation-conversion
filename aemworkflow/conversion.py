@@ -51,9 +51,12 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
 
         logger_session.info("Testing GMT for +Z ")
 
-        # pdf_list = []
+        (srt_dir / "met.bdf").unlink(missing_ok=True)
         pcols = ("nm", "fid", "pix_x", "pix_y", "coordx", "coordy", "col7", "col8", "gl")
         for nm in exdf['nm']:
+            for old_file in srt_dir.glob(f"{nm}_*.srt"):
+                old_file.unlink()
+            (srt_dir / f"{nm}_hdr.hdr").unlink(missing_ok=True)
             ner = 0
             fidd = 0
             row = exdf.query("nm == @nm")

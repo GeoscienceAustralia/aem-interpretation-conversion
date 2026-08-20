@@ -195,7 +195,7 @@ Validation
 
 .. code-block:: bash
 
-    aemworkflow validate --i "{input_directory}" --o "{output_directory}" --a "{asud_filename}"
+    aemworkflow validate --i "{input_directory}" --o "{output_directory}" --a "{asud_filename}" --c "{confidence_filename}" --ct "{contact_filename}" --ib "{interp_basis_filename}"
 
 **Parameter examples:**
 
@@ -205,6 +205,9 @@ Argument                      Required       Default         Options   Notes
 input directory               Yes            None                      A non zipped folder containing required files 
 output directory              Yes            None                             
 asud filename                 Yes            None
+confidence filename           Yes            None
+contact filename              Yes            None
+interp basis filename         Yes            None
 ============================= ============== =============== ========= =============================================    
 
 Conversion
@@ -241,7 +244,7 @@ input directory               Yes            None                               
 output directory              Yes            None                                                                    
 asud filename                 Yes            None
 boundary file                 Yes            None                                                            
-split file                    No             None                                                   
+split file                    Yes             None                                                   
 --mdc                         No             False            Add the flag if you want to set to true         Export to MDC format
 --mdch                        No             False            Add the flag if you want to set to true         Export to MDCH format
 --csv                         No             False            Add the flag if you want to set to true         Export to CSV format
