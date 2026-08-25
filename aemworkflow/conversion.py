@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import pandas as pd
+from filelock import FileLock
 from loguru import logger
 from osgeo import osr
 
@@ -51,12 +52,16 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
 
         logger_session.info("Testing GMT for +Z ")
 
-        (srt_dir / "met.bdf").unlink(missing_ok=True)
+        lock_file = Path(srt_dir) / ".unlink.lock"
+
+        with FileLock(str(lock_file)):
+            (srt_dir / "met.bdf").unlink(missing_ok=True)
         pcols = ("nm", "fid", "pix_x", "pix_y", "coordx", "coordy", "col7", "col8", "gl")
         for nm in exdf['nm']:
-            for old_file in srt_dir.glob(f"{nm}_*.srt"):
-                old_file.unlink()
-            (srt_dir / f"{nm}_hdr.hdr").unlink(missing_ok=True)
+            with FileLock(str(lock_file)):
+                for old_file in srt_dir.glob(f"{nm}_*.srt"):
+                    old_file.unlink()
+                (srt_dir / f"{nm}_hdr.hdr").unlink(missing_ok=True)
             ner = 0
             fidd = 0
             row = exdf.query("nm == @nm")
@@ -162,10 +167,13 @@ def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_se
         else:
             logger_session.warning(f"{zfshp_dir} folder already exists!")
 
+        lock_file = Path(srt_dir) / ".unlink.lock"
+
         for nm in nm_lst:
-            ano_list = sorted(glob.glob(os.path.join(srt_dir, "*Annotations.srt")))
-            if ano_list:
-                _ = [Path(_f).unlink() for _f in ano_list]
+            with FileLock(str(lock_file)):
+                ano_list = sorted(glob.glob(os.path.join(srt_dir, "*Annotations.srt")))
+                if ano_list:
+                    _ = [Path(_f).unlink() for _f in ano_list]
 
             srt_list = sorted(glob.glob(os.path.join(srt_dir, f"{nm}*.srt")))
             hdr = Path(srt_dir / f"{nm}_hdr.hdr")
@@ -259,13 +267,16 @@ def conversion_sort_gmtp(wrk_dir: str, nm_lst: List[int], logger_session=logger)
         else:
             logger_session.warning(f"{zfshp_dir} folder already exists!")
 
+        lock_file = Path(srt_dir) / ".unlink.lock"
+
         for nm in nm_lst:
             seg = 0
             vtx = 1
             fn = 1
-            ano_list = sorted(glob.glob(os.path.join(srt_dir, "*Annotations.srt")))
-            if ano_list:
-                _ = [Path(_f).unlink() for _f in ano_list]
+            with FileLock(str(lock_file)):
+                ano_list = sorted(glob.glob(os.path.join(srt_dir, "*Annotations.srt")))
+                if ano_list:
+                    _ = [Path(_f).unlink() for _f in ano_list]
             srt_list = sorted(glob.glob(os.path.join(srt_dir, f"{nm}*.srt")))
             hdr = Path(srt_dir / f"{nm}_hdr.hdr")
             hlines = hdr.read_text().split("\n")[:-1]
