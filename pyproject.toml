@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aemworkflow"
-version = "0.0.7"
+version = "3.0.0"
 authors = [
   { name="Geoscience Australia", email="toolkits@ga.gov.au" },
 ]
 description = "Geoscience Australia’s Online Airborne Electromagnetic Interpretation Conversion Tool"
-readme = "README.md"
+readme = "README.rst"
 requires-python = ">=3.12.9"
 classifiers = [
     "Programming Language :: Python :: 3",
