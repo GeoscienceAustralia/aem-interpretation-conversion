@@ -51,9 +51,13 @@ def interpret(input_directory, output_directory, crs="28349", gis="esri_arcmap_0
 @click.option("--i", "input_directory", type=click.Path(exists=True), required=True)
 @click.option("--o", "output_directory", type=click.Path(), required=True)
 @click.option("--a", "asud_filename", type=click.Path(exists=True), required=True)
-def validate(input_directory, output_directory, asud_filename):
+@click.option("--c", "confidence_filename", type=click.Path(exists=True), required=True)
+@click.option("--ct", "contact_filename", type=click.Path(exists=True), required=True)
+@click.option("--ib", "interp_filename", type=click.Path(exists=True), required=True)
+def validate(input_directory, output_directory, asud_filename, confidence_filename, contact_filename, interp_filename):
     try:
-        validation(input_directory, output_directory, asud_filename)
+        validation(input_directory, output_directory, asud_filename, confidence_filename, contact_filename,
+                   interp_filename)
         click.echo("Completed validation")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
