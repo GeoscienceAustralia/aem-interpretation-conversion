@@ -106,6 +106,42 @@ def test_validation_qc_units_basic(tmp_path, dummy_logger):
     assert "completed qc_units validation." in dummy_logger.messages
 
 
+def test_validation_qc_units_csv_format(tmp_path, dummy_logger):
+    validation_dir = tmp_path
+    os.makedirs(os.path.join(validation_dir, "qc"), exist_ok=True)
+    erc_path = os.path.join(validation_dir, "ERC_Stratigraphic_names_Current.csv")
+    bdf_2_path = os.path.join(validation_dir, "qc", "met2.bdf")
+
+    with open(erc_path, "w", encoding="utf-8", newline="") as f:
+        f.write("STRATIGRAPHIC NAME,STRAT NO\n")
+        f.write("unit1,num1\n")
+
+    with open(bdf_2_path, "w") as f:
+        fields = [""] * 26
+        fields[7] = "unit1"
+        fields[8] = "num1"
+        f.write("|".join(fields) + "\n")
+
+        fields = [""] * 26
+        fields[7] = "unit2"
+        fields[8] = "num2"
+        f.write("|".join(fields) + "\n")
+
+    validation.validation_qc_units(erc_path, bdf_2_path, validation_dir, dummy_logger)
+
+    summary_files = [f for f in os.listdir(os.path.join(validation_dir, "qc")) if f.startswith("ASUD_validation_sum")]
+
+    assert summary_files, "Summary file not created"
+
+    with open(os.path.join(validation_dir, "qc", summary_files[0])) as f:
+        lines = f.readlines()
+
+    assert any("matched,unit1,num1,1" in line for line in lines)
+    assert any("no match,unit2,num2,1" in line for line in lines)
+    assert "Running qc_units validation." in dummy_logger.messages
+    assert "completed qc_units validation." in dummy_logger.messages
+
+
 def test_validation_qc_units_short_nf(tmp_path, dummy_logger):
     validation_dir = tmp_path
     os.makedirs(os.path.join(validation_dir, "qc"), exist_ok=True)
