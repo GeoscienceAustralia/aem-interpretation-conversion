@@ -195,7 +195,7 @@ Validation
 
 .. code-block:: bash
 
-    aemworkflow validate --i "{input_directory}" --o "{output_directory}" --a "{asud_filename}"
+    aemworkflow validate --i "{input_directory}" --o "{output_directory}" --a "{asud_filename}" --c "{confidence_filename}" --ct "{contact_filename}" --ib "{interp_basis_filename}"
 
 **Parameter examples:**
 
@@ -205,6 +205,9 @@ Argument                      Required       Default         Options   Notes
 input directory               Yes            None                      A non zipped folder containing required files 
 output directory              Yes            None                             
 asud filename                 Yes            None
+confidence filename           Yes            None
+contact filename              Yes            None
+interp basis filename         Yes            None
 ============================= ============== =============== ========= =============================================    
 
 Conversion
@@ -230,7 +233,7 @@ Export
 
 .. code-block:: bash
 
-    aemworkflow export --i "{input_directory}" --o "{output_directory}" --b "{boundary_file}" --s "{split_file}" --mdc --mdch --egs 
+    aemworkflow export --i "{input_directory}" --o "{output_directory}" --b "{boundary_file}" --s "{split_file}" --mdc --mdch --csv --es --3d
 
 **Parameter examples:**
 
@@ -241,10 +244,13 @@ input directory               Yes            None                               
 output directory              Yes            None                                                                    
 asud filename                 Yes            None
 boundary file                 Yes            None                                                            
-split file                    No             None                                                   
+split file                    Yes             None                                                   
 --mdc                         No             False            Add the flag if you want to set to true         Export to MDC format
 --mdch                        No             False            Add the flag if you want to set to true         Export to MDCH format
---egs                         No             False            Add the flag if you want to set to true         Export to EGS format
+--csv                         No             False            Add the flag if you want to set to true         Export to CSV format
+--es                          No             False            Add the flag if you want to set to true         Export to Export to GA 3D Portal / EarthSci format
+--3d                          No             False            Add the flag if you want to set to true         Export to 3D shape file format
+--crs                         No             28349            28349, 28350, 28351, 28352, 28354, 28355, 28356 GDA/MGA zone EPSG
 ============================= ============== =============== ================================================ =============================================           
 
 

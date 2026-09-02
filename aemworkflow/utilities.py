@@ -112,6 +112,18 @@ def get_make_srt_dir(wrk_dir: str, logger_session=logger) -> None:
         sys.exit()
 
 
+def get_make_export_dir(wrk_dir: str, logger_session=logger) -> None:
+    '''
+    '''
+    try:
+        if not (wrk_dir).exists():
+            logger_session.info('Making Export directory...')
+            wrk_dir.mkdir()
+    except OSError as osx:
+        logger_session.error(osx.args)
+        sys.exit()
+
+
 def find_geometry_file(shp_dir, prefix, geometryfile, logger_session=logger) -> Tuple[Path, str]:
     required_suffix = '.path.txt' if geometryfile == 'path' else '.extent.txt'
     for base_suffix in BASE_SUFFIX:
