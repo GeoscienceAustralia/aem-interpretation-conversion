@@ -74,14 +74,29 @@ def validation_qc_units(erc_file_path, bdf_2_file_path, validation_dir, logger_s
         Path(qc_outputs_path).mkdir(exist_ok=True)
 
         with open(erc_file_path, "r", encoding='utf-8') as strat_file:
-            with open(fr"{qc_outputs_path}asud_nf.asc", "w") as nf_file:
-                for line in strat_file:
-                    fields = line.strip().split("|")
-                    if len(fields) != 43:
-                        nf_file.write(f"{len(fields)} {line}")
-                    else:
-                        stratno[fields[0]] = fields[1]
-                        name[fields[0]] = fields[0]
+            first_line = strat_file.readline()
+            strat_file.seek(0)
+            if "|" in first_line:
+                with open(fr"{qc_outputs_path}asud_nf.asc", "w") as nf_file:
+                    for line in strat_file:
+                        fields = line.strip().split("|")
+                        if len(fields) != 43:
+                            nf_file.write(f"{len(fields)} {line}")
+                        else:
+                            stratno[fields[0]] = fields[1]
+                            name[fields[0]] = fields[0]
+            else:
+                reader = csv.DictReader(strat_file)
+                reader.fieldnames = [
+                    field.strip()
+                    for field in (reader.fieldnames or [])
+                ]
+
+                for row in reader:
+                    strat_name = row["STRATIGRAPHIC NAME"]
+                    strat_no = row["STRAT NO"]
+                    stratno[strat_name] = strat_no
+                    name[strat_name] = strat_name
 
         # Read AusAEM1_Interp.csv and compare unit name-number
         with open(bdf_2_file_path, "r") as interp_file:
