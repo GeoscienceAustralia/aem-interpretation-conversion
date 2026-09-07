@@ -128,12 +128,12 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
                 fou.write(">\n")
                 logger_session.info(f"** Error count {ner} **\n")
                 # logger_session.info("** See z_err.log **\n")
-                fou.write("# @D0|DNDUTL|||||||||||||||||||||MAL|\n")
-                for i in range(frst, last + 1):
-                    tmp = f"{-(row['t_top'].iloc[0] - tdf['gl'].iloc[i]) / y_scale: .6f}"\
-                        .rstrip('0').rstrip('.')
-                    fou.write(f"{i} {tmp}\n")
-                fou.write(">\n")
+                # fou.write("# @D0|DNDUTL|||||||||||||||||||||MAL|\n")
+                # for i in range(frst, last + 1):
+                #     tmp = f"{-(row['t_top'].iloc[0] - tdf['gl'].iloc[i]) / y_scale: .6f}"\
+                #         .rstrip('0').rstrip('.')
+                #     fou.write(f"{i} {tmp}\n")
+                # fou.write(">\n")
 
         logger_session.info("Completed zedfix_gmt_to_srt conversion.")
 
@@ -220,7 +220,7 @@ def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_se
                                     vtx += 1
 
             in_gmtf = Path(srt_dir) / f"{nm}zf.gmtf"
-            out_shp = Path(zfshp_dir) / f"{nm}_zf.shp"
+            out_shp = Path(zfshp_dir) / f"{nm}_AEMtotalxz_interp_zf.shp"
 
             # ogr2ogr.main(["", "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)])
             cmd = [get_ogr_path(), "-f", "ESRI Shapefile", str(out_shp), str(in_gmtf)]
@@ -229,7 +229,7 @@ def conversion_sort_gmtp_3d(wrk_dir: str, nm_lst: List[int], crs: str, logger_se
             run_command(cmd)
 
             if out_shp.exists():
-                logger_session.info(f"{nm}zf.gmtf successfully converted to {nm}_zf.shp")
+                logger_session.info(f"{nm}zf.gmtf successfully converted to {nm}_AEMtotalxz_interp_zf.shp")
 
         logger_session.info("Completed sort_gmtp conversion.")
     except Exception as e:
