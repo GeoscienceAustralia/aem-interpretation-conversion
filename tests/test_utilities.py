@@ -223,3 +223,100 @@ def test_find_geometry_file(tmp_path):
     with pytest.raises(FileNotFoundError):
         utilities.find_geometry_file(tmp_path, "missing file", "path", logger_session)
     logger_session.error.assert_called()
+
+
+def _make_fiona_feature(fid, geometry, properties):
+    return {'id': str(fid), 'geometry': geometry, 'properties': properties}
+
+
+def test_check_shapefile_blank_rows_no_blank_rows(tmp_path):
+    shp_path = tmp_path / "LN1_interp_001.shp"
+    shp_path.write_text("")
+    features = [
+        _make_fiona_feature(0, {'type': 'LineString', 'coordinates': [(0, 0), (1, 1)]},
+                            {'FID': 0, 'Type': 'BASE', 'BoundConf': 'H'}),
+        _make_fiona_feature(1, {'type': 'LineString', 'coordinates': [(2, 2), (3, 3)]},
+                            {'FID': 1, 'Type': 'WITHIN', 'BoundConf': 'M'}),
+    ]
+    with mock.patch("aemworkflow.utilities.fiona.open") as mock_open:
+        mock_open.return_value.__enter__.return_value = iter(features)
+        result = utilities.check_shapefile_blank_rows(str(shp_path), logger_session)
+    assert result == []
+    logger_session.warning.assert_not_called()
+
+
+def test_check_shapefile_blank_rows_blank_attributes(tmp_path):
+    shp_path = tmp_path / "LN1_interp_001.shp"
+    shp_path.write_text("")
+    features = [
+        _make_fiona_feature(0, {'type': 'LineString', 'coordinates': [(0, 0), (1, 1)]},
+                            {'FID': 0, 'Type': None, 'BoundConf': ''}),
+    ]
+    logger_session.reset_mock()
+    with mock.patch("aemworkflow.utilities.fiona.open") as mock_open:
+        mock_open.return_value.__enter__.return_value = iter(features)
+        result = utilities.check_shapefile_blank_rows(str(shp_path), logger_session)
+    assert result == [0]
+    logger_session.warning.assert_called_once()
+    assert 'Blank row detected' in logger_session.warning.call_args[0][0]
+    assert 'LN1' in logger_session.warning.call_args[0][0]
+
+
+def test_check_shapefile_blank_rows_missing_geometry(tmp_path):
+    shp_path = tmp_path / "LN1_interp_001.shp"
+    shp_path.write_text("")
+    features = [
+        _make_fiona_feature(2, None, {'FID': 2, 'Type': 'BASE', 'BoundConf': 'H'}),
+    ]
+    logger_session.reset_mock()
+    with mock.patch("aemworkflow.utilities.fiona.open") as mock_open:
+        mock_open.return_value.__enter__.return_value = iter(features)
+        result = utilities.check_shapefile_blank_rows(str(shp_path), logger_session)
+    assert result == [2]
+    logger_session.warning.assert_called_once()
+    assert 'Missing geometry' in logger_session.warning.call_args[0][0]
+
+
+def test_check_shapefile_blank_rows_mixed(tmp_path):
+    shp_path = tmp_path / "LN2_interp_001.shp"
+    shp_path.write_text("")
+    features = [
+        _make_fiona_feature(0, {'type': 'LineString', 'coordinates': [(0, 0)]},
+                            {'FID': 0, 'Type': 'BASE', 'BoundConf': 'H'}),
+        _make_fiona_feature(1, None, {'FID': 1, 'Type': 'BASE', 'BoundConf': 'H'}),
+        _make_fiona_feature(2, {'type': 'LineString', 'coordinates': [(1, 1)]},
+                            {'FID': 2, 'Type': None, 'BoundConf': ''}),
+    ]
+    logger_session.reset_mock()
+    with mock.patch("aemworkflow.utilities.fiona.open") as mock_open:
+        mock_open.return_value.__enter__.return_value = iter(features)
+        result = utilities.check_shapefile_blank_rows(str(shp_path), logger_session)
+    assert result == [1, 2]
+    assert logger_session.warning.call_count == 2
+
+
+def test_check_shapefile_blank_rows_uses_stem_prefix_for_line_name(tmp_path):
+    shp_path = tmp_path / "LN5_interp_001.shp"
+    shp_path.write_text("")
+    features = [
+        _make_fiona_feature(0, None, {'FID': 0, 'Type': 'BASE', 'BoundConf': 'H'}),
+    ]
+    logger_session.reset_mock()
+    with mock.patch("aemworkflow.utilities.fiona.open") as mock_open:
+        mock_open.return_value.__enter__.return_value = iter(features)
+        utilities.check_shapefile_blank_rows(str(shp_path), logger_session)
+    assert 'LN5' in logger_session.warning.call_args[0][0]
+
+
+def test_active_shp_to_gmt_skips_blank_fids(monkeypatch):
+    from aemworkflow import interpretation
+    commands = []
+
+    monkeypatch.setattr(interpretation, "validate_file", lambda x: True)
+    monkeypatch.setattr(interpretation, "check_shapefile_blank_rows", lambda *a, **k: [3, 7])
+    monkeypatch.setattr(interpretation, "run_command", lambda cmd: commands.append(cmd))
+    monkeypatch.setattr(interpretation, "get_ogr_path", lambda: "ogr2ogr")
+
+    interpretation.active_shp_to_gmt("input.shp", "output.gmt")
+    assert "-where" in commands[0]
+    assert "FID NOT IN (3,7)" in commands[0]
