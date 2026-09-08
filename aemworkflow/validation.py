@@ -357,7 +357,10 @@ def validation_asud_eras(bdf_2_file_path, validation_dir, asud_era_file_paths, l
                     interpreted_eras['under'] = under_era
 
                 elif type_value.startswith('WITHIN_'):
-                    interpreted_eras['within'] = type_value.removeprefix('WITHIN_')
+                    within_era = type_value.removeprefix('WITHIN_')
+                    interpreted_eras['over'] = within_era
+                    interpreted_eras['under'] = within_era
+                    interpreted_eras['within'] = within_era
 
                 for field_group, interpreted_era in interpreted_eras.items():
                     validation_rule = era_rules[field_group]
@@ -376,24 +379,26 @@ def validation_asud_eras(bdf_2_file_path, validation_dir, asud_era_file_paths, l
 
                     if not asud_eras:
                         continue
-                    elif interpreted_era in asud_eras:
+                    asud_era_text = ';'.join(sorted(asud_eras))
+
+                    if interpreted_era in asud_eras:
                         result = 'matched'
                     else:
-                        asud_era_text = ';'.join(sorted(asud_eras))
-                        result = f'age mismatch - interpreted: {interpreted_era}, ASUD: {asud_era_text}'
+                        result = 'age mismatch'
 
-                    age_key = (f'{name_field}/{no_field}', result, f'{strat_name} {strat_no}')
+                    age_key = (result, interpreted_era, asud_era_text, name_field, no_field, strat_name, strat_no)
                     age_summary[age_key] = age_summary.get(age_key, 0) + 1
 
                     if result != 'matched':
                         age_error_count += 1
-                        _write_validation_error(error_list_file, field_group, result, name_field, strat_name, no_field,
-                                                strat_no, fields)
+                        error_result = f'age mismatch - interpreted: {interpreted_era}, ASUD: {asud_era_text}'
+                        _write_validation_error(error_list_file, field_group, error_result, name_field, strat_name,
+                                                no_field, strat_no, fields)
 
         if malformed_record_count:
             logger_session.warning(f'Found {malformed_record_count} malformed BDF records during ASUD Era validation.')
 
-        _write_validation_summary(age_summary_file, age_summary, logger_session)
+        _write_age_validation_summary(age_summary_file, age_summary, logger_session)
 
         logger_session.info(f'Completed ASUD geological Era validation. Records checked: {record_count}. '
                             f'Age errors: {age_error_count}. Malformed records: {malformed_record_count}.')
@@ -401,6 +406,19 @@ def validation_asud_eras(bdf_2_file_path, validation_dir, asud_era_file_paths, l
     except Exception as e:
         logger_session.error(f'Error during ASUD geological Era validation: {e}')
         raise
+
+
+def _write_age_validation_summary(summary_file_path, age_summary, logger_session=logger):
+    with open(summary_file_path, 'w', encoding='utf-8', newline='') as summary_file:
+        writer = csv.writer(summary_file)
+        writer.writerow(['result', 'interpretation value', 'ASUD value', 'field 1', 'field 2', 'strat unit', 'strat no',
+                         'count'])
+
+        for summary_key, count in age_summary.items():
+            result, interpreted_era, asud_era, name_field, no_field, strat_name, strat_no = summary_key
+            logger_session.info(f'{result},{interpreted_era},{asud_era},{name_field},{no_field},{strat_name},{strat_no}'
+                                f',{count}')
+            writer.writerow([result, interpreted_era, asud_era, name_field, no_field, strat_name, strat_no, count])
 
 
 def _write_validation_summary(summary_file_path, validation_summary, logger_session=logger):

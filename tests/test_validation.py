@@ -591,8 +591,8 @@ def test_validation_asud_eras_matched_base_top(tmp_path, dummy_logger):
     d = date.today().strftime('%Y%m%d')
     summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
 
-    assert 'matched,OvrStrtUnt/OvrStratNo,UnitA N001,1' in summary
-    assert 'matched,UndStrtUnt/UndStratNo,UnitB N002,1' in summary
+    assert 'matched,Cenozoic,Cenozoic,OvrStrtUnt,OvrStratNo,UnitA,N001,1' in summary
+    assert 'matched,Paleozoic,Paleozoic,UndStrtUnt,UndStratNo,UnitB,N002,1' in summary
     assert 'Running ASUD geological Era validation.' in dummy_logger.messages
     assert any('Records checked: 1' in msg for msg in dummy_logger.messages)
 
@@ -623,11 +623,8 @@ def test_validation_asud_eras_age_mismatch_over(tmp_path, dummy_logger):
     summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
     error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
 
-    assert 'age mismatch' in summary
-    assert 'interpreted: Mesozoic' in summary
-    assert 'ASUD: Cenozoic' in summary
-    assert 'over|age mismatch' in error_log
-    assert 'OvrStrtUnt|UnitA|OvrStratNo|N001|' in error_log
+    assert 'age mismatch,Mesozoic,Cenozoic,OvrStrtUnt,OvrStratNo,UnitA,N001,1' in summary
+    assert 'over|age mismatch - interpreted: Mesozoic, ASUD: Cenozoic|OvrStrtUnt|UnitA|OvrStratNo|N001|' in error_log
 
 
 def test_validation_asud_eras_age_mismatch_under(tmp_path, dummy_logger):
@@ -656,11 +653,8 @@ def test_validation_asud_eras_age_mismatch_under(tmp_path, dummy_logger):
     summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
     error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
 
-    assert 'age mismatch' in summary
-    assert 'interpreted: Mesozoic' in summary
-    assert 'ASUD: Paleozoic' in summary
-    assert 'under|age mismatch' in error_log
-    assert 'UndStrtUnt|UnitB|UndStratNo|N002|' in error_log
+    assert 'age mismatch,Mesozoic,Paleozoic,UndStrtUnt,UndStratNo,UnitB,N002,1' in summary
+    assert 'under|age mismatch - interpreted: Mesozoic, ASUD: Paleozoic|UndStrtUnt|UnitB|UndStratNo|N002|' in error_log
 
 
 def test_validation_asud_eras_matched_within(tmp_path, dummy_logger):
@@ -682,7 +676,7 @@ def test_validation_asud_eras_matched_within(tmp_path, dummy_logger):
     d = date.today().strftime('%Y%m%d')
     summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
 
-    assert 'matched,WithinStrt/WithinStNo,UnitC N003,1' in summary
+    assert 'matched,Cenozoic,Cenozoic,WithinStrt,WithinStNo,UnitC,N003,1' in summary
 
 
 def test_validation_asud_eras_age_mismatch_within(tmp_path, dummy_logger):
@@ -706,10 +700,8 @@ def test_validation_asud_eras_age_mismatch_within(tmp_path, dummy_logger):
     summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
     error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
 
-    assert 'age mismatch' in summary
-    assert 'interpreted: Paleozoic' in summary
-    assert 'ASUD: Cenozoic' in summary
-    assert 'within|age mismatch' in error_log
+    assert 'age mismatch,Paleozoic,Cenozoic,WithinStrt,WithinStNo,UnitC,N003,1' in summary
+    assert 'within|age mismatch - interpreted: Paleozoic, ASUD: Cenozoic|WithinStrt|UnitC|WithinStNo|N003|' in error_log
 
 
 def test_validation_asud_eras_skips_unit_not_in_asud(tmp_path, dummy_logger):
@@ -734,7 +726,7 @@ def test_validation_asud_eras_skips_unit_not_in_asud(tmp_path, dummy_logger):
     summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
     error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
 
-    assert summary.strip() == 'result,field,value,count'
+    assert summary.strip() == 'result,interpretation value,ASUD value,field 1,field 2,strat unit,strat no,count'
     assert 'age mismatch' not in error_log
 
 
@@ -758,7 +750,7 @@ def test_validation_asud_eras_skips_blank_strat_fields(tmp_path, dummy_logger):
     d = date.today().strftime('%Y%m%d')
     summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
 
-    assert summary.strip() == 'result,field,value,count'
+    assert summary.strip() == 'result,interpretation value,ASUD value,field 1,field 2,strat unit,strat no,count'
 
 
 def test_validation_asud_eras_malformed_record(tmp_path, dummy_logger):
@@ -797,7 +789,7 @@ def test_validation_asud_eras_non_base_within_type_skipped(tmp_path, dummy_logge
     d = date.today().strftime('%Y%m%d')
     summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
 
-    assert summary.strip() == 'result,field,value,count'
+    assert summary.strip() == 'result,interpretation value,ASUD value,field 1,field 2,strat unit,strat no,count'
 
 
 def test_validation_asud_eras_multiple_era_files(tmp_path, dummy_logger):
@@ -828,7 +820,7 @@ def test_validation_asud_eras_multiple_era_files(tmp_path, dummy_logger):
     d = date.today().strftime('%Y%m%d')
     summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
 
-    assert 'matched,OvrStrtUnt/OvrStratNo,UnitA N001,1' in summary
-    assert 'matched,UndStrtUnt/UndStratNo,UnitB N002,1' in summary
-    assert 'matched,WithinStrt/WithinStNo,UnitC N003,1' in summary
+    assert 'matched,Cenozoic,Cenozoic,OvrStrtUnt,OvrStratNo,UnitA,N001,1' in summary
+    assert 'matched,Paleozoic,Paleozoic,UndStrtUnt,UndStratNo,UnitB,N002,1' in summary
+    assert 'matched,Mesozoic,Mesozoic,WithinStrt,WithinStNo,UnitC,N003,1' in summary
     assert any('Records checked: 2' in msg for msg in dummy_logger.messages)
