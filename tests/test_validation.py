@@ -535,3 +535,292 @@ def test_finalise_error_log_counts_by_flight_line_and_fid(tmp_path):
     assert rows[0][6] == '2'
     assert rows[1][6] == '2'
     assert rows[2][6] == '1'
+
+
+def _write_era_lookup_file(path, rows):
+    with open(path, 'w', encoding='utf-8', newline='') as f:
+        f.write('STRATIGRAPHIC NAME,STRAT NO\n')
+        for name, no in rows:
+            f.write(f'{name},{no}\n')
+
+
+def _make_bdf_record(type_value, over_name='', over_no='', under_name='', under_no='', within_name='', within_no=''):
+    fields = [''] * 26
+    fields[0] = '5001001_interp.gmt'
+    fields[1] = '1'
+    fields[2] = '# @D0'
+    fields[3] = type_value
+    fields[4] = 'H'
+    fields[5] = 'unc'
+    fields[6] = 'IAEM'
+    fields[7] = over_name
+    fields[8] = over_no
+    fields[9] = 'H'
+    fields[10] = under_name
+    fields[11] = under_no
+    fields[12] = 'M'
+    fields[13] = within_name
+    fields[14] = within_no
+    fields[15] = 'L'
+    fields[24] = 'TEST'
+    fields[25] = '11/08/2026'
+    return '|'.join(fields)
+
+
+def test_validation_asud_eras_matched_base_top(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+    paleozoic_path = tmp_path / 'paleozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('UnitA', 'N001')])
+    _write_era_lookup_file(paleozoic_path, [('UnitB', 'N002')])
+
+    bdf_path.write_text(
+        _make_bdf_record('BASE_Cenozoic_TOP_Paleozoic', over_name='UnitA', over_no='N001',
+                         under_name='UnitB', under_no='N002') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path,
+                                    {'Cenozoic': cenozoic_path, 'Paleozoic': paleozoic_path},
+                                    dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
+
+    assert 'matched,Cenozoic,Cenozoic,OvrStrtUnt,OvrStratNo,UnitA,N001,1' in summary
+    assert 'matched,Paleozoic,Paleozoic,UndStrtUnt,UndStratNo,UnitB,N002,1' in summary
+    assert 'Running ASUD geological Era validation.' in dummy_logger.messages
+    assert any('Records checked: 1' in msg for msg in dummy_logger.messages)
+
+
+def test_validation_asud_eras_age_mismatch_over(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+    paleozoic_path = tmp_path / 'paleozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('UnitA', 'N001')])
+    _write_era_lookup_file(paleozoic_path, [('UnitB', 'N002')])
+
+    # Type says BASE_Mesozoic_TOP_Paleozoic but UnitA is Cenozoic
+    bdf_path.write_text(
+        _make_bdf_record('BASE_Mesozoic_TOP_Paleozoic', over_name='UnitA', over_no='N001',
+                         under_name='UnitB', under_no='N002') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path,
+                                    {'Cenozoic': cenozoic_path, 'Paleozoic': paleozoic_path},
+                                    dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'age mismatch,Mesozoic,Cenozoic,OvrStrtUnt,OvrStratNo,UnitA,N001,1' in summary
+    assert 'over|age mismatch - interpreted: Mesozoic, ASUD: Cenozoic|OvrStrtUnt|UnitA|OvrStratNo|N001|' in error_log
+
+
+def test_validation_asud_eras_age_mismatch_under(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+    paleozoic_path = tmp_path / 'paleozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('UnitA', 'N001')])
+    _write_era_lookup_file(paleozoic_path, [('UnitB', 'N002')])
+
+    # Type says BASE_Cenozoic_TOP_Mesozoic but UnitB is Paleozoic
+    bdf_path.write_text(
+        _make_bdf_record('BASE_Cenozoic_TOP_Mesozoic', over_name='UnitA', over_no='N001',
+                         under_name='UnitB', under_no='N002') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path,
+                                    {'Cenozoic': cenozoic_path, 'Paleozoic': paleozoic_path},
+                                    dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'age mismatch,Mesozoic,Paleozoic,UndStrtUnt,UndStratNo,UnitB,N002,1' in summary
+    assert 'under|age mismatch - interpreted: Mesozoic, ASUD: Paleozoic|UndStrtUnt|UnitB|UndStratNo|N002|' in error_log
+
+
+def test_validation_asud_eras_matched_within(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('UnitC', 'N003')])
+
+    bdf_path.write_text(
+        _make_bdf_record('WITHIN_Cenozoic', within_name='UnitC', within_no='N003') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path, {'Cenozoic': cenozoic_path}, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
+
+    assert 'matched,Cenozoic,Cenozoic,WithinStrt,WithinStNo,UnitC,N003,1' in summary
+
+
+def test_validation_asud_eras_age_mismatch_within(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('UnitC', 'N003')])
+
+    # Type says WITHIN_Paleozoic but UnitC is Cenozoic
+    bdf_path.write_text(
+        _make_bdf_record('WITHIN_Paleozoic', within_name='UnitC', within_no='N003') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path, {'Cenozoic': cenozoic_path}, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'age mismatch,Paleozoic,Cenozoic,WithinStrt,WithinStNo,UnitC,N003,1' in summary
+    assert 'within|age mismatch - interpreted: Paleozoic, ASUD: Cenozoic|WithinStrt|UnitC|WithinStNo|N003|' in error_log
+
+
+def test_validation_asud_eras_skips_unit_not_in_asud(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('KnownUnit', 'K001')])
+
+    # UnitX/N999 not in any era lookup — should be skipped silently
+    bdf_path.write_text(
+        _make_bdf_record('BASE_Cenozoic_TOP_Paleozoic', over_name='UnitX', over_no='N999',
+                         under_name='UnitY', under_no='N888') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path, {'Cenozoic': cenozoic_path}, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert summary.strip() == 'result,interpretation value,ASUD value,field 1,field 2,strat unit,strat no,count'
+    assert 'age mismatch' not in error_log
+
+
+def test_validation_asud_eras_skips_blank_strat_fields(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('UnitA', 'N001')])
+
+    # over fields are blank — should be skipped
+    bdf_path.write_text(
+        _make_bdf_record('BASE_Cenozoic_TOP_Paleozoic', over_name='', over_no='') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path, {'Cenozoic': cenozoic_path}, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
+
+    assert summary.strip() == 'result,interpretation value,ASUD value,field 1,field 2,strat unit,strat no,count'
+
+
+def test_validation_asud_eras_malformed_record(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('UnitA', 'N001')])
+
+    bdf_path.write_text('flight|1|# @D0\n', encoding='utf-8')
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path, {'Cenozoic': cenozoic_path}, dummy_logger)
+
+    assert 'Found 1 malformed BDF records during ASUD Era validation.' in dummy_logger.messages
+
+
+def test_validation_asud_eras_non_base_within_type_skipped(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('UnitA', 'N001')])
+
+    # Type that doesn't match BASE_*_TOP_* or WITHIN_* patterns
+    bdf_path.write_text(
+        _make_bdf_record('UNRECOGNISED_TYPE', over_name='UnitA', over_no='N001') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path, {'Cenozoic': cenozoic_path}, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
+
+    assert summary.strip() == 'result,interpretation value,ASUD value,field 1,field 2,strat unit,strat no,count'
+
+
+def test_validation_asud_eras_multiple_era_files(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+    cenozoic_path = tmp_path / 'cenozoic.csv'
+    paleozoic_path = tmp_path / 'paleozoic.csv'
+    mesozoic_path = tmp_path / 'mesozoic.csv'
+
+    _write_era_lookup_file(cenozoic_path, [('UnitA', 'N001')])
+    _write_era_lookup_file(paleozoic_path, [('UnitB', 'N002')])
+    _write_era_lookup_file(mesozoic_path, [('UnitC', 'N003')])
+
+    bdf_path.write_text(
+        _make_bdf_record('BASE_Cenozoic_TOP_Paleozoic', over_name='UnitA', over_no='N001',
+                         under_name='UnitB', under_no='N002') + '\n' +
+        _make_bdf_record('WITHIN_Mesozoic', within_name='UnitC', within_no='N003') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_asud_eras(bdf_path, tmp_path,
+                                    {'Cenozoic': cenozoic_path, 'Paleozoic': paleozoic_path,
+                                     'Mesozoic': mesozoic_path},
+                                    dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    summary = (qc_dir / f'ASUD_age_validation_summary_{d}.txt').read_text(encoding='utf-8')
+
+    assert 'matched,Cenozoic,Cenozoic,OvrStrtUnt,OvrStratNo,UnitA,N001,1' in summary
+    assert 'matched,Paleozoic,Paleozoic,UndStrtUnt,UndStratNo,UnitB,N002,1' in summary
+    assert 'matched,Mesozoic,Mesozoic,WithinStrt,WithinStNo,UnitC,N003,1' in summary
+    assert any('Records checked: 2' in msg for msg in dummy_logger.messages)

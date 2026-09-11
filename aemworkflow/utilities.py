@@ -61,6 +61,39 @@ def validate_shapefile(root_dir: str, logger_session=logger) -> bool:
     return True
 
 
+def check_shapefile_blank_rows(shp_file_path, logger_session=logger):
+    """
+    Checks for blank rows in the shapefile's attribute table and returns a list of FIDs to skip.
+    """
+    skipped_fids = []
+    line_name = Path(shp_file_path).stem.split('_')[0]
+
+    with fiona.open(shp_file_path) as src:
+        for row_number, feature in enumerate(src, start=1):
+            geometry_missing = feature['geometry'] is None
+
+            values = list(feature['properties'].values())[1:]
+            attributes_blank = all(value is None or str(value).strip() == '' for value in values)
+
+            if attributes_blank or geometry_missing:
+                skipped_fids.append(int(feature['id']))
+
+                if attributes_blank:
+                    logger_session.warning(
+                        f'Blank row detected in shapefile attributes table for line {line_name}, row {row_number}. '
+                        f'This blank row has been skipped to continue the conversion. '
+                        f'It is recommended to remove this blank row at the shapefile level.'
+                    )
+                else:
+                    logger_session.warning(
+                        f'Missing geometry detected in shapefile for line {line_name}, row {row_number}. '
+                        f'This feature has been skipped to continue the conversion. '
+                        f'It is recommended to correct the shapefile at the source.'
+                    )
+
+    return skipped_fids
+
+
 def run_command(cmd: List[str], logger_session=logger) -> None:
     """
     A helper function to run subprocess commands with error handling.

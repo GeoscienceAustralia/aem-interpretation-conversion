@@ -23,6 +23,7 @@ def test_active_shp_to_gmt(monkeypatch):
         command["command"] = cmd
 
     monkeypatch.setattr(interpretation, "validate_file", lambda x: True)
+    monkeypatch.setattr(interpretation, "check_shapefile_blank_rows", lambda *a, **k: [])
     monkeypatch.setattr(interpretation, "run_command", fake_run)
     monkeypatch.setattr(interpretation, "get_ogr_path", lambda: "ogr2ogr")
 
@@ -97,6 +98,9 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
 
     # Patch validate_shapefile to pass validation
     monkeypatch.setattr(interpretation, "validate_shapefile", lambda *a, **k: True)
+
+    # Patch check_shapefile_blank_rows to return no skipped FIDs
+    monkeypatch.setattr(interpretation, "check_shapefile_blank_rows", lambda *a, **k: [])
 
     # Patch geopandas.read_file to return a dummy GeoDataFrame
     class DummyGeoDF:
