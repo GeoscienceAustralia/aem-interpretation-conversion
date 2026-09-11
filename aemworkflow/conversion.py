@@ -127,13 +127,6 @@ def conversion_zedfix_gmt_to_srt(wrk_dir: str, path_dir: str, ext_file: str, log
 
                 fou.write(">\n")
                 logger_session.info(f"** Error count {ner} **\n")
-                # logger_session.info("** See z_err.log **\n")
-                # fou.write("# @D0|DNDUTL|||||||||||||||||||||MAL|\n")
-                # for i in range(frst, last + 1):
-                #     tmp = f"{-(row['t_top'].iloc[0] - tdf['gl'].iloc[i]) / y_scale: .6f}"\
-                #         .rstrip('0').rstrip('.')
-                #     fou.write(f"{i} {tmp}\n")
-                # fou.write(">\n")
 
         logger_session.info("Completed zedfix_gmt_to_srt conversion.")
 
