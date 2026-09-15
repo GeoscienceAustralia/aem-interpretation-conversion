@@ -234,7 +234,7 @@ def test_check_shapefile_blank_rows_no_blank_rows(tmp_path):
     shp_path.write_text("")
     features = [
         _make_fiona_feature(0, {'type': 'LineString', 'coordinates': [(0, 0), (1, 1)]},
-                            {'FID': 0, 'Type': 'BASE', 'BoundConf': 'H'}),
+                            {'id': 0, 'Type': 'BASE', 'BoundConf': 'H'}),
         _make_fiona_feature(1, {'type': 'LineString', 'coordinates': [(2, 2), (3, 3)]},
                             {'FID': 1, 'Type': 'WITHIN', 'BoundConf': 'M'}),
     ]
@@ -250,7 +250,7 @@ def test_check_shapefile_blank_rows_blank_attributes(tmp_path):
     shp_path.write_text("")
     features = [
         _make_fiona_feature(0, {'type': 'LineString', 'coordinates': [(0, 0), (1, 1)]},
-                            {'FID': 0, 'Type': None, 'BoundConf': ''}),
+                            {'id': 0, 'Type': None, 'BoundConf': ''}),
     ]
     logger_session.reset_mock()
     with mock.patch("aemworkflow.utilities.fiona.open") as mock_open:
@@ -266,7 +266,7 @@ def test_check_shapefile_blank_rows_missing_geometry(tmp_path):
     shp_path = tmp_path / "LN1_interp_001.shp"
     shp_path.write_text("")
     features = [
-        _make_fiona_feature(2, None, {'FID': 2, 'Type': 'BASE', 'BoundConf': 'H'}),
+        _make_fiona_feature(2, None, {'id': 2, 'Type': 'BASE', 'BoundConf': 'H'}),
     ]
     logger_session.reset_mock()
     with mock.patch("aemworkflow.utilities.fiona.open") as mock_open:
@@ -282,10 +282,10 @@ def test_check_shapefile_blank_rows_mixed(tmp_path):
     shp_path.write_text("")
     features = [
         _make_fiona_feature(0, {'type': 'LineString', 'coordinates': [(0, 0)]},
-                            {'FID': 0, 'Type': 'BASE', 'BoundConf': 'H'}),
-        _make_fiona_feature(1, None, {'FID': 1, 'Type': 'BASE', 'BoundConf': 'H'}),
+                            {'id': 0, 'Type': 'BASE', 'BoundConf': 'H'}),
+        _make_fiona_feature(1, None, {'id': 1, 'Type': 'BASE', 'BoundConf': 'H'}),
         _make_fiona_feature(2, {'type': 'LineString', 'coordinates': [(1, 1)]},
-                            {'FID': 2, 'Type': None, 'BoundConf': ''}),
+                            {'id': 2, 'Type': None, 'BoundConf': ''}),
     ]
     logger_session.reset_mock()
     with mock.patch("aemworkflow.utilities.fiona.open") as mock_open:
@@ -299,7 +299,7 @@ def test_check_shapefile_blank_rows_uses_stem_prefix_for_line_name(tmp_path):
     shp_path = tmp_path / "LN5_interp_001.shp"
     shp_path.write_text("")
     features = [
-        _make_fiona_feature(0, None, {'FID': 0, 'Type': 'BASE', 'BoundConf': 'H'}),
+        _make_fiona_feature(0, None, {'id': 0, 'Type': 'BASE', 'BoundConf': 'H'}),
     ]
     logger_session.reset_mock()
     with mock.patch("aemworkflow.utilities.fiona.open") as mock_open:

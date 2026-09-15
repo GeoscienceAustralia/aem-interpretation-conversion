@@ -2,6 +2,8 @@ import builtins
 import io
 import sys
 
+import fiona
+
 from aemworkflow import interpretation
 
 
@@ -168,3 +170,48 @@ def test_main_creates_outputs(monkeypatch, tmp_path):
     assert "layer interval" in out
     assert "layer count" in out
     assert "completed updating map" in out
+
+
+def test_active_shp_to_gmt_fiona_id_matches_ogr_fid(tmp_path):
+    shp_file_path = tmp_path / "input.shp"
+    gmt_file_path = tmp_path / "output.gmt"
+
+    schema = {
+        "geometry": "LineString",
+        "properties": {
+            "Id": "int",
+            "Type": "str",
+        },
+    }
+
+    features = [
+        {
+            "geometry": {"type": "LineString", "coordinates": [(0, 0), (1, 1)]},
+            "properties": {"Id": 0, "Type": "keep_1"},
+        },
+        {
+            "geometry": {"type": "LineString", "coordinates": [(1, 1), (2, 2)]},
+            "properties": {"Id": 0, "Type": None},
+        },
+        {
+            "geometry": {"type": "LineString", "coordinates": [(2, 2), (3, 3)]},
+            "properties": {"Id": 0, "Type": "keep_2"},
+        },
+    ]
+
+    with fiona.open(shp_file_path, "w", driver="ESRI Shapefile", schema=schema, crs="EPSG:4326") as dst:
+        dst.writerecords(features)
+
+    with fiona.open(shp_file_path) as src:
+        source_features = list(src)
+        blank_feature_id = source_features[1]["id"]
+
+    assert blank_feature_id == "1"
+
+    interpretation.active_shp_to_gmt(str(shp_file_path), str(gmt_file_path))
+
+    with fiona.open(gmt_file_path) as src:
+        remaining_types = [feature["properties"]["Type"] for feature in src]
+
+    assert remaining_types == ["keep_1", "keep_2"]
+    assert None not in remaining_types

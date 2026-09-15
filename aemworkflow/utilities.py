@@ -72,7 +72,11 @@ def check_shapefile_blank_rows(shp_file_path, logger_session=logger):
         for row_number, feature in enumerate(src, start=1):
             geometry_missing = feature['geometry'] is None
 
-            values = list(feature['properties'].values())[1:]
+            values = [
+                value
+                for field_name, value in feature['properties'].items()
+                if field_name.lower() != 'id'
+            ]
             attributes_blank = all(value is None or str(value).strip() == '' for value in values)
 
             if attributes_blank or geometry_missing:
