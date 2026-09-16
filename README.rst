@@ -197,18 +197,33 @@ Validation
 
     aemworkflow validate --i "{input_directory}" --o "{output_directory}" --a "{asud_filename}" --c "{confidence_filename}" --ct "{contact_filename}" --ib "{interp_basis_filename}"
 
+To also run ASUD geological era validation, provide one or more era lookup files:
+
+.. code-block:: bash
+
+    aemworkflow validate --i "{input_directory}" --o "{output_directory}" --a "{asud_filename}" --c "{confidence_filename}" --ct "{contact_filename}" --ib "{interp_basis_filename}" --cenozoic "{cenozoic_file}" --mesozoic "{mesozoic_file}" --paleozoic "{paleozoic_file}"
+
 **Parameter examples:**
 
 ============================= ============== =============== ========= =============================================
-Argument                      Required       Default         Options   Notes    
+Argument                      Required       Default         Options   Notes
 ============================= ============== =============== ========= =============================================
-input directory               Yes            None                      A non zipped folder containing required files 
-output directory              Yes            None                             
+input directory               Yes            None                      A non zipped folder containing required files
+output directory              Yes            None
 asud filename                 Yes            None
 confidence filename           Yes            None
 contact filename              Yes            None
 interp basis filename         Yes            None
-============================= ============== =============== ========= =============================================    
+--cenozoic                    No             None                      Path to Cenozoic ASUD era lookup CSV file
+--mesozoic                    No             None                      Path to Mesozoic ASUD era lookup CSV file
+--paleozoic                   No             None                      Path to Paleozoic ASUD era lookup CSV file
+--neoproterozoic              No             None                      Path to Neoproterozoic ASUD era lookup CSV file
+--mesoproterozoic             No             None                      Path to Mesoproterozoic ASUD era lookup CSV file
+--paleoproterozoic            No             None                      Path to Paleoproterozoic ASUD era lookup CSV file
+--archean                     No             None                      Path to Archean ASUD era lookup CSV file
+============================= ============== =============== ========= =============================================
+
+The era lookup flags are all optional. Only the eras whose flags are provided will be included in the geological era validation. If none are provided, the era validation step is skipped.
 
 Conversion
 -----------------------

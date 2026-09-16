@@ -7,9 +7,17 @@ from pathlib import Path
 
 import folium
 import geopandas
+from loguru import logger
 from osgeo import osr
 
-from aemworkflow.utilities import find_geometry_file, get_ogr_path, run_command, validate_file, validate_shapefile
+from aemworkflow.utilities import (
+    check_shapefile_blank_rows,
+    find_geometry_file,
+    get_ogr_path,
+    run_command,
+    validate_file,
+    validate_shapefile,
+)
 
 header = 0
 xpo = 0.5
@@ -32,10 +40,16 @@ def active_gmt_metadata_to_bdf(gmt_file_path, bdf_file_path, mode):
         sys.exit(1)
 
 
-def active_shp_to_gmt(shp_file_path, gmt_file_path):
+def active_shp_to_gmt(shp_file_path, gmt_file_path, logger_session=logger):
     cmd = [get_ogr_path(), "-f", "GMT", gmt_file_path, shp_file_path]
     if not validate_file(shp_file_path):
         return
+
+    skipped_fids = check_shapefile_blank_rows(shp_file_path, logger_session)
+    if skipped_fids:
+        fid_list = ','.join(str(fid) for fid in skipped_fids)
+        cmd = [get_ogr_path(), "-f", "GMT", "-where", f"FID NOT IN ({fid_list})", gmt_file_path, shp_file_path]
+
     run_command(cmd)
 
 

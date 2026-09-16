@@ -1,5 +1,6 @@
 import csv
 import os
+from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
@@ -300,6 +301,126 @@ def validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path
         raise
 
 
+def validation_asud_eras(bdf_2_file_path, validation_dir, asud_era_file_paths, logger_session=logger):
+    logger_session.info("Running ASUD geological Era validation.")
+
+    try:
+        qc_outputs_path = os.path.join(validation_dir, 'qc') + os.sep
+        Path(qc_outputs_path).mkdir(parents=True, exist_ok=True)
+
+        era_by_name = defaultdict(set)
+        era_by_number = defaultdict(set)
+
+        for era, era_file_path in asud_era_file_paths.items():
+            with open(era_file_path, 'r', encoding='utf-8-sig', newline='') as strat_file:
+                reader = csv.DictReader(strat_file)
+
+                for row in reader:
+                    strat_name = row['STRATIGRAPHIC NAME'].strip()
+                    strat_no = row['STRAT NO'].strip()
+                    era_by_name[strat_name].add(era)
+                    era_by_number[strat_no].add(era)
+
+        d = date.today().strftime("%Y%m%d")
+        age_summary_file = fr'{qc_outputs_path}ASUD_age_validation_summary_{d}.txt'
+        error_list_path = fr'{qc_outputs_path}error_list.log'
+
+        age_summary = {}
+
+        era_rules = {
+            'over': {'name_field': 'OvrStrtUnt', 'name_index': 7, 'no_field': 'OvrStratNo', 'no_index': 8},
+            'under': {'name_field': 'UndStrtUnt', 'name_index': 10, 'no_field': 'UndStratNo', 'no_index': 11},
+            'within': {'name_field': 'WithinStrt', 'name_index': 13, 'no_field': 'WithinStNo', 'no_index': 14},
+        }
+
+        record_count = 0
+        age_error_count = 0
+        malformed_record_count = 0
+
+        with (open(bdf_2_file_path, 'r', encoding='utf-8', errors='replace') as bdf_file,
+              open(error_list_path, 'a', encoding='utf-8') as error_list_file):
+            for line in bdf_file:
+                record_count += 1
+                record_line = line.rstrip('\r\n')
+                fields = record_line.split('|')
+
+                if len(fields) != 26:
+                    malformed_record_count += 1
+                    continue
+
+                type_value = fields[3].strip()
+                interpreted_eras = {}
+
+                if type_value.startswith('BASE_') and '_TOP_' in type_value:
+                    over_era, under_era = type_value.removeprefix('BASE_').split('_TOP_', 1)
+                    interpreted_eras['over'] = over_era
+                    interpreted_eras['under'] = under_era
+
+                elif type_value.startswith('WITHIN_'):
+                    within_era = type_value.removeprefix('WITHIN_')
+                    interpreted_eras['over'] = within_era
+                    interpreted_eras['under'] = within_era
+                    interpreted_eras['within'] = within_era
+
+                for field_group, interpreted_era in interpreted_eras.items():
+                    validation_rule = era_rules[field_group]
+
+                    name_field = validation_rule['name_field']
+                    no_field = validation_rule['no_field']
+                    strat_name = fields[validation_rule['name_index']].strip()
+                    strat_no = fields[validation_rule['no_index']].strip()
+
+                    if not strat_name or not strat_no:
+                        continue
+
+                    name_eras = era_by_name.get(strat_name, set())
+                    number_eras = era_by_number.get(strat_no, set())
+                    asud_eras = name_eras & number_eras
+
+                    if not asud_eras:
+                        continue
+                    asud_era_text = ';'.join(sorted(asud_eras))
+
+                    if interpreted_era in asud_eras:
+                        result = 'matched'
+                    else:
+                        result = 'age mismatch'
+
+                    age_key = (result, interpreted_era, asud_era_text, name_field, no_field, strat_name, strat_no)
+                    age_summary[age_key] = age_summary.get(age_key, 0) + 1
+
+                    if result != 'matched':
+                        age_error_count += 1
+                        error_result = f'age mismatch - interpreted: {interpreted_era}, ASUD: {asud_era_text}'
+                        _write_validation_error(error_list_file, field_group, error_result, name_field, strat_name,
+                                                no_field, strat_no, fields)
+
+        if malformed_record_count:
+            logger_session.warning(f'Found {malformed_record_count} malformed BDF records during ASUD Era validation.')
+
+        _write_age_validation_summary(age_summary_file, age_summary, logger_session)
+
+        logger_session.info(f'Completed ASUD geological Era validation. Records checked: {record_count}. '
+                            f'Age errors: {age_error_count}. Malformed records: {malformed_record_count}.')
+
+    except Exception as e:
+        logger_session.error(f'Error during ASUD geological Era validation: {e}')
+        raise
+
+
+def _write_age_validation_summary(summary_file_path, age_summary, logger_session=logger):
+    with open(summary_file_path, 'w', encoding='utf-8', newline='') as summary_file:
+        writer = csv.writer(summary_file)
+        writer.writerow(['result', 'interpretation value', 'ASUD value', 'field 1', 'field 2', 'strat unit', 'strat no',
+                         'count'])
+
+        for summary_key, count in age_summary.items():
+            result, interpreted_era, asud_era, name_field, no_field, strat_name, strat_no = summary_key
+            logger_session.info(f'{result},{interpreted_era},{asud_era},{name_field},{no_field},{strat_name},{strat_no}'
+                                f',{count}')
+            writer.writerow([result, interpreted_era, asud_era, name_field, no_field, strat_name, strat_no, count])
+
+
 def _write_validation_summary(summary_file_path, validation_summary, logger_session=logger):
     with open(summary_file_path, 'w', encoding='utf-8', newline='') as summary_file:
         writer = csv.writer(summary_file)
@@ -366,7 +487,8 @@ def _load_lookup_values(lookup_file_path):
     return lookup_values
 
 
-def main(input_directory, output_directory, asud, confidence_lookup, contact_type_lookup, interpretation_basis_lookup):
+def main(input_directory, output_directory, asud, confidence_lookup, contact_type_lookup, interpretation_basis_lookup, 
+         asud_era_lookups=None):
     bdf_file_path = fr'{output_directory}{os.sep}interp{os.sep}met.bdf'
     qc_output_dir = fr'{output_directory}{os.sep}qc'
 
@@ -384,6 +506,9 @@ def main(input_directory, output_directory, asud, confidence_lookup, contact_typ
     validation_qc_units(erc_file_path, bdf_out_file_path, output_directory)
     validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path, interpretation_basis_lookup_path,
                                 bdf_out_file_path, output_directory)
+    if asud_era_lookups:
+        validation_asud_eras(bdf_out_file_path, output_directory, asud_era_lookups)
+
     finalise_error_log(qc_output_dir)
 
 

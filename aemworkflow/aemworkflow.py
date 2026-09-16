@@ -54,10 +54,30 @@ def interpret(input_directory, output_directory, crs="28349", gis="esri_arcmap_0
 @click.option("--c", "confidence_filename", type=click.Path(exists=True), required=True)
 @click.option("--ct", "contact_filename", type=click.Path(exists=True), required=True)
 @click.option("--ib", "interp_filename", type=click.Path(exists=True), required=True)
-def validate(input_directory, output_directory, asud_filename, confidence_filename, contact_filename, interp_filename):
+@click.option("--cenozoic", type=click.Path(exists=True), required=False)
+@click.option("--mesozoic", type=click.Path(exists=True), required=False)
+@click.option("--paleozoic", type=click.Path(exists=True), required=False)
+@click.option("--neoproterozoic", type=click.Path(exists=True), required=False)
+@click.option("--mesoproterozoic", type=click.Path(exists=True), required=False)
+@click.option("--paleoproterozoic", type=click.Path(exists=True), required=False)
+@click.option("--archean", type=click.Path(exists=True), required=False)
+def validate(input_directory, output_directory, asud_filename, confidence_filename, contact_filename, interp_filename,
+             cenozoic, mesozoic, paleozoic, neoproterozoic, mesoproterozoic, paleoproterozoic, archean):
     try:
+        asud_era_file_paths = {
+            'Cenozoic': cenozoic,
+            'Mesozoic': mesozoic,
+            'Paleozoic': paleozoic,
+            'Neoproterozoic': neoproterozoic,
+            'Mesoproterozoic': mesoproterozoic,
+            'Paleoproterozoic': paleoproterozoic,
+            'Archean': archean,
+        }
+
+        asud_era_file_paths = {era: path for era, path in asud_era_file_paths.items() if path}
+
         validation(input_directory, output_directory, asud_filename, confidence_filename, contact_filename,
-                   interp_filename)
+                   interp_filename, asud_era_file_paths)
         click.echo("Completed validation")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)

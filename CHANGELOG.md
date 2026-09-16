@@ -19,6 +19,12 @@ All new CLI commands and usage examples are documented in [README.rst](README.rs
 
 - `Confidence_validation_summary_{date}.txt`, `Contact_type_validation_summary_{date}.txt`, `Interpretation_basis_validation_summary_{date}.txt`, `Comma_validation_summary_{date}.txt`, and `error_list.log` are now produced by `validate`.
 
+- **ASUD geological Era validation**: new validation checks whether interpreted stratigraphic units are consistent with the geological Era assigned in the interpretation `Type` field. For `BASE_<OVER_ERA>_TOP_<UNDER_ERA>` records, the overlying stratigraphic unit is checked against the overlying Era and the underlying stratigraphic unit is checked against the underlying Era. For `WITHIN_<ERA>` records, all populated stratigraphic unit fields (overlying, underlying, and within) are checked against the specified Era.
+
+- The Era validation supports the following geological Eras: `Cenozoic`, `Mesozoic`, `Paleozoic`, `Neoproterozoic`, `Mesoproterozoic`, `Paleoproterozoic`, and `Archean`.
+
+- A new `ASUD_age_validation_summary_{date}.txt` file is produced. The summary contains separate fields for `result`, `interpretation value`, `ASUD value`, `field 1`, `field 2`, `strat unit`, `strat no`, and `count`. Age mismatches are also written to `error_list.log`.
+
 ### Breaking changes
 
 - **`validate` CLI command** now requires three additional options: `--c` (confidence lookup file), `--ct` (contact-type lookup file), `--ib` (interpretation-basis lookup file). Existing invocations without these will fail with a missing-option error.
@@ -36,6 +42,8 @@ All new CLI commands and usage examples are documented in [README.rst](README.rs
 - `validate` now requires a confidence lookup file (`--c`), a contact-type lookup file (`--ct`), and an interpretation-basis lookup file (`--ib`), in addition to the existing ASUD file (`--a`).
 - These three lookup files will be made available for download from the eCat dependencies page.
 
+- `validate` supports optional ASUD Era lookup files for geological Era validation using `--cenozoic`, `--mesozoic`, `--paleozoic`, `--neoproterozoic`, `--mesoproterozoic`, `--paleoproterozoic`, and `--archean`.
+
 
 ### Fixed
 
@@ -45,6 +53,7 @@ All new CLI commands and usage examples are documented in [README.rst](README.rs
 - `validation_qc_units` ASUD lookup and summary logic has changed for blank strat unit/number fields. Each strat name/number pair is now evaluated as follows: if both the strat unit and strat number are blank, the pair is skipped entirely (no ASUD lookup, no entry in the summary); if only one of the pair is blank, the pair is still checked and reported as "no match"; if both are populated, the pair is checked against ASUD as normal and reported as matched or no match. Previously, blank pairs could still be counted in the `ASUD_validation_summary`, even though no ASUD lookup was actually performed for them. The `ASUD_validation_summary` now only reflects strat unit/number pairs that were actually checked against ASUD, so summary counts from v2 and v3 are not directly comparable.
 - Fixed CLI export skipping the first survey line.
 - Fixed MDC/MDCH metadata headers being misaligned with the data values written beneath them (e.g. `*metadata*BoundaryNm` was previously printing the `BoundConf` value); headers now correctly correspond to the field written on each line, and several previously-missing fields (`ContactTyp`, `HydStrtType`, `HydStrConf`, `BOMNAFUnt`, `BOMNAFNo`, `OverAge`, `UnderAge`, `Date`) are now included.
+- Interpretation shapefiles containing blank attribute rows or features with missing geometry no longer cause the SHP-to-GMT conversion to fail. Before conversion, affected features are identified and their FIDs are excluded from the GMT conversion while the remaining features continue to process normally.
 
 ### Migration guide
 
@@ -55,3 +64,5 @@ All new CLI commands and usage examples are documented in [README.rst](README.rs
 3. Use `--es` if GA Portal / Earth Sciences output is required.
 
 4. Use `--3d` for per-line 3D shapefile output. Specify `--crs` if a CRS other than the default EPSG:28349 is required.
+
+5. For geological Era validation, provide the required ASUD Era lookup files using the applicable `--cenozoic`, `--mesozoic`, `--paleozoic`, `--neoproterozoic`, `--mesoproterozoic`, `--paleoproterozoic`, and `--archean` options.
