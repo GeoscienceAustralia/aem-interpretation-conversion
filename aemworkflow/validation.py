@@ -336,6 +336,8 @@ def validation_asud_eras(bdf_2_file_path, validation_dir, asud_era_file_paths, l
         record_count = 0
         age_error_count = 0
         malformed_record_count = 0
+        skipped_era_validation_count = 0
+        available_eras = set(asud_era_file_paths)
 
         with (open(bdf_2_file_path, 'r', encoding='utf-8', errors='replace') as bdf_file,
               open(error_list_path, 'a', encoding='utf-8') as error_list_file):
@@ -353,16 +355,17 @@ def validation_asud_eras(bdf_2_file_path, validation_dir, asud_era_file_paths, l
 
                 if type_value.startswith('BASE_') and '_TOP_' in type_value:
                     over_era, under_era = type_value.removeprefix('BASE_').split('_TOP_', 1)
-                    interpreted_eras['over'] = over_era
-                    interpreted_eras['under'] = under_era
+                    interpreted_eras['over'] = {over_era}
+                    interpreted_eras['under'] = {under_era}
+                    interpreted_eras['within'] = {over_era, under_era}
 
                 elif type_value.startswith('WITHIN_'):
                     within_era = type_value.removeprefix('WITHIN_')
-                    interpreted_eras['over'] = within_era
-                    interpreted_eras['under'] = within_era
-                    interpreted_eras['within'] = within_era
+                    interpreted_eras['over'] = {within_era}
+                    interpreted_eras['under'] = {within_era}
+                    interpreted_eras['within'] = {within_era}
 
-                for field_group, interpreted_era in interpreted_eras.items():
+                for field_group, expected_eras in interpreted_eras.items():
                     validation_rule = era_rules[field_group]
 
                     name_field = validation_rule['name_field']
@@ -373,35 +376,48 @@ def validation_asud_eras(bdf_2_file_path, validation_dir, asud_era_file_paths, l
                     if not strat_name or not strat_no:
                         continue
 
+                    # All expected era files must be available before this field can be validated.
+                    if not expected_eras.issubset(available_eras):
+                        skipped_era_validation_count += 1
+                        continue
+
                     name_eras = era_by_name.get(strat_name, set())
                     number_eras = era_by_number.get(strat_no, set())
                     asud_eras = name_eras & number_eras
 
                     if not asud_eras:
                         continue
+
+                    interpreted_era_text = ';'.join(sorted(expected_eras))
                     asud_era_text = ';'.join(sorted(asud_eras))
 
-                    if interpreted_era in asud_eras:
+                    if expected_eras.issubset(asud_eras):
                         result = 'matched'
                     else:
                         result = 'age mismatch'
 
-                    age_key = (result, interpreted_era, asud_era_text, name_field, no_field, strat_name, strat_no)
+                    age_key = (result, interpreted_era_text, asud_era_text, name_field, no_field, strat_name, strat_no)
                     age_summary[age_key] = age_summary.get(age_key, 0) + 1
 
-                    if result != 'matched':
+                    if result == 'age mismatch':
                         age_error_count += 1
-                        error_result = f'age mismatch - interpreted: {interpreted_era}, ASUD: {asud_era_text}'
+                        error_result = f'age mismatch - interpreted: {interpreted_era_text}, ASUD: {asud_era_text}'
                         _write_validation_error(error_list_file, field_group, error_result, name_field, strat_name,
                                                 no_field, strat_no, fields)
 
         if malformed_record_count:
             logger_session.warning(f'Found {malformed_record_count} malformed BDF records during ASUD Era validation.')
 
+        if skipped_era_validation_count:
+            logger_session.warning(f'Skipped {skipped_era_validation_count} ASUD Era field validations because the '
+                                   'required era lookup files were unavailable.')
+
         _write_age_validation_summary(age_summary_file, age_summary, logger_session)
 
         logger_session.info(f'Completed ASUD geological Era validation. Records checked: {record_count}. '
-                            f'Age errors: {age_error_count}. Malformed records: {malformed_record_count}.')
+                            f'Age errors: {age_error_count}. '
+                            f'Skipped validations: {skipped_era_validation_count}. '
+                            f'Malformed records: {malformed_record_count}.')
 
     except Exception as e:
         logger_session.error(f'Error during ASUD geological Era validation: {e}')
