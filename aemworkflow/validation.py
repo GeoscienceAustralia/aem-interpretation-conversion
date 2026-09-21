@@ -1,7 +1,8 @@
 import csv
 import os
+import re
 from collections import defaultdict
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from loguru import logger
@@ -424,6 +425,79 @@ def validation_asud_eras(bdf_2_file_path, validation_dir, asud_era_file_paths, l
         raise
 
 
+def validation_operator_date_fields(bdf_2_file_path, validation_dir, logger_session=logger):
+    logger_session.info("Running Operator and Date validation.")
+
+    try:
+        qc_outputs_path = os.path.join(validation_dir, 'qc') + os.sep
+        Path(qc_outputs_path).mkdir(parents=True, exist_ok=True)
+
+        d = date.today().strftime('%Y%m%d')
+        operator_summary_file = fr'{qc_outputs_path}Operator_validation_summary_{d}.txt'
+        date_summary_file = fr'{qc_outputs_path}Date_validation_summary_{d}.txt'
+        error_list_path = fr'{qc_outputs_path}error_list.log'
+
+        operator_summary = {}
+        date_summary = {}
+
+        record_count = 0
+        operator_error_count = 0
+        date_error_count = 0
+
+        with (open(bdf_2_file_path, 'r', encoding='utf-8', errors='replace') as bdf_file,
+              open(error_list_path, 'a', encoding='utf-8') as error_list_file):
+
+            for line in bdf_file:
+                record_count += 1
+                fields = line.rstrip('\r\n').split('|')
+
+                if len(fields) != 26:
+                    continue
+
+                operator = fields[24].strip()
+                operator_result = 'matched' if operator else 'missing'
+                operator_key = ('Operator', operator_result, operator)
+                operator_summary[operator_key] = operator_summary.get(operator_key, 0) + 1
+
+                if operator_result == 'missing':
+                    operator_error_count += 1
+                    _write_validation_error(error_list_file, 'operator', 'missing', 'Operator', '<blank>', 'N/A', 'N/A',
+                                             fields)
+
+                date_value = fields[25].strip()
+
+                if not date_value:
+                    date_result = 'missing'
+                elif not re.fullmatch(r'\d{2}/\d{2}/\d{4}', date_value):
+                    date_result = 'invalid format'
+                else:
+                    try:
+                        datetime.strptime(date_value, '%d/%m/%Y')
+                        date_result = 'matched'
+                    except ValueError:
+                        date_result = 'invalid date'
+
+                date_key = ('Date', date_result, date_value)
+                date_summary[date_key] = date_summary.get(date_key, 0) + 1
+
+                if date_result != 'matched':
+                    date_error_count += 1
+                    _write_validation_error(error_list_file, 'date', date_result, 'Date', date_value or '<blank>',
+                                            'ExpectedFormat', 'DD/MM/YYYY', fields)
+
+        _write_validation_summary(operator_summary_file, operator_summary, logger_session)
+        _write_validation_summary(date_summary_file, date_summary, logger_session)
+
+        logger_session.info(f'Completed Operator and Date validation. '
+                            f'Records checked: {record_count}. '
+                            f'Operator errors: {operator_error_count}. '
+                            f'Date errors: {date_error_count}.')
+
+    except Exception as e:
+        logger_session.error(f'Error during Operator and Date validation: {e}')
+        raise
+
+
 def _write_age_validation_summary(summary_file_path, age_summary, logger_session=logger):
     with open(summary_file_path, 'w', encoding='utf-8', newline='') as summary_file:
         writer = csv.writer(summary_file)
@@ -522,6 +596,7 @@ def main(input_directory, output_directory, asud, confidence_lookup, contact_typ
     validation_qc_units(erc_file_path, bdf_out_file_path, output_directory)
     validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path, interpretation_basis_lookup_path,
                                 bdf_out_file_path, output_directory)
+    validation_operator_date_fields(bdf_out_file_path, output_directory)
     if asud_era_lookups:
         validation_asud_eras(bdf_out_file_path, output_directory, asud_era_lookups)
 
