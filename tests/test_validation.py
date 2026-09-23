@@ -379,7 +379,7 @@ def test_validation_mandatory_fields_multiple_interpretation_basis_values(tmp_pa
     assert "interpretation basis|no match|BasisOfInt|AEM|N/A|N/A|" in error_log
 
 
-def test_validation_mandatory_fields_detects_comma_and_field_name(tmp_path, dummy_logger):
+def test_validation_basic_fields_detects_comma_and_field_name(tmp_path, dummy_logger):
     qc_dir = tmp_path / "qc"
     qc_dir.mkdir()
 
@@ -397,8 +397,7 @@ def test_validation_mandatory_fields_detects_comma_and_field_name(tmp_path, dumm
     bdf_path.write_text("|".join(fields) + "\n", encoding="utf-8")
 
     validation.initialise_error_log(qc_dir)
-    validation.validation_mandatory_fields(confidence_lookup, contact_lookup, interp_lookup, bdf_path, tmp_path,
-                                           dummy_logger)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
 
     d = date.today().strftime("%Y%m%d")
     comma_summary = (qc_dir / f"Comma_validation_summary_{d}.txt").read_text(encoding="utf-8")
@@ -438,31 +437,6 @@ def test_validation_mandatory_fields_missing_contact_and_basis(tmp_path, dummy_l
     assert "missing,BasisOfInt,,1" in interp_summary
 
 
-def test_validation_mandatory_fields_malformed_record(tmp_path, dummy_logger):
-    qc_dir = tmp_path / "qc"
-    qc_dir.mkdir()
-
-    confidence_lookup = tmp_path / "LU_CONFIDENCE.txt"
-    contact_lookup = tmp_path / "LU_CONTACT_TYPES.txt"
-    interp_lookup = tmp_path / "LU_INTERP_BASIS.txt"
-    bdf_path = qc_dir / "met2.bdf"
-
-    _write_lookup_file(confidence_lookup, ["H"])
-    _write_lookup_file(contact_lookup, ["unc"])
-    _write_lookup_file(interp_lookup, ["IAEM"])
-
-    bdf_path.write_text("flight|1|# @D0\n", encoding="utf-8")
-
-    validation.initialise_error_log(qc_dir)
-    validation.validation_mandatory_fields(confidence_lookup, contact_lookup, interp_lookup, bdf_path, tmp_path,
-                                           dummy_logger)
-
-    error_log = (qc_dir / "error_list.log").read_text(encoding="utf-8")
-
-    assert "bdf|incorrect field count|BDFFieldCount|3|N/A|N/A|" in error_log
-    assert "Found 1 malformed BDF records." in dummy_logger.messages
-
-
 def test_validation_main_removes_quotes_and_validates(tmp_path):
     input_dir = str(tmp_path)
     output_dir = str(tmp_path)
@@ -479,14 +453,16 @@ def test_validation_main_removes_quotes_and_validates(tmp_path):
         with mock.patch("aemworkflow.validation.initialise_error_log") as initialise_error_log:
             with mock.patch("aemworkflow.validation.validation_qc_units") as qc_units:
                 with mock.patch("aemworkflow.validation.validation_mandatory_fields") as mandatory_fields:
-                    with mock.patch("aemworkflow.validation.finalise_error_log"):
-                        validation.main(input_dir, output_dir, "test.asud", "LU_CONFIDENCE.txt", "LU_CONTACT_TYPES.txt",
-                                        "LU_INTERP_BASIS.txt")
+                    with mock.patch("aemworkflow.validation.validation_basic_fields") as basic_fields:
+                        with mock.patch("aemworkflow.validation.finalise_error_log"):
+                            validation.main(input_dir, output_dir, "test.asud", "LU_CONFIDENCE.txt",
+                                            "LU_CONTACT_TYPES.txt", "LU_INTERP_BASIS.txt")
 
     remove_quotes.assert_called_once_with(bdf_path, bdf_out_path)
     initialise_error_log.assert_called_once_with(qc_output_dir)
     qc_units.assert_called_once_with(erc_path, bdf_out_path, output_dir)
     mandatory_fields.assert_called_once_with(confidence_path, contact_path, interp_path, bdf_out_path, output_dir)
+    basic_fields.assert_called_once_with(bdf_out_path, output_dir)
 
 
 def test_finalise_error_log_adds_error_counts(tmp_path):
@@ -834,3 +810,185 @@ def test_validation_asud_eras_multiple_era_files(tmp_path, dummy_logger):
     assert 'matched,Paleozoic,Paleozoic,UndStrtUnt,UndStratNo,UnitB,N002,1' in summary
     assert 'matched,Mesozoic,Mesozoic,WithinStrt,WithinStNo,UnitC,N003,1' in summary
     assert any('Records checked: 2' in msg for msg in dummy_logger.messages)
+
+
+# ---------------------------------------------------------------------------
+# validation_basic_fields — operator and date
+# ---------------------------------------------------------------------------
+
+def _make_op_date_record(operator='GA', date_value='11/08/2026'):
+    fields = [''] * 26
+    fields[0] = '5001001_interp.gmt'
+    fields[1] = '1'
+    fields[2] = '# @D0'
+    fields[3] = 'BASE_Cenozoic_TOP_Paleozoic'
+    fields[24] = operator
+    fields[25] = date_value
+    return '|'.join(fields)
+
+
+def test_validation_basic_fields_operator_date_matched(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+
+    bdf_path.write_text(_make_op_date_record('GA', '15/03/2025') + '\n', encoding='utf-8')
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    op_summary = (qc_dir / f'Operator_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    dt_summary = (qc_dir / f'Date_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'matched,Operator,GA,1' in op_summary
+    assert 'matched,Date,15/03/2025,1' in dt_summary
+    assert 'operator' not in error_log
+    assert 'date' not in error_log
+    assert 'Running basic BDF field validation.' in dummy_logger.messages
+    assert any('Records checked: 1' in msg for msg in dummy_logger.messages)
+    assert any('Operator errors: 0' in msg for msg in dummy_logger.messages)
+    assert any('Date errors: 0' in msg for msg in dummy_logger.messages)
+
+
+def test_validation_basic_fields_missing_operator(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+
+    bdf_path.write_text(_make_op_date_record(operator='', date_value='11/08/2026') + '\n', encoding='utf-8')
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    op_summary = (qc_dir / f'Operator_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'missing,Operator,,1' in op_summary
+    assert 'operator|missing|Operator|<blank>|N/A|N/A|' in error_log
+    assert any('Operator errors: 1' in msg for msg in dummy_logger.messages)
+
+
+def test_validation_basic_fields_missing_date(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+
+    bdf_path.write_text(_make_op_date_record(operator='GA', date_value='') + '\n', encoding='utf-8')
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    dt_summary = (qc_dir / f'Date_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'missing,Date,,1' in dt_summary
+    assert 'date|missing|Date|<blank>|ExpectedFormat|DD/MM/YYYY|' in error_log
+    assert any('Date errors: 1' in msg for msg in dummy_logger.messages)
+
+
+def test_validation_basic_fields_invalid_date_format(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+
+    bdf_path.write_text(_make_op_date_record(operator='GA', date_value='2026-08-11') + '\n', encoding='utf-8')
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    dt_summary = (qc_dir / f'Date_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'invalid format,Date,2026-08-11,1' in dt_summary
+    assert 'date|invalid format|Date|2026-08-11|ExpectedFormat|DD/MM/YYYY|' in error_log
+    assert any('Date errors: 1' in msg for msg in dummy_logger.messages)
+
+
+def test_validation_basic_fields_invalid_date_value(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+
+    # Matches DD/MM/YYYY format but is a logically invalid calendar date
+    bdf_path.write_text(_make_op_date_record(operator='GA', date_value='31/02/2025') + '\n', encoding='utf-8')
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    dt_summary = (qc_dir / f'Date_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'invalid date,Date,31/02/2025,1' in dt_summary
+    assert 'date|invalid date|Date|31/02/2025|ExpectedFormat|DD/MM/YYYY|' in error_log
+    assert any('Date errors: 1' in msg for msg in dummy_logger.messages)
+
+
+def test_validation_basic_fields_future_date_value(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+
+    bdf_path.write_text(_make_op_date_record(operator='GA', date_value='01/01/3025') + '\n', encoding='utf-8')
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    dt_summary = (qc_dir / f'Date_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'future date,Date,01/01/3025,1' in dt_summary
+    assert 'date|future date|Date|01/01/3025|CurrentDate|' in error_log
+    assert any('Date errors: 1' in msg for msg in dummy_logger.messages)
+
+
+def test_validation_basic_fields_malformed_record(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+
+    bdf_path.write_text('flight|1|# @D0\n', encoding='utf-8')
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    op_summary = (qc_dir / f'Operator_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    dt_summary = (qc_dir / f'Date_validation_summary_{d}.txt').read_text(encoding='utf-8')
+
+    assert op_summary.strip() == 'result,field,value,count'
+    assert dt_summary.strip() == 'result,field,value,count'
+    assert any('Records checked: 1' in msg for msg in dummy_logger.messages)
+
+
+def test_validation_basic_fields_operator_date_multiple_records(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+
+    bdf_path.write_text(
+        _make_op_date_record('GA', '01/01/2024') + '\n' +
+        _make_op_date_record('', '99/99/9999') + '\n',
+        encoding='utf-8'
+    )
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    op_summary = (qc_dir / f'Operator_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    dt_summary = (qc_dir / f'Date_validation_summary_{d}.txt').read_text(encoding='utf-8')
+
+    assert 'matched,Operator,GA,1' in op_summary
+    assert 'missing,Operator,,1' in op_summary
+    assert 'matched,Date,01/01/2024,1' in dt_summary
+    assert 'invalid date,Date,99/99/9999,1' in dt_summary
+    assert any('Records checked: 2' in msg for msg in dummy_logger.messages)
+    assert any('Operator errors: 1' in msg for msg in dummy_logger.messages)
+    assert any('Date errors: 1' in msg for msg in dummy_logger.messages)
