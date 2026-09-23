@@ -1,7 +1,8 @@
 import csv
 import os
+import re
 from collections import defaultdict
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from loguru import logger
@@ -175,13 +176,11 @@ def validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path
         confidence_summary_file = fr'{qc_outputs_path}Confidence_validation_summary_{d}.txt'
         contact_summary_file = fr'{qc_outputs_path}Contact_type_validation_summary_{d}.txt'
         interpretation_basis_summary_file = fr'{qc_outputs_path}Interpretation_basis_validation_summary_{d}.txt'
-        comma_summary_file = fr'{qc_outputs_path}Comma_validation_summary_{d}.txt'
         error_list_path = fr'{qc_outputs_path}error_list.log'
 
         confidence_summary = {}
         contact_summary = {}
         interp_basis_summary = {}
-        comma_summary = {}
 
         confidence_rules = {
             'BoundConf': {'field_index': 4, 'related_unit_index': None},
@@ -194,8 +193,6 @@ def validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path
         confidence_error_count = 0
         contact_error_count = 0
         interp_basis_error_count = 0
-        comma_error_count = 0
-        malformed_record_count = 0
 
         with (open(bdf_2_file_path, 'r', encoding='utf-8', errors='replace') as bdf_file,
               open(error_list_path, 'a', encoding='utf-8') as error_list_file):
@@ -205,21 +202,7 @@ def validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path
                 fields = record_line.split('|')
 
                 if len(fields) != 26:
-                    malformed_record_count += 1
-                    _write_validation_error(error_list_file, 'bdf', 'incorrect field count', 'BDFFieldCount',
-                                            str(len(fields)), 'N/A', 'N/A', fields)
                     continue
-
-                for field_index, field_value in enumerate(fields):
-                    if ',' not in field_value:
-                        continue
-
-                    comma_error_count += 1
-                    comma_field_name = BDF_FIELD_NAMES[field_index]
-                    comma_key = (comma_field_name, 'comma found', field_value)
-                    comma_summary[comma_key] = comma_summary.get(comma_key, 0) + 1
-                    _write_validation_error(error_list_file, 'comma', 'comma found', comma_field_name, field_value,
-                                            'N/A', 'N/A', fields)
 
                 for field_name, validation_rule in confidence_rules.items():
                     field_index = validation_rule['field_index']
@@ -281,20 +264,14 @@ def validation_mandatory_fields(confidence_lookup_path, contact_type_lookup_path
                             _write_validation_error(error_list_file, 'interpretation basis', 'no match', 'BasisOfInt',
                                                     basis_value or '<blank>', 'N/A', 'N/A', fields)
 
-        if malformed_record_count:
-            logger_session.warning(f'Found {malformed_record_count} malformed BDF records.')
-
         _write_validation_summary(confidence_summary_file, confidence_summary, logger_session)
         _write_validation_summary(contact_summary_file, contact_summary, logger_session)
         _write_validation_summary(interpretation_basis_summary_file, interp_basis_summary, logger_session)
-        _write_validation_summary(comma_summary_file, comma_summary, logger_session)
 
         logger_session.info(f'Completed mandatory field validation. Records checked: {record_count}. '
                             f'Confidence errors:{confidence_error_count}. '
                             f'Contact type errors: {contact_error_count}. '
-                            f'Interpretation basis errors: {interp_basis_error_count}. '
-                            f'Comma errors: {comma_error_count}. '
-                            f'Malformed records: {malformed_record_count}. ')
+                            f'Interpretation basis errors: {interp_basis_error_count}.')
 
     except Exception as e:
         logger_session.error(f'Error during mandatory field validation: {e}')
@@ -424,6 +401,108 @@ def validation_asud_eras(bdf_2_file_path, validation_dir, asud_era_file_paths, l
         raise
 
 
+def validation_basic_fields(bdf_2_file_path, validation_dir, logger_session=logger):
+    logger_session.info("Running basic BDF field validation.")
+
+    try:
+        qc_outputs_path = os.path.join(validation_dir, 'qc') + os.sep
+        Path(qc_outputs_path).mkdir(parents=True, exist_ok=True)
+
+        d = date.today().strftime('%Y%m%d')
+        comma_summary_file = fr'{qc_outputs_path}Comma_validation_summary_{d}.txt'
+        operator_summary_file = fr'{qc_outputs_path}Operator_validation_summary_{d}.txt'
+        date_summary_file = fr'{qc_outputs_path}Date_validation_summary_{d}.txt'
+        error_list_path = fr'{qc_outputs_path}error_list.log'
+
+        comma_summary = {}
+        operator_summary = {}
+        date_summary = {}
+
+        record_count = 0
+        malformed_record_count = 0
+        comma_error_count = 0
+        operator_error_count = 0
+        date_error_count = 0
+
+        with (open(bdf_2_file_path, 'r', encoding='utf-8', errors='replace') as bdf_file,
+              open(error_list_path, 'a', encoding='utf-8') as error_list_file):
+
+            for line in bdf_file:
+                record_count += 1
+                fields = line.rstrip('\r\n').split('|')
+
+                if len(fields) != 26:
+                    malformed_record_count += 1
+                    _write_validation_error(error_list_file, 'bdf', 'incorrect field count', 'BDFFieldCount',
+                                            str(len(fields)), 'ExpectedFieldCount', '26', fields)
+                    continue
+
+                for field_index, field_value in enumerate(fields):
+                    if ',' not in field_value:
+                        continue
+
+                    comma_error_count += 1
+                    comma_field_name = BDF_FIELD_NAMES[field_index]
+                    comma_key = (comma_field_name, 'comma found', field_value)
+                    comma_summary[comma_key] = comma_summary.get(comma_key, 0) + 1
+                    _write_validation_error(error_list_file, 'comma', 'comma found', comma_field_name, field_value,
+                                            'N/A', 'N/A', fields)
+
+                operator = fields[24].strip()
+                operator_result = 'matched' if operator else 'missing'
+                operator_key = ('Operator', operator_result, operator)
+                operator_summary[operator_key] = operator_summary.get(operator_key, 0) + 1
+
+                if operator_result == 'missing':
+                    operator_error_count += 1
+                    _write_validation_error(error_list_file, 'operator', 'missing', 'Operator', '<blank>', 'N/A', 'N/A',
+                                             fields)
+
+                date_value = fields[25].strip()
+                current_date = date.today()
+
+                if not date_value:
+                    date_result = 'missing'
+                elif not re.fullmatch(r'\d{2}/\d{2}/\d{4}', date_value):
+                    date_result = 'invalid format'
+                else:
+                    try:
+                        parsed_date = datetime.strptime(date_value, '%d/%m/%Y').date()
+                        date_result = 'future date' if parsed_date > current_date else 'matched'
+                    except ValueError:
+                        date_result = 'invalid date'
+
+                date_key = ('Date', date_result, date_value)
+                date_summary[date_key] = date_summary.get(date_key, 0) + 1
+
+                if date_result != 'matched':
+                    date_error_count += 1
+
+                    if date_result == 'future date':
+                        _write_validation_error(error_list_file, 'date', date_result, 'Date', date_value, 'CurrentDate',
+                                                 current_date.strftime('%d/%m/%Y'), fields)
+                    else:
+                        _write_validation_error(error_list_file, 'date', date_result, 'Date', date_value or '<blank>',
+                                                'ExpectedFormat', 'DD/MM/YYYY', fields)
+        _write_validation_summary(comma_summary_file, comma_summary, logger_session)
+        _write_validation_summary(operator_summary_file, operator_summary, logger_session)
+        _write_validation_summary(date_summary_file, date_summary, logger_session)
+
+        if malformed_record_count:
+            logger_session.warning(f'Found {malformed_record_count} malformed BDF records.')
+
+        logger_session.info(f'Completed basic BDF field validation. '
+                            f'Records checked: {record_count}. '
+                            f'Malformed records: {malformed_record_count}. '
+                            f'Comma errors: {comma_error_count}. '
+                            f'Operator errors: {operator_error_count}. '
+                            f'Date errors: {date_error_count}.')
+
+    except Exception as e:
+        logger_session.error(f'Error during basic BDF field validation: {e}')
+        raise
+
+
 def _write_age_validation_summary(summary_file_path, age_summary, logger_session=logger):
     with open(summary_file_path, 'w', encoding='utf-8', newline='') as summary_file:
         writer = csv.writer(summary_file)
@@ -513,6 +592,8 @@ def main(input_directory, output_directory, asud, confidence_lookup, contact_typ
 
     validation_remove_quotes(bdf_file_path, bdf_out_file_path)
     initialise_error_log(qc_output_dir)
+
+    validation_basic_fields(bdf_out_file_path, output_directory)
 
     erc_file_path = os.path.join(input_directory, asud)
     confidence_lookup_path = os.path.join(input_directory, confidence_lookup)
