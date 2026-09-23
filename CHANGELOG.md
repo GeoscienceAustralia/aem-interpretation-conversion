@@ -1,10 +1,10 @@
 # Changelog
 
-## [Version 3.0.0] 
+## [Version 3.0.2] 
 
 ### What changed and why
 
-Version 3 reworks the export and validation stages of the workflow to support new output formats (3D shapefiles, GA Portal / Earth Sciences format) and stricter interpretation validation against confidence, contact-type, and interpretation-basis lookups. Export outputs are now consolidated into a single `export/` directory instead of being written in `SORT/`.
+Version 3 reworks the export and validation stages of the workflow to support new output formats (3D shapefiles, GA Portal / Earth Sciences format) and stricter interpretation validation against confidence, contact-type, interpretation-basis, operator, date, and ASUD geological Era lookups. Export outputs are now consolidated into a single `export/` directory instead of being written in `SORT/`.
 
 All new CLI commands and usage examples are documented in [README.rst](README.rst).
 
@@ -17,7 +17,13 @@ All new CLI commands and usage examples are documented in [README.rst](README.rs
 
 ### New validation outputs
 
-- `Confidence_validation_summary_{date}.txt`, `Contact_type_validation_summary_{date}.txt`, `Interpretation_basis_validation_summary_{date}.txt`, `Comma_validation_summary_{date}.txt`, and `error_list.log` are now produced by `validate`.
+- `Confidence_validation_summary_{date}.txt`, `Contact_type_validation_summary_{date}.txt`, `Interpretation_basis_validation_summary_{date}.txt`, `Comma_validation_summary_{date}.txt`, `Operator_validation_summary_{date}.txt`, `Date_validation_summary_{date}.txt`, and `error_list.log` are now produced by `validate`.
+
+- **Basic field validation** (`met2.bdf`): `validate` now runs a set of basic field checks across every record in `met2.bdf`:
+  - **Malformed records**: records that do not have exactly 26 pipe-separated fields are flagged as `incorrect field count` and written to `error_list.log`; they are skipped from all further field checks.
+  - **Comma check**: every field in each record is scanned for embedded commas. Fields containing a comma are reported by field name in `Comma_validation_summary_{date}.txt` and written to `error_list.log`.
+  - **Operator**: a missing `Operator` field (field 25) is reported as `missing` in `Operator_validation_summary_{date}.txt` and written to `error_list.log`.
+  - **Date**: the `Date` field (field 26) is validated against the `DD/MM/YYYY` format. A blank value is reported as `missing`; a value that does not match the format is reported as `invalid format`; a value that matches the format but is an impossible calendar date (e.g. `31/02/2025`) is reported as `invalid date`. Results are written to `Date_validation_summary_{date}.txt`; errors are also written to `error_list.log`.
 
 - **ASUD geological Era validation**: new validation checks whether interpreted stratigraphic units are consistent with the geological Era assigned in the interpretation `Type` field. For `BASE_<OVER_ERA>_TOP_<UNDER_ERA>` records, the overlying stratigraphic unit is checked against the overlying Era and the underlying stratigraphic unit is checked against the underlying Era. For `WITHIN_<ERA>` records, all populated stratigraphic unit fields (overlying, underlying, and within) are checked against the specified Era.
 
