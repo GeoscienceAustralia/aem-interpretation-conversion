@@ -929,6 +929,25 @@ def test_validation_basic_fields_invalid_date_value(tmp_path, dummy_logger):
     assert any('Date errors: 1' in msg for msg in dummy_logger.messages)
 
 
+def test_validation_basic_fields_future_date_value(tmp_path, dummy_logger):
+    qc_dir = tmp_path / 'qc'
+    qc_dir.mkdir()
+    bdf_path = qc_dir / 'met2.bdf'
+
+    bdf_path.write_text(_make_op_date_record(operator='GA', date_value='01/01/3025') + '\n', encoding='utf-8')
+
+    validation.initialise_error_log(qc_dir)
+    validation.validation_basic_fields(bdf_path, tmp_path, dummy_logger)
+
+    d = date.today().strftime('%Y%m%d')
+    dt_summary = (qc_dir / f'Date_validation_summary_{d}.txt').read_text(encoding='utf-8')
+    error_log = (qc_dir / 'error_list.log').read_text(encoding='utf-8')
+
+    assert 'future date,Date,01/01/3025,1' in dt_summary
+    assert 'date|future date|Date|01/01/3025|CurrentDate|' in error_log
+    assert any('Date errors: 1' in msg for msg in dummy_logger.messages)
+
+
 def test_validation_basic_fields_malformed_record(tmp_path, dummy_logger):
     qc_dir = tmp_path / 'qc'
     qc_dir.mkdir()

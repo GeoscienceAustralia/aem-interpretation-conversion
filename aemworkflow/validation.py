@@ -459,6 +459,7 @@ def validation_basic_fields(bdf_2_file_path, validation_dir, logger_session=logg
                                              fields)
 
                 date_value = fields[25].strip()
+                current_date = date.today()
 
                 if not date_value:
                     date_result = 'missing'
@@ -466,8 +467,8 @@ def validation_basic_fields(bdf_2_file_path, validation_dir, logger_session=logg
                     date_result = 'invalid format'
                 else:
                     try:
-                        datetime.strptime(date_value, '%d/%m/%Y')
-                        date_result = 'matched'
+                        parsed_date = datetime.strptime(date_value, '%d/%m/%Y').date()
+                        date_result = 'future date' if parsed_date > current_date else 'matched'
                     except ValueError:
                         date_result = 'invalid date'
 
@@ -476,9 +477,13 @@ def validation_basic_fields(bdf_2_file_path, validation_dir, logger_session=logg
 
                 if date_result != 'matched':
                     date_error_count += 1
-                    _write_validation_error(error_list_file, 'date', date_result, 'Date', date_value or '<blank>',
-                                            'ExpectedFormat', 'DD/MM/YYYY', fields)
 
+                    if date_result == 'future date':
+                        _write_validation_error(error_list_file, 'date', date_result, 'Date', date_value, 'CurrentDate',
+                                                 current_date.strftime('%d/%m/%Y'), fields)
+                    else:
+                        _write_validation_error(error_list_file, 'date', date_result, 'Date', date_value or '<blank>',
+                                                'ExpectedFormat', 'DD/MM/YYYY', fields)
         _write_validation_summary(comma_summary_file, comma_summary, logger_session)
         _write_validation_summary(operator_summary_file, operator_summary, logger_session)
         _write_validation_summary(date_summary_file, date_summary, logger_session)
