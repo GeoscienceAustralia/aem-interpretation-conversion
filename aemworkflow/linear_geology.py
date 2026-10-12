@@ -28,18 +28,18 @@ def parse_folder_lst(folder_lst_path: str) -> List[Tuple[str, int]]:
     return entries
 
 
-def path_to_point_gmt(path_file: str, output_gmt: str, crs_in: int, crs_out: int = 4283,
-                      logger_session=logger) -> None:
+def path_to_point_gmt(path_file: str, output_gmt: str, logger_session=logger) -> None:
     """
     Translate all_pts_i_gmt.awk: convert a .path.txt file into a GMT point file.
-    Each row in the path file becomes a point feature with linenum and flib attributes.
-    Columns used: col1=linenum, col2=flib, col5=x(easting), col6=y(northing).
+    Uses cols 7,8 (geographic lon/lat in EPSG:4283) — these are already in the
+    target CRS and match the polygon shapefiles, avoiding projection zone errors.
+    Columns: col1=linenum, col2=flib, col7=longitude, col8=latitude.
     """
     logger_session.info(f"Converting path file to GMT: {Path(path_file).name}")
 
     with open(output_gmt, 'w') as out:
         out.write("# @VGMT1.0 @GPOINT\n")
-        out.write(f"# @Je{crs_in}\n")
+        out.write("# @Je4283\n")
         out.write("# @Nlinenum|flib|date|Survey|Company|Status\n")
         out.write("# @Tinteger|integer|integer|string|string|string\n")
         out.write("# FEATURE_DATA\n")
@@ -47,27 +47,24 @@ def path_to_point_gmt(path_file: str, output_gmt: str, crs_in: int, crs_out: int
         with open(path_file, 'r') as f:
             for line in f:
                 parts = line.strip().split()
-                if len(parts) < 6:
+                if len(parts) < 8:
                     continue
                 linenum = parts[0]
                 flib = parts[1]
-                x = parts[4]
-                y = parts[5]
+                lon = parts[6]
+                lat = parts[7]
                 out.write(">\n")
                 out.write(f"# @D{linenum}|{flib}\n")
-                out.write(f"{x} {y}\n")
+                out.write(f"{lon} {lat}\n")
 
     logger_session.info(f"GMT point file written: {Path(output_gmt).name}")
 
 
-def path_gmt_to_shp(gmt_file: str, shp_file: str, crs_in: int, crs_out: int,
-                    logger_session=logger) -> None:
-    """Convert a GMT point file to a shapefile, reprojecting from crs_in to crs_out."""
+def path_gmt_to_shp(gmt_file: str, shp_file: str, logger_session=logger) -> None:
+    """Convert a GMT point file (EPSG:4283) to a shapefile with no reprojection."""
     cmd = [
         get_ogr_path(),
         "-f", "ESRI Shapefile",
-        "-s_srs", f"EPSG:{crs_in}",
-        "-t_srs", f"EPSG:{crs_out}",
         shp_file,
         gmt_file,
     ]
@@ -194,7 +191,7 @@ def find_map_data_dir(input_directory: str) -> str:
     return ""
 
 
-def run_linear_geology(input_directory: str, output_directory: str, crs: str,
+def run_linear_geology(input_directory: str, output_directory: str,
                        logger_session=logger) -> bool:
     """
     Run the full linear geology pipeline for all map datasets.
@@ -213,7 +210,6 @@ def run_linear_geology(input_directory: str, output_directory: str, crs: str,
     DEFAULT_COLUMN = 6
 
     try:
-        crs_in = int(crs)
         map_data_dir = find_map_data_dir(input_directory)
 
         if not map_data_dir:
@@ -253,8 +249,8 @@ def run_linear_geology(input_directory: str, output_directory: str, crs: str,
             stem = path_file.stem.split(".")[0]
             gmt_out = os.path.join(point_shp_dir, f"{stem}.gmt")
             shp_out = os.path.join(point_shp_dir, f"{stem}.shp")
-            path_to_point_gmt(str(path_file), gmt_out, crs_in, logger_session=logger_session)
-            path_gmt_to_shp(gmt_out, shp_out, crs_in, 4283, logger_session=logger_session)
+            path_to_point_gmt(str(path_file), gmt_out, logger_session=logger_session)
+            path_gmt_to_shp(gmt_out, shp_out, logger_session=logger_session)
 
         # Stage 2 + 3: per map dataset
         for map_stem, col_idx in entries:
