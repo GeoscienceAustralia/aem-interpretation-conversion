@@ -56,7 +56,7 @@ def spatial_join(point_shp_dir: str, polygon_shp: str, output_dir: str,
     polygons = gpd.read_file(polygon_shp)
     logger_session.info(f"Loaded polygon shapefile: {Path(polygon_shp).name} ({len(polygons)} features)")
 
-    for filename in os.listdir(point_shp_dir):
+    for filename in sorted(os.listdir(point_shp_dir)):
         if not filename.endswith(".shp"):
             continue
         points = gpd.read_file(os.path.join(point_shp_dir, filename))
