@@ -288,7 +288,7 @@ Argument                      Required       Default         Options            
 input directory               Yes            None                                                             A non zipped folder containing required files
 output directory              Yes            None
 map data entries              Yes            None            multiple --map-data <stem> <column>              Shapefile name without .shp and column number
-============================ ============== =============== ================================================ ==============================================           
+============================= ============== =============== ================================================ =============================================           
 
 
 
