@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import geopandas as gpd
 from loguru import logger
@@ -8,24 +8,9 @@ from loguru import logger
 from aemworkflow.utilities import get_ogr_path, run_command
 
 
-def parse_folder_lst(folder_lst_path: str) -> List[Tuple[str, int]]:
-    """
-    Parse folder.lst returning a list of (shapefile_stem, column_index) tuples.
-    Each row format: {stem} {directory} {column_index}
-    The directory is ignored — map shapefiles are located by stem in map_data_dir.
-    """
-    entries = []
-    with open(folder_lst_path, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            parts = line.split()
-            if len(parts) >= 3:
-                stem = parts[0]
-                col = int(parts[2])
-                entries.append((stem, col))
-    return entries
+def get_map_data_defaults(map_data_dir: str) -> Dict[str, int]:
+    """Return {stem: 1} for every .shp in map_data_dir."""
+    return {shp.stem: 1 for shp in sorted(Path(map_data_dir).glob("*.shp"))}
 
 
 def path_to_point_gmt(path_file: str, output_gmt: str, logger_session=logger) -> None:
@@ -61,14 +46,8 @@ def path_to_point_gmt(path_file: str, output_gmt: str, logger_session=logger) ->
 
 
 def path_gmt_to_shp(gmt_file: str, shp_file: str, logger_session=logger) -> None:
-    """Convert a GMT point file (EPSG:4283) to a shapefile with no reprojection."""
-    cmd = [
-        get_ogr_path(),
-        "-f", "ESRI Shapefile",
-        shp_file,
-        gmt_file,
-    ]
-    run_command(cmd)
+    """Convert a GMT point file to a shapefile (no reprojection needed)."""
+    run_command([get_ogr_path(), "-f", "ESRI Shapefile", shp_file, gmt_file])
     logger_session.info(f"Point shapefile written: {Path(shp_file).name}")
 
 
@@ -76,7 +55,7 @@ def spatial_join(point_shp_dir: str, polygon_shp: str, output_dir: str,
                  logger_session=logger) -> None:
     """
     Translate test_point_poly_join_mgn2.py: spatial join all point shapefiles in
-    point_shp_dir against the polygon shapefile, writing *_new.shp to output_dir.
+    point_shp_dir against polygon_shp, writing *_new.shp to output_dir.
     """
     os.makedirs(output_dir, exist_ok=True)
     polygons = gpd.read_file(polygon_shp)
@@ -85,8 +64,7 @@ def spatial_join(point_shp_dir: str, polygon_shp: str, output_dir: str,
     for filename in os.listdir(point_shp_dir):
         if not filename.endswith(".shp"):
             continue
-        path = os.path.join(point_shp_dir, filename)
-        points = gpd.read_file(path)
+        points = gpd.read_file(os.path.join(point_shp_dir, filename))
         points = points.to_crs(polygons.crs)
         joined = gpd.sjoin(points, polygons, how="left", predicate="within")
         new_filename = f"{filename.split('.')[0]}_new.shp"
@@ -97,26 +75,16 @@ def spatial_join(point_shp_dir: str, polygon_shp: str, output_dir: str,
 def build_polygon_gmt(joined_shp: str, output_gmt: str, column_index: int,
                       logger_session=logger) -> None:
     """
-    Translate lin_geology_5p_clm.awk: read the joined point shapefile (converted
-    to GMT), group consecutive points by column_index value, and write 5-point
-    rectangular polygons (height=20 image units) to a GMT polygon file.
-
-    The joined shapefile is first converted to GMT format by the caller, then this
-    function reads that GMT directly.
+    Translate lin_geology_5p_clm.awk: group consecutive points by the value at
+    column_index and write 5-point rectangular polygons (height=20 image units).
     """
-    logger_session.info(f"Building polygon GMT from: {Path(joined_shp).name}, column index: {column_index}")
+    logger_session.info(f"Building polygon GMT: {Path(joined_shp).name}, col={column_index}")
 
-    # Convert joined shapefile to intermediate GMT so we can read @D metadata
     stem = Path(joined_shp).stem
-    work_dir = str(Path(joined_shp).parent)
-    path_surfgeo_gmt = os.path.join(work_dir, f"{stem}_path_SurfGeo.gmt")
+    path_surfgeo_gmt = os.path.join(str(Path(joined_shp).parent), f"{stem}_path_SurfGeo.gmt")
+    run_command([get_ogr_path(), "-f", "GMT", path_surfgeo_gmt, joined_shp])
 
-    cmd = [get_ogr_path(), "-f", "GMT", path_surfgeo_gmt, joined_shp]
-    run_command(cmd)
-
-    # Parse the GMT and build polygons
-    h1 = ""
-    h2 = ""
+    h1 = h2 = ""
     first = True
     current_key = None
     x_pts: list = []
@@ -135,19 +103,15 @@ def build_polygon_gmt(joined_shp: str, output_gmt: str, column_index: int,
             line = raw.strip()
             if not line:
                 continue
-
             parts = line.split()
-
             if len(parts) >= 2 and parts[1].startswith("@Nlinenum"):
                 h1 = line
                 continue
             if len(parts) >= 2 and parts[1].startswith("@Tinteger"):
                 h2 = line
                 continue
-
             if len(parts) >= 2 and "@D" in parts[1]:
                 fields = line.split("|")
-                # column_index is 1-based as in the AWK (clm variable)
                 key = fields[column_index - 1] if len(fields) >= column_index else None
 
                 if not header_written:
@@ -184,55 +148,28 @@ def build_polygon_gmt(joined_shp: str, output_gmt: str, column_index: int,
 
 def find_map_data_dir(input_directory: str) -> str:
     """Return the map_data subfolder path, case-insensitive. Empty string if not found."""
-    parent = Path(input_directory)
-    for child in parent.iterdir():
+    for child in Path(input_directory).iterdir():
         if child.is_dir() and child.name.lower() == "map_data":
             return str(child)
     return ""
 
 
 def run_linear_geology(input_directory: str, output_directory: str,
+                       entries: List[Tuple[str, int]],
                        logger_session=logger) -> bool:
     """
-    Run the full linear geology pipeline for all map datasets.
+    Run the full linear geology pipeline.
 
-    Expected input_directory structure:
-        *.path.txt           — flight line geometry files
-        map_data/ (or Map_data/) — polygon shapefiles; optionally folder.lst
-
-    If folder.lst is present it controls which shapefiles are processed and which
-    column index to use per dataset. If absent, all *.shp files in map_data/ are
-    processed using the default column index (6).
-
-    Output goes to output_directory/lin_geo/{map_stem}/ per dataset.
-    Returns True on success, False on any failure.
+    Args:
+        input_directory: contains *.path.txt and map_data/ folder
+        output_directory: root output dir; results go under lin_geo/
+        entries: list of (shapefile_stem, column_index) from the UI selection
     """
-    DEFAULT_COLUMN = 6
-
     try:
         map_data_dir = find_map_data_dir(input_directory)
-
         if not map_data_dir:
             logger_session.error("No map_data folder found in input directory.")
             return False
-
-        folder_lst = os.path.join(map_data_dir, "folder.lst")
-
-        if Path(folder_lst).is_file():
-            entries = parse_folder_lst(folder_lst)
-            if not entries:
-                logger_session.error("folder.lst is empty or could not be parsed.")
-                return False
-            logger_session.info(f"Using folder.lst: {len(entries)} dataset(s) defined.")
-        else:
-            shp_files = sorted(Path(map_data_dir).glob("*.shp"))
-            if not shp_files:
-                logger_session.error("No shapefiles found in map_data directory.")
-                return False
-            entries = [(s.stem, DEFAULT_COLUMN) for s in shp_files]
-            logger_session.warning(
-                f"folder.lst not found — processing {len(entries)} shapefile(s) with default column {DEFAULT_COLUMN}."
-            )
 
         path_files = sorted(Path(input_directory).glob("*.path.txt"))
         if not path_files:
@@ -252,33 +189,29 @@ def run_linear_geology(input_directory: str, output_directory: str,
             path_to_point_gmt(str(path_file), gmt_out, logger_session=logger_session)
             path_gmt_to_shp(gmt_out, shp_out, logger_session=logger_session)
 
-        # Stage 2 + 3: per map dataset
+        # Stage 2 + 3: per selected map dataset
         for map_stem, col_idx in entries:
             polygon_shp = os.path.join(map_data_dir, f"{map_stem}.shp")
             if not Path(polygon_shp).is_file():
-                logger_session.warning(f"Map shapefile not found, skipping: {polygon_shp}")
+                logger_session.warning(f"Map shapefile not found, skipping: {map_stem}.shp")
                 continue
 
-            logger_session.info(f"Processing map dataset: {map_stem}")
+            logger_session.info(f"Processing map dataset: {map_stem} (column {col_idx})")
 
             joined_dir = os.path.join(lin_geo_root, map_stem, "joined")
             poly_dir = os.path.join(lin_geo_root, map_stem, "polygons")
             os.makedirs(joined_dir, exist_ok=True)
             os.makedirs(poly_dir, exist_ok=True)
 
-            # Stage 2: spatial join
             spatial_join(point_shp_dir, polygon_shp, joined_dir, logger_session=logger_session)
 
-            # Stage 3: build polygon GMT + SHP per joined file
             for joined_shp in sorted(Path(joined_dir).glob("*_new.shp")):
                 nm = joined_shp.stem.replace("_new", "")
                 poly_gmt = os.path.join(poly_dir, f"{nm}_{map_stem}_pl.gmt")
                 poly_shp = os.path.join(poly_dir, f"{nm}_{map_stem}.shp")
-
-                build_polygon_gmt(str(joined_shp), poly_gmt, col_idx, logger_session=logger_session)
-
-                cmd = [get_ogr_path(), "-f", "ESRI Shapefile", poly_shp, poly_gmt]
-                run_command(cmd)
+                build_polygon_gmt(str(joined_shp), poly_gmt, col_idx,
+                                  logger_session=logger_session)
+                run_command([get_ogr_path(), "-f", "ESRI Shapefile", poly_shp, poly_gmt])
                 logger_session.info(f"Polygon shapefile written: {Path(poly_shp).name}")
 
         logger_session.info("Linear geology pipeline completed.")
