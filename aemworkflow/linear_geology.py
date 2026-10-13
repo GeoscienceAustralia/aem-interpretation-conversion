@@ -1,16 +1,11 @@
 import os
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import geopandas as gpd
 from loguru import logger
 
 from aemworkflow.utilities import get_ogr_path, run_command
-
-
-def get_map_data_defaults(map_data_dir: str) -> Dict[str, int]:
-    """Return {stem: 1} for every .shp in map_data_dir."""
-    return {shp.stem: 1 for shp in sorted(Path(map_data_dir).glob("*.shp"))}
 
 
 def path_to_point_gmt(path_file: str, output_gmt: str, logger_session=logger) -> None:
@@ -220,3 +215,7 @@ def run_linear_geology(input_directory: str, output_directory: str,
     except Exception as e:
         logger_session.error(f"Linear geology pipeline failed: {e}")
         return False
+
+
+if __name__ == "__main__":
+    run_linear_geology()

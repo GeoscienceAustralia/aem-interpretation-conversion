@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aemworkflow"
-version = "3.0.0"
+version = "3.0.3"
 authors = [
   { name="Geoscience Australia", email="toolkits@ga.gov.au" },
 ]
