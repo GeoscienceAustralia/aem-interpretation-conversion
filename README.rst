@@ -269,6 +269,28 @@ split file                    Yes             None
 ============================= ============== =============== ================================================ =============================================           
 
 
+Linear Geology
+-----------------------
+
+.. code-block:: bash
+
+    aemworkflow linear_geology --i "{input_directory}" --o "{output_directory}" --map-data {Shapefile1 stem} {Column index} --map-data {Shapefile2 stem} {Column index} ...
+
+The ``--map-data`` option requires two values:
+1. **Shapefile stem** (without the ``.shp`` extension)
+2. **Column number** used to group the joined geology attributes
+
+**Parameter examples:**
+
+============================= ============== =============== ================================================ =============================================
+Argument                      Required       Default         Options                                          Notes
+============================= ============== =============== ================================================ =============================================
+input directory               Yes            None                                                             A non zipped folder containing required files
+output directory              Yes            None
+map data entries              Yes            None            multiple --map-data <stem> <column>              Shapefile name without .shp and column number
+============================= ============== =============== ================================================ =============================================           
+
+
 
 Useful Links
 ------------

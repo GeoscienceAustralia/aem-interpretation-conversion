@@ -1,10 +1,12 @@
 # Changelog
 
-## [Version 3.0.2] 
+## [Version 3.0.3] 
 
 ### What changed and why
 
 Version 3 reworks the export and validation stages of the workflow to support new output formats (3D shapefiles, GA Portal / Earth Sciences format) and stricter interpretation validation against confidence, contact-type, interpretation-basis, operator, date, and ASUD geological Era lookups. Export outputs are now consolidated into a single `export/` directory instead of being written in `SORT/`.
+
+Version 3 also introduces a new Linear Geology workflow for generating linear geology polygon shapefiles from AEM flight-line path files and geological map-data polygon layers.
 
 All new CLI commands and usage examples are documented in [README.rst](README.rst).
 
@@ -42,6 +44,7 @@ All new CLI commands and usage examples are documented in [README.rst](README.rs
 - **Output file locations**: export outputs (CSV, MDC/MDCH, Earth Sciences, 3D shapefiles) are now written to a new `export/` directory instead of `SORT/`. Scripts that read output from `SORT/` will need to look in `export/` instead.
 - **MDC/MDCH metadata field changes**: `*metadata*Line` renamed to `*metadata*SURVEY_LINE`; `*metadata*BoundaryNm` removed; `*metadata*Organization` corrected to `*metadata*Organisation`; `OvrStrtCod`/`UndStrtCod` renamed to `OvrStratNo`/`UndStratNo`; `WithinType` removed; new fields added: `OverAge`, `UnderAge`, `ContactTyp`, `HydStrtType`, `HydStrConf`, `BOMNAFUnt`, `BOMNAFNo`, `Date`. These label names are not cosmetic — in v2 several metadata header labels did not line up with the data value actually written under them (e.g. the `BoundaryNm` label was printing what was really the `BoundConf` value, one field out of place); the field list above reflects the corrected label/data alignment, so v2 output produced under the old labels should not be assumed correct and downstream consumers should re-derive any values they depend on from the field position, not the old label name.
 - **Validation summary file renamed**: `AEM_validation_summary_{date}.txt` is now `ASUD_validation_summary_{date}.txt`.
+- Added a new `linear-geology` CLI command for generating linear geology outputs from geological map datasets and AEM flight-line path files.
 
 ### New required input files
 
