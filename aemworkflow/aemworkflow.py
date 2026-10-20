@@ -5,6 +5,7 @@ import click
 from .conversion import main as conversion
 from .exports import main as exports
 from .interpretation import main as interpretation
+from .linear_geology import run_linear_geology
 from .pre_interpretation import main as pre_interpretation
 from .validation import main as validation
 
@@ -113,6 +114,20 @@ def export(input_directory, output_directory, boundary_filename, split_filename,
         exports(input_directory, output_directory, boundary_filename, split_filename,
                 mdc, mdch, csv, es, export_3d, crs)
         click.echo("Completed export")
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.option("--i", "input_directory", type=click.Path(exists=True), required=True)
+@click.option("--o", "output_directory", type=click.Path(), required=True)
+@click.option("--map-data", "entries", type=(str, int), multiple=True, required=True, metavar="STEM COLUMN",
+              help=("Map shapefile stem and one-based joined-attribute column number."))
+def linear_geology(input_directory, output_directory, entries):
+    try:
+        run_linear_geology(input_directory, output_directory, entries)
+        click.echo("Completed linear geology processing")
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
